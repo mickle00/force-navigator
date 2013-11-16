@@ -1,0 +1,10 @@
+{
+  "appName": {
+    "message": "SFNav",
+    "description": "The name of the application"
+  },
+  "appDescription": {
+    "message": "Salesforce Navigator",
+    "description": "The description of the application"
+  }
+}
