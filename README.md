@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Salesforce Navigator
 
 This extension helps you get to any salesforce page quickly. Just type in what you need to do.
@@ -22,3 +23,9 @@ To test, go to: chrome://extensions, enable Developer mode and load app as an un
 ## License
 [MIT License](http://en.wikipedia.org/wiki/MIT_License)
 
+=======
+force-navigator
+===============
+
+Salesforce Navigator
+>>>>>>> b5269c8c4aaa742b0050532af877b9e0688fb5f0
