@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # Salesforce Navigator
 
 This extension helps you get to any salesforce page quickly. Just type in what you need to do.
@@ -12,7 +11,9 @@ This extension helps you get to any salesforce page quickly. Just type in what y
 Check it out on the Chrome Web Store:
 [Salesforce Navigator](https://chrome.google.com/webstore/detail/salesforce-navigator/ecjmdlggbilopfkkhggmgebbmbiklcdo)
 
-Maintainers: [Daniel Nakov](https://twitter.com/dnak0v) and [Wes Weingartner](https://twitter.com/wes1278)
+Maintainers: [Daniel Nakov](https://twitter.com/dnak0v) and [Wes Weingartner](https://twitter.com/wes1278) 
+
+[Silverline CRM](http://silverlinecrm.com)
 
 ## Getting Started
 Project was scaffolded using [Yeoman](http://yeoman.io/) using [generator-chrome-extension](https://github.com/yeoman/generator-chrome-extension)
@@ -23,9 +24,3 @@ To test, go to: chrome://extensions, enable Developer mode and load app as an un
 ## License
 [MIT License](http://en.wikipedia.org/wiki/MIT_License)
 
-=======
-force-navigator
-===============
-
-Salesforce Navigator
->>>>>>> b5269c8c4aaa742b0050532af877b9e0688fb5f0
