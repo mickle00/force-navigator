@@ -1,11 +1,11 @@
 {
     "name": "Salesforce Navigator",
-    "version": "0.5.12",
+    "version": "0.5.14",
     "manifest_version": 2,
     "default_locale": "en",
     "browser_action": {
-        "default_icon": "images/32.png",
-        "default_popup": "popup.html"
+        "default_icon": "images/32.png"
+        // "default_popup": "popup.html"
     },
     "background": {
         "scripts": [
@@ -14,24 +14,42 @@
         "persistent": true
     },
     "web_accessible_resources": [
-        "images/ajax-loader.gif"
+        "scripts/app/mainView.html",
+        "bower_components/font-awesome/fonts/fontawesome-webfont.eot",
+        "bower_components/font-awesome/fonts/fontawesome-webfont.svg",
+        "bower_components/font-awesome/fonts/fontawesome-webfont.ttf",
+        "bower_components/font-awesome/fonts/fontawesome-webfont.woff"
     ],
     "description": "",
     "content_scripts": [
         {
             "css": [
-                "styles/main.css"
+                "styles/main.css",
+                "bower_components/font-awesome/css/font-awesome.css"
             ],
             "matches": [
                 "https://*.force.com/*",
-                "https://*.salesforce.com/*"
+                "https://*.salesforce.com/*","http://*/*",
+                "https://*/*"
             ],
             "js": [
-                "scripts/jquery.js",
-                "scripts/mousetrap.min.js",
-                "scripts/forceTooling.js",
-                "scripts/main.js",
-                "scripts/popup.js"
+                // "scripts/templates.js",
+                "scripts/util.js",
+                // "bower_components/jquery/jquery.js",
+                // "scripts/advancedsettings.js",
+                // "bower_components/hogan/web/builds/2.0.0/hogan-2.0.0.js",
+                // "bower_components/typeahead.js/dist/typeahead.js",
+                // "bower_components/keymaster/keymaster.js",
+                // "scripts/mousetrap.min.js",
+                // "scripts/forceTooling.js",
+                // "scripts/main.js"
+                // "scripts/popup.js"
+                "bower_components/angular/angular.js",
+                "bower_components/angular-cookies/angular-cookies.js",
+                "scripts/app/app.js",
+                "scripts/app/controllers.js",                
+                "scripts/app/services.js",                
+                "scripts/content.js"
             ],
             "run_at": "document_end"
         }
@@ -39,6 +57,10 @@
     "permissions": [
         "https://*.force.com/*",
         "https://*.salesforce.com/*",
-        "storage"
+        "http://*/*",
+        "https://*/*",
+        "file://*/*",
+        "storage",
+        "cookies"
     ]
 }

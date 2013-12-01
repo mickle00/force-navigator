@@ -1,0 +1,15 @@
+<div class="sfnav-wrapper">
+	<div class="sfnav-wrapper">
+    <div id="sfnav" class="" >
+        <div id="sfnav-search">
+            <input ng-model="query" id="sfnav-search-field" type="search">
+        </div>
+        <ul>
+            <li class="sfnav-content" ng-class="{selected: $index==selectedIndex}" ng-repeat="item in (filteredItems = (items | orderBy:sortByMostHits | filter:query | limitTo:10 ))" ng-click="go($index)">
+                <i class="{{item.icon}} fa-lg"></i>
+                <h4 class="sfnav-name">{{item.name}}  {{stats[item.name].totalHits}}</h4>
+            </li>
+        </ul>
+    </div>
+</div>
+</div>
