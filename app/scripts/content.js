@@ -52,5 +52,31 @@
 		angular.element(window).off();		
 	}
 
+	// TODO: need some mechanism for defaults because this sucks
+	chrome.storage.local.get("site.https://*.salesforce.com/*", function(results) {
+		if(Object.keys(results).length !== 0) return;
+
+		var defaultStuff = 
+		{
+		  "site.https://*.salesforce.com/*": {
+		    "collections": {
+		      "collection.user.salesforce": {
+		        // "lastRefreshed": "",
+		        "refreshFrequency": 2 // in min
+		      }
+		    }
+		    // "stats": {
+		    // }
+		  },
+		  'settings': {
+		  	lazyloadScripts: false
+		  }
+		}
+		chrome.storage.local.set(defaultStuff);
+		
+	});
+
+
+
 })();
  

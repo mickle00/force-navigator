@@ -5,6 +5,7 @@ angular.module('forceNavigator')
 
   	// wait for the stupid async storage data to load
   	chromeStorage.init().then(function(data) {
+  		 getSiteKey();
   		 registerListeners();
   		 onStorageChange();
   	});
@@ -20,9 +21,9 @@ angular.module('forceNavigator')
 
   	function getSiteKey() {
   		var urlPatternKey;
-	    for (var key in chromeStorage.data.sites) {
-	      if(URLPattern.matches(key, theUrl)) {
-	      	$scope.urlPatternKey = key;
+	    for (var key in chromeStorage.data) {
+	      if(URLPattern.matches(key.substring(5), theUrl)) {
+	      	$scope.urlPatternKey = key.substring(5);
 	      }
 	    }
 	    $scope.siteKey = 'site.' + $scope.urlPatternKey;
@@ -79,11 +80,11 @@ angular.module('forceNavigator')
 	    // see if collection.user.salesforce is defined and generate an org collection	    
 	    else if($scope.collections['collection.user.salesforce'] !== undefined)
 	    {
-	    	chromeStorage.data[siteKey]
+	    	chromeStorage.data[$scope.siteKey]
 	    	.collections['collection.user.salesforce.' + $scope.orgId] = 
 	    	angular.copy($scope.collections['collection.user.salesforce']);
     		
- 			refreshCollection(chromeStorage.data[siteKey]
+ 			refreshCollection(chromeStorage.data[$scope.siteKey]
 	    	.collections['collection.user.salesforce.' + $scope.orgId]);
 
 	    }
