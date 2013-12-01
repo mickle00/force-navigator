@@ -1,4 +1,4 @@
-$(document).ready(function() { 
+window.onload = function() {
 
     var container = document.getElementById("jsoneditor");
     
@@ -24,7 +24,7 @@ $(document).ready(function() {
 
     // get json
     var json = editor.get();
-});
+}
  chrome.storage.onChanged.addListener(function(changes, namespace) {
   for (key in changes) {
     var storageChange = changes[key];
