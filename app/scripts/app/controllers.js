@@ -33,7 +33,7 @@ angular.module('forceNavigator')
  	}
 
  	$scope.go = function(index) {
- 		$scope.stats = $scope.stats || {};
+ 		// $scope.stats = $scope.stats || {};
  		$scope.stats[$scope.filteredItems[index].name] = $scope.stats[$scope.filteredItems[index].name] || {};
 
  		var keyStat = $scope.stats[$scope.filteredItems[index].name];

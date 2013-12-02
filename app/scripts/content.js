@@ -58,19 +58,30 @@
 
 		var defaultStuff = 
 		{
-		  "site.https://*.salesforce.com/*": {
-		    "collections": {
-		      "collection.user.salesforce": {
-		        // "lastRefreshed": "",
-		        "refreshFrequency": 2 // in min
-		      }
-		    }
-		    // "stats": {
-		    // }
+		  "site.https://*.salesforce.com/*": 
+		  {
+		    "collections": 
+		    {
+		      
+		    },
+			"services": 
+			{
+				"service.user.salesforce": 
+				{
+				  "ngServiceName": "salesforceSvc",
+				  "refreshFrequency": 2
+				}
+			},		  
+			"stats":
+			{
+				
+			}		    
 		  },
-		  'settings': {
-		  	lazyloadScripts: false
-		  }
+		  "settings": 
+		  {
+		    "lazyloadScripts": false
+		  },
+
 		}
 		chrome.storage.local.set(defaultStuff);
 		
