@@ -77,6 +77,25 @@
 				
 			}		    
 		  },
+		  "site.https://*.jira.com/*": 
+		  {
+		    "collections": 
+		    {
+		      
+		    },
+			"services": 
+			{
+				"service.user.jira": 
+				{
+				  "ngServiceName": "jiraSvc",
+				  "refreshFrequency": 2
+				}
+			},		  
+			"stats":
+			{
+				
+			}		    
+		  },		  
 		  "settings": 
 		  {
 		    "lazyloadScripts": false

@@ -225,6 +225,78 @@ sfNav.service('salesforceSvc', function($q, $cookies, $location, $http) {
 
 });
 
+sfNav.service('jiraSvc', function($q, $cookies, $location, $http) {
+
+	this.isAsync = true;
+	var serviceName = 'service.user.jira';
+	
+
+ 	function _parseData(data) {
+ 		var collection = {
+ 			collectionId : 'collection.user.jira.' + $location.host(),
+ 			serviceId : serviceName,
+ 			items : []
+ 		};
+
+		angular.forEach(data, function(value, key){
+			var item = 
+			{
+				name : 'Issues: ' + value.key,
+				longName : value.name,
+				url : '/browse/' + value.key,
+				pid : value.id
+
+			};
+			collection.items.push(item);
+
+			item = {};
+			item = 
+			{
+				name : 'Wiki: ' + value.key,
+				longName : value.name,
+				url : '/wiki/display/' + value.key + '/Home',
+				pid : value.id
+
+			};
+			collection.items.push(item);	
+		});
+		return collection;	
+ 	}
+
+ 	this.$getData = function(existingCollections) {
+
+ 		var dfd = $q.defer();
+
+ 		// siteSvc sends the existing collections
+ 		// if a collection needs to be refreshed,
+ 		// it won't be sent as part of the existing collections
+
+ 		for(var key in existingCollections)
+ 		{
+ 			if(key === 'collection.user.jira.' + $location.host())
+ 			{
+ 				dfd.resolve();
+ 				return dfd.promise;
+ 			}
+ 		}
+
+		$http({	method: 'GET', 
+						url: 'https://' + $location.host() + '/rest/api/2/project'})
+		.success(function(data, status, headers, config) {
+			dfd.resolve(_parseData(data));
+		})
+		.error(function(data, status, headers, config) {
+			dfd.reject(data);
+		});
+
+		return dfd.promise; 	 		
+
+ 	}
+
+
+
+});
+
 sfNav.service('siteSvc', function ($injector, $rootScope, $location) {
 
 	var chromeStorage = $injector.get('chromeStorage');
@@ -280,7 +352,7 @@ sfNav.service('siteSvc', function ($injector, $rootScope, $location) {
   		_registerListeners();
 
 		collectionsToGet = {};
-		collections = chromeStorage.data[siteKey].collections;
+		collections = chromeStorage.data[siteKey].collections || {};
 
 		for(var key in collections)
 		{
