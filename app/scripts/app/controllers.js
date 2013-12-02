@@ -1,155 +1,14 @@
 'use strict';
 
 angular.module('forceNavigator')
-  .controller('MainCtrl', function ($window, $scope, $rootScope, chromeStorage, $filter, keymaster, $http, $cookies) {
+  .controller('MainCtrl', function (siteSvc, $window, $scope, $rootScope, chromeStorage, $filter, $http, $cookies) {
 
-  	// wait for the stupid async storage data to load
   	chromeStorage.init().then(function(data) {
-  		 getSiteKey();
-  		 registerListeners();
-  		 onStorageChange();
+  		siteSvc.init();
+	  	$scope.items = siteSvc.items;
+	  	$scope.stats = siteSvc.stats;
   	});
 
-  	var theUrl = location.href;
-
-  	if($cookies.sid !== undefined)
-  	{
-  		$scope.sessionId = $cookies.sid;
-  		$scope.orgId = $cookies.sid.split('!')[0];
-  		$scope.instanceUrl = location.origin;
-  	}
-
-  	function getSiteKey() {
-  		var urlPatternKey;
-	    for (var key in chromeStorage.data) {
-	      if(URLPattern.matches(key.substring(5), theUrl)) {
-	      	$scope.urlPatternKey = key.substring(5);
-	      }
-	    }
-	    $scope.siteKey = 'site.' + $scope.urlPatternKey;
-	    return $scope.siteKey;
-  	}
-    
- 
-
-  	function registerListeners() {
-	   $rootScope.$on('storageChange.' + getSiteKey(), onStorageChange);
-	    for(var key in $scope.collections) {
-	    	$rootScope.$on('storageChange.' + key, onStorageChange);
-	    }
-  	}
- 
- 	var onStorageChange = function() {
-		// get all collections for the current site
- 
-		// $rootScope.$on('storageChange.' + getSiteKey(), onStorageLoaded);
-
-	    $scope.chromeStorage = chromeStorage;
-
-	    $scope.apiVersion = chromeStorage.data[$scope.siteKey].apiVersion || 'v28.0';
-
-	    $scope.collections = chromeStorage.data[$scope.siteKey].collections;
-	    $scope.stats = chromeStorage.data[$scope.siteKey].stats || {};
-
-	    // get all items for the collections
-	    $scope.items = [];
-	    for(var collectionKey in $scope.collections) {
-
-	    	var itemsInStorage = chromeStorage.data[collectionKey];
-
-	    	if(itemsInStorage !== undefined && itemsInStorage.data !== undefined) {
-	    		itemsInStorage.data.forEach(function(_item) {
-	    			var pos = $scope.items.map(function(e) { return e.name; }).indexOf(_item.name);
-	    			
-	    			if(pos < 0) pos = $scope.items.length;
-					
-					$scope.items[pos] = _item;
-	    			// $scope.items[pos].stats = $scope.stats[_item.name];
-	    		});
-		   		
-	    	}
-		}
-
-	    // check if there's already a collection for this org
-	    var thisCollection = $scope.collections['collection.user.salesforce.' + $scope.orgId];
-	    if(thisCollection !== undefined)
-	    {
-	    	// check and refresh collection if necessary
-	    	if(shouldRefreshCollection(thisCollection)) refreshCollection(thisCollection);
-	    }
-	    // see if collection.user.salesforce is defined and generate an org collection	    
-	    else if($scope.collections['collection.user.salesforce'] !== undefined)
-	    {
-	    	chromeStorage.data[$scope.siteKey]
-	    	.collections['collection.user.salesforce.' + $scope.orgId] = 
-	    	angular.copy($scope.collections['collection.user.salesforce']);
-    		
- 			refreshCollection(chromeStorage.data[$scope.siteKey]
-	    	.collections['collection.user.salesforce.' + $scope.orgId]);
-
-	    }
-	}
-
-	function shouldRefreshCollection(collection) {
-		if(collection !== undefined) {
-	    	var now = new Date();
-
-	    	if(collection.lastRefreshed === undefined)  
-	    		return true;
-	    	if(Math.round((now-new Date(parseInt(collection.lastRefreshed, 10)))/60000) < collection.refreshFrequency)
-				return false;
-	    	else
-	    		return true;
-	    }
-	    return false;
-	}
-
-	function refreshCollection(collection)
-	{
-
-		var coll = collection;
-		getSalesforceData($scope.instanceUrl, $scope.apiVersion, $scope.sessionId)
-		.then(parseSFMetadata);
-	}
-
-	function parseSFMetadata(data, status, headers, config) {
-		var items = [];
-		angular.forEach(data.data.sobjects, function(value, key){
-			var item = 
-			{
-				name : 'List ' + value.labelPlural,
-				url : '/' + value.keyPrefix,
-				keyPrefix : value.keyPrefix,
-				label : value.label,
-				icon : 'fa fa-list'			
-			};
-			items.push(item);
-
-			item = {};
-			item = 
-			{
-				name : 'New ' + value.labelPlural,
-				url : '/' + value.keyPrefix + '/e',
-				keyPrefix : value.keyPrefix,
-				label : value.label,
-				icon : 'fa fa-file-o'			
-			};
-			items.push(item);	
-		});
-		var collectionKey = 'collection.user.salesforce.' + $scope.orgId;
-		
-		chromeStorage.data[collectionKey] = angular.copy({data:items});
-		var now = new Date();
-		chromeStorage.data[$scope.siteKey].collections[collectionKey].lastRefreshed = now.getTime(); 
-	}
-
-	function getSalesforceData(url, apiVersion, sessionId) {
-		return $http({	method: 'GET', 
-						url: url + '/services/data/' + apiVersion + '/sobjects/', 
-						headers: {'Authorization': 'Bearer ' + sessionId}
-					});
-
-	}
 
 	$scope.selectedIndex = -1;
 
@@ -174,20 +33,20 @@ angular.module('forceNavigator')
  	}
 
  	$scope.go = function(index) {
- 		chromeStorage.data[$scope.siteKey].stats = chromeStorage.data[$scope.siteKey].stats || {};
- 		chromeStorage.data[$scope.siteKey].stats[$scope.filteredItems[index].name] = chromeStorage.data[$scope.siteKey].stats[$scope.filteredItems[index].name] || {};
+ 		$scope.stats = $scope.stats || {};
+ 		$scope.stats[$scope.filteredItems[index].name] = $scope.stats[$scope.filteredItems[index].name] || {};
 
- 		var keyStat = chromeStorage.data[$scope.siteKey].stats[$scope.filteredItems[index].name];
+ 		var keyStat = $scope.stats[$scope.filteredItems[index].name];
  		if(keyStat.totalHits === undefined) keyStat.totalHits = 1;
  		else	keyStat.totalHits++;
 
  		var now = new Date();
  		keyStat.lastHit = now.getTime();
- 		chromeStorage.data[$scope.siteKey].stats[$scope.filteredItems[index].name] = angular.copy(keyStat);
+ 		// $scope.stats[$scope.filteredItems[index].name] = angular.copy(keyStat);
  		//using this to make sure we get the callback when it's saved.
- 		chromeStorage.set(chromeStorage.data, function() {
+ 		// chromeStorage.set(chromeStorage.data, function() {
  			$window.location.href = $scope.filteredItems[index].url;
- 		});
+ 		// });
  	}
 
 	angular.element($window).on('keydown', function(e) {
