@@ -1,7 +1,9 @@
 'use strict';
 
 angular.module('forceNavigator')
-  .controller('MainCtrl', function (siteSvc, $window, $scope, $rootScope, chromeStorage, $filter, $http, $cookies) {
+  .controller('MainCtrl', function ($injector, siteSvc, $window, $scope, $rootScope, chromeStorage, $filter, $http, $cookies) {
+
+  	angular.bootstrap(document.getElementById('sfnav-wrapper'), ['chieffancypants.loadingBar']);
 
   	chromeStorage.init().then(function(data) {
   		siteSvc.init();
@@ -47,6 +49,10 @@ angular.module('forceNavigator')
  		// chromeStorage.set(chromeStorage.data, function() {
  			$window.location.href = $scope.filteredItems[index].url;
  		// });
+ 	}
+
+ 	$scope.refresh = function() {
+ 		siteSvc.refresh();
  	}
 
 	angular.element($window).on('keydown', function(e) {

@@ -244,6 +244,7 @@ sfNav.service('jiraSvc', function($q, $cookies, $location, $http) {
 				name : 'Issues: ' + value.key,
 				longName : value.name,
 				url : '/browse/' + value.key,
+				img : value.avatarUrls['24x24'],
 				pid : value.id
 
 			};
@@ -254,7 +255,8 @@ sfNav.service('jiraSvc', function($q, $cookies, $location, $http) {
 			{
 				name : 'Wiki: ' + value.key,
 				longName : value.name,
-				url : '/wiki/display/' + value.key + '/Home',
+				url : '/wiki/display/' + value.key,
+				img : value.avatarUrls['24x24'],
 				pid : value.id
 
 			};
@@ -307,7 +309,8 @@ sfNav.service('siteSvc', function ($injector, $rootScope, $location) {
 	var collections = {};
 	var servicesDef = {};
 	var siteKey = '';
- 	
+ 	var listenersRegistered = false;
+
  	var that = this;
  	this.collections = collections;
  	this.stats = stats;
@@ -328,9 +331,15 @@ sfNav.service('siteSvc', function ($injector, $rootScope, $location) {
 
   	function _registerListeners() {
 	   // $rootScope.$on('storageChange.' + siteKey, onStorageChange);
-	   //  for(var key in this.collections) {
-	   //  	$rootScope.$on('storageChange.' + key, onStorageChange);
-	   //  }
+	   if(!listenersRegistered) {
+		    for(var key in collections) {
+		    	$rootScope.$on('storageChange.' + key, function() { 
+		    		_initItems(); 
+		    		$rootScope.$apply();
+		    	});
+		    }
+			listenersRegistered = true;
+		}
   	};
 
 	function _shouldRefreshCollection(collection) {
@@ -349,7 +358,7 @@ sfNav.service('siteSvc', function ($injector, $rootScope, $location) {
 
   	this.init = function() {
   		_getSiteKey();
-  		_registerListeners();
+  		
 
 		collectionsToGet = {};
 		collections = chromeStorage.data[siteKey].collections || {};
@@ -364,9 +373,23 @@ sfNav.service('siteSvc', function ($injector, $rootScope, $location) {
 	    servicesDef = chromeStorage.data[siteKey].services || {};
 	    stats = chromeStorage.data[siteKey].stats || {};
 	    this.stats = stats;
+
 	    _initItems();
 	    _injectServices();
 	    _getDataFromServices();
+	    _registerListeners();
+  	}
+
+  	this.refresh = function() {
+
+		collectionsToGet = {};
+
+	    servicesDef = chromeStorage.data[siteKey].services || {};
+	    stats = chromeStorage.data[siteKey].stats || {};
+	    this.stats = stats;
+	    _initItems();
+	    _injectServices();
+	    _getDataFromServices();  		
   	}
 
   	function _injectServices() {
@@ -380,7 +403,7 @@ sfNav.service('siteSvc', function ($injector, $rootScope, $location) {
   		for(var key in services)
   		{
   			if(services[key].isAsync === true)
-  			{
+  			{	 
   				services[key].$getData(collectionsToGet).then(_addDataToList);
   			}
   			else
@@ -392,14 +415,18 @@ sfNav.service('siteSvc', function ($injector, $rootScope, $location) {
 
   	function _addDataToList(data) {
   		
+  		_registerListeners();
+
   		if(data === undefined) return;
 
   		_registerCollection(data);
   		_initItems();
-
+		
   	}
 
 	function _initItems() {
+		items.length = 0;
+
 	    for(var collectionKey in collections) {
 
 	    	var itemsInStorage = chromeStorage.data[collectionKey];
@@ -415,7 +442,7 @@ sfNav.service('siteSvc', function ($injector, $rootScope, $location) {
 	    		});
 		   		
 	    	}
-		} 		
+		}		
 	}  	
 
   	function _registerCollection(collection) {

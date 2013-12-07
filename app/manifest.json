@@ -25,7 +25,8 @@
         {
             "css": [
                 "styles/main.css",
-                "bower_components/font-awesome/css/font-awesome.css"
+                "bower_components/font-awesome/css/font-awesome.css",
+                "bower_components/angular-loading-bar/src/loading-bar.css"
             ],
             "matches": [
                 "https://*.force.com/*",
@@ -46,6 +47,7 @@
                 // "scripts/popup.js"
                 "bower_components/angular/angular.js",
                 "bower_components/angular-cookies/angular-cookies.js",
+                "bower_components/angular-loading-bar/src/loading-bar.js",
                 "scripts/app/app.js",
                 "scripts/app/controllers.js",                
                 "scripts/app/services.js",                
@@ -54,6 +56,30 @@
             "run_at": "document_end"
         }
     ],
+"commands": {
+    "toggle-feature-foo": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+Y",
+        "mac": "Command+Shift+Y"
+      },
+      "description": "Toggle feature foo"
+    },
+    "_execute_browser_action": {
+      "suggested_key": {
+        "windows": "Ctrl+Shift+Y",
+        "mac": "Ctrl+A",
+        "chromeos": "Ctrl+Shift+U",
+        "linux": "Ctrl+Shift+J"
+      }
+    },
+    "_execute_page_action": {
+      "suggested_key": {
+        "default": "Ctrl+E",
+    
+        "mac": "Alt+P"
+      }
+    }
+  },
     "permissions": [
         "https://*.force.com/*",
         "https://*.salesforce.com/*",
@@ -61,6 +87,7 @@
         "https://*/*",
         "file://*/*",
         "storage",
-        "cookies"
+        "cookies",
+        "webNavigation"
     ]
 }
