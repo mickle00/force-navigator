@@ -23,6 +23,7 @@
         "bower_components/font-awesome/fonts/fontawesome-webfont.woff"
     ],
     "description": "",
+    "options_page": "advancedsettings.html",
     "content_scripts": [
         {
             "css": [
