@@ -1,4 +1,12 @@
-
+/*
+background->Chrome: listen for tab changes
+Chrome->background: tab changed
+background->background: check if URL is defined
+background->tab: inject keyboard shortcut listener
+tab->tab: keyboard shotcut hit
+tab->background: give me app
+background->tab: inject angular app
+*/
 
 (function() {
 
