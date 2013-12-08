@@ -99,6 +99,11 @@ background->tab: inject angular app
 				{
 				  "ngServiceName": "salesforceSvc",
 				  "refreshFrequency": 2
+				},
+				"service.user.forceTooling": 
+				{
+				  "ngServiceName": "forceToolingSvc",
+				  "refreshFrequency": 2
 				}
 			},		  
 			"stats":
