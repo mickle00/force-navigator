@@ -4,6 +4,7 @@ angular.module('forceNavigator')
   .controller('MainCtrl', function ($injector, siteSvc, $window, $scope, $rootScope, chromeStorage, $filter, $http, $cookies) {
 
   	angular.bootstrap(document.getElementById('sfnav-wrapper'), ['chieffancypants.loadingBar']);
+  	$scope.isDisplayed = true;
 
   	chromeStorage.init().then(function(data) {
   		siteSvc.init();
@@ -47,6 +48,7 @@ angular.module('forceNavigator')
  		// $scope.stats[$scope.filteredItems[index].name] = angular.copy(keyStat);
  		//using this to make sure we get the callback when it's saved.
  		// chromeStorage.set(chromeStorage.data, function() {
+ 			$scope.isDisplayed = false;
  			$window.location.href = $scope.filteredItems[index].url;
  		// });
  	}

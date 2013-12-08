@@ -1,3 +1,5 @@
+
+
 (function() {
 
 	chrome.extension.onMessage.addListener(
@@ -7,12 +9,21 @@
 	            case 'toggle':
 	                toggle();
 	                break;
-	            case 'okay':
+	            case 'app_loaded':
 	            	createElement();
 					insertElement();
 					break;
+				case 'shortcut':
+					registerShortcut(request.value.shortcut);
 	        }
 	    });
+
+	function registerShortcut(shortcut) {
+
+		Mousetrap.bindGlobal(shortcut, function() { 
+			toggle(); 
+		});	
+	}
 
 	function toggle() {
 		if(typeof this.rootEl === 'undefined')
@@ -34,7 +45,12 @@
 		if (document.body.firstChild.id == 'sfnav-wrapper') removeElement();
 		else insertElement();
 	}
-	function createElement() {
+
+	function hide() {
+		if (document.body.firstChild.id == 'sfnav-wrapper') removeElement();		
+	}
+
+	function createElement() {		
 		this.rootEl = document.createElement('div');
 		this.rootEl.id = 'sfnav-wrapper';
 		this.rootEl.setAttribute('ng-app', 'forceNavigator');
@@ -42,14 +58,19 @@
 		this.rootEl.innerHTML = '<sf-nav></sf-nav>';
 		angular.bootstrap(this.rootEl, ['forceNavigator']);
 		
+		
 	}
 	function insertElement() {
 		document.body.insertBefore(this.rootEl, document.body.firstChild);
 		document.body.classList.add('sfnav-noscroll');
+		Mousetrap.bindGlobal('esc', function() {
+			hide(); 
+		});			
 	}
 	function removeElement() {
 		document.body.removeChild(document.body.firstChild);
-		angular.element(window).off();		
+		angular.element(window).off();
+		Mousetrap.unbind('esc');
 	}
 
 	// TODO: need some mechanism for defaults because this sucks
@@ -106,7 +127,7 @@
 		
 	});
 
-
-
 })();
+
+
  

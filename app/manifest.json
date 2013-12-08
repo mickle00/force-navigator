@@ -9,7 +9,9 @@
     },
     "background": {
         "scripts": [
+            "scripts/util.js",
             "scripts/background.js"
+
         ],
         "persistent": true
     },
@@ -50,8 +52,8 @@
                 "bower_components/angular-loading-bar/src/loading-bar.js",
                 "scripts/app/app.js",
                 "scripts/app/controllers.js",                
-                "scripts/app/services.js",                
-                "scripts/content.js"
+                "scripts/app/services.js"              
+                // "scripts/content.js"
             ],
             "run_at": "document_end"
         }
@@ -88,6 +90,7 @@
         "file://*/*",
         "storage",
         "cookies",
-        "webNavigation"
+        "webNavigation",
+        "tabs"
     ]
 }
