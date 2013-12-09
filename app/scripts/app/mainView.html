@@ -3,7 +3,7 @@
     <div id="sfnav" class="sfnav" ng-show="!isSettings" click-anywhere-but-here="kill()">
         <div id="sfnav-search" class="sfnav-search">
             <i ng-click="refresh()" class="fa fa-refresh sfnav-refresh"></i>
-            <input x-webkit-speech ng-model="query" id="sfnav-search-field" type="search" autofocus="autofocus">
+            <input x-webkit-speech ng-model="query" id="sfnav-search-field" type="search" autofocus="autofocus" ng-focus="true">
             <i ng-click="isSettings=!isSettings; newShortcut=shortcut.main" class="fa fa-gear sfnav-config"></i>
         </div>
         <ul id="sfnav-ul">
@@ -19,7 +19,9 @@
     </div>
     <div class="sfnav-config sfnav" ng-show="isSettings" ng-click="" click-anywhere-but-here="kill()">
         <div class="sfnav-search">
-            <input type="text" key-combo ng-model="newShortcut" />
+            <input type="checkbox" ng-model="disableKeyListener"/>
+            <input type="text" key-combo ng-model="newShortcut" ng-show="!disableKeyListener"/>
+            <input type="text" ng-model="newShortcut" ng-show="disableKeyListener"/>
             <button class="keycombo-save" ng-click="shortcut.main = newShortcut">Save</button>
         </div>
     </div>

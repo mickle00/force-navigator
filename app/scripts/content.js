@@ -80,10 +80,12 @@ var sfnav = new function() {
 	}
 	function insertElement() {
 		document.body.insertBefore(this.rootEl, document.body.firstChild);
+		document.getElementById('sfnav-search-field').focus();
 		document.body.classList.add('sfnav-noscroll');
 		Mousetrap.bindGlobal('esc', function() {
 			hide(); 
-		});			
+		});	
+
 	}
 	function removeElement() {
 		document.body.removeChild(document.body.firstChild);
@@ -97,6 +99,7 @@ var sfnav = new function() {
 
 		var defaultStuff = 
 		{
+		"shortcut": {"main":"mod+capslock"},
 		  "site.https://*.salesforce.com/*": 
 		  {
 		    "collections": 

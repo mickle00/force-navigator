@@ -1,4 +1,7 @@
  #sfnav-wrapper .sfnav {font-family: "Lato", Helvetica, Arial, sans-serif;}
+ #sfnav-wrapper input::-webkit-input-speech-button {
+   width: 15px;height: 30px;background-color: #0F0;
+}
 #sfnav-wrapper, .sfnav-wrapper {
 	position:fixed;
 	z-index:99999999;
@@ -8,7 +11,7 @@
 #sfnav-wrapper .sfnav {
 	position:relative;
 	top:50px;
-  color: #798795;
+  color:#DADADA;
   margin-bottom: 20px;
   border-radius: 6px;
   width: 30%;
@@ -19,6 +22,7 @@ margin-left: auto;
 }
 
 #sfnav-wrapper .sfnav h4 {
+  color:#DADADA;
   display: inline-block;
   margin-top: 0px;
   margin-bottom: 0px;
@@ -69,28 +73,29 @@ margin-left: auto;
 #sfnav-wrapper .sfnav li#sfnav-wrapper .sfnav-done {
   /*background: transparent url(../images/sfnav/done.png) 92% center no-repeat;*/
   background-size: 20px 20px;
-  color: #1abc9c;
+  color: #0F0;
 }
 #sfnav-wrapper .sfnav li#sfnav-wrapper .sfnav-done #sfnav-wrapper .sfnav-name {
-  color: #1abc9c;
+  color: #0F0;
 }
 #sfnav-wrapper .sfnav li:hover, #sfnav-wrapper .sfnav .hover, #sfnav-wrapper .sfnav .selected {
   /*background: transparent url(../images/sfnav/done.png) 92% center no-repeat;*/
   background-size: 20px 20px;
-  color: #1abc9c;
+  color: #0F0;
   background-color: #2c3e50;
 }
 
 #sfnav-wrapper .sfnav li:hover .sfnav-name, #sfnav-wrapper .sfnav .hover .sfnav-name, #sfnav-wrapper .sfnav .selected .sfnav-name {
-  color: #1abc9c;
+  color: #0F0;
 }
 
 #sfnav-wrapper .sfnav-search {
   position: relative;
-  background: #1abc9c;
+  background: #000;
+  color:#0F0;
   background-size: 16px 16px;
   border-radius: 6px 6px 0 0;
-  color: #34495e;
+ 
   /*padding: 19px 25px 20px;*/
   padding-top: 19px;
 	padding-right: 0;
@@ -119,6 +124,7 @@ margin-left: auto;
 .sfnav-config {
   position:absolute;
   top:5px;
+  right: 5px;
   /*float:right;*/
 }
 #sfnav-wrapper #sfnav-search-field:focus {
@@ -126,9 +132,10 @@ margin-left: auto;
 }
 
 #sfnav-wrapper #sfnav-search-field  {
+  width:100%;
   background: none;
   border: none;
-  color: #34495e;
+  color: #0F0;
   font-size: 19px;
   font-weight: 700;
   margin: 0;
@@ -140,6 +147,7 @@ margin-left: auto;
   -webkit-box-shadow: none;
   box-shadow: none;
 }
+
 input#sfnav-wrapper #sfnav-search-field:-moz-placeholder {
   color: #34495e;
 }
