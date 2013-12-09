@@ -6,6 +6,8 @@ angular.module('forceNavigator')
   	angular.bootstrap(document.getElementById('sfnav-wrapper'), ['chieffancypants.loadingBar']);
   	$scope.isDisplayed = true;
   	$scope.isSettings = false;
+  	$scope.actionReturnData = {};
+
 
   	chromeStorage.init().then(function(data) {
   		siteSvc.init();
@@ -56,7 +58,16 @@ angular.module('forceNavigator')
  		//using this to make sure we get the callback when it's saved.
  		// chromeStorage.set(chromeStorage.data, function() {
  			$scope.isDisplayed = false;
- 			$window.location.href = $scope.filteredItems[index].url;
+
+ 			siteSvc.go($scope.filteredItems[index]).then(function(data){
+ 				$scope.actionReturnData = data;
+ 			}); 
+ 			// the above call should go to the service and determine what do do and then do it.
+ 			// doAction
+ 			//$window.location.href = $scope.filteredItems[index].url;
+
+ 			// Need to instead tell the site service to do
+ 			//  something with the item that was just selected/hit enter on
  		// });
  	}
 

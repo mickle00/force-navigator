@@ -109,6 +109,11 @@ var sfnav = new function() {
 				{
 				  "ngServiceName": "salesforceSvc",
 				  "refreshFrequency": 2
+				},
+				"service.user.forceTooling": 
+				{
+				  "ngServiceName": "forceToolingSvc",
+				  "refreshFrequency": 2
 				}
 			},		  
 			"stats":
