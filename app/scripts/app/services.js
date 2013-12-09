@@ -149,7 +149,7 @@ sfNav.service('salesforceSetupMenu', function($window, $q,$cookies,$location,$ht
 	}
 
 	if (instance === undefined) {
-		apiUrl = $location.origin;
+		apiUrl = location.origin;
 	}
 	else
 	{
@@ -275,7 +275,7 @@ sfNav.service('salesforceSvc', function($q,$window, $cookies, $location, $http) 
 	}
 
 	if (instance === undefined) {
-		apiUrl = $location.origin;
+		apiUrl = location.origin;
 	}
 	else
 	{
@@ -470,7 +470,7 @@ sfNav.service('forceToolingSvc', function($q, $cookies, $location, $http) {
 	}
 
 	if (instance === undefined) {
-		apiUrl = $location.origin;
+		apiUrl = location.origin;
 	}
 	else
 	{
