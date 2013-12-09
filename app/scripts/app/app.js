@@ -1,6 +1,6 @@
 'use strict';
 
-var sfNav = angular.module('forceNavigator', ['chromeStorage','ngCookies']);
+var sfNav = angular.module('forceNavigator', ['chromeStorage','ngCookies', 'keycombo']);
 
 sfNav.directive('sfNav', function () {
   return {
@@ -19,7 +19,26 @@ sfNav.config(function($sceDelegateProvider) {
  
  });
 
- 
+ sfNav.directive('clickAnywhereButHere', function($document){
+  return {
+    restrict: 'A',
+    link: function(scope, elem, attr, ctrl) {
+      elem.bind('click', function(e) {
+        // this part keeps it from firing the click on the document.
+        e.stopPropagation();
+      });
+      elem.children.bind('click', function(e) {
+        // this part keeps it from firing the click on the document.
+        e.stopPropagation();
+      });
+      $document.bind('click', function() {
+        // magic here.
+        scope.$apply(attr.clickAnywhereButHere);
+      })
+    }
+  }
+});
+
 // https://github.com/DerekRies/angular-keycombo
 angular.module('keycombo', [] )
   .directive('keyCombo', [function () {

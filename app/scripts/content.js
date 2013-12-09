@@ -8,7 +8,7 @@ tab->background: give me app
 background->tab: inject angular app
 */
 
-(function() {
+var sfnav = new function() {
 
 	chrome.extension.onMessage.addListener(
 	    function(request, sender, sendResponse) {
@@ -22,15 +22,23 @@ background->tab: inject angular app
 					insertElement();
 					break;
 				case 'shortcut':
-					registerShortcut(request.value.shortcut);
+					registerShortcut(request.value.shortcut.main);
 	        }
 	    });
 
 	function registerShortcut(shortcut) {
 
-		Mousetrap.bindGlobal(shortcut, function() { 
+		Mousetrap.bindGlobal(shortcut.toLowerCase(), function() { 
 			toggle(); 
 		});	
+	}
+
+	this.toggle = function() {
+		toggle();
+	}
+
+	this.hide = function() {
+		hide();
 	}
 
 	function toggle() {
@@ -57,6 +65,8 @@ background->tab: inject angular app
 	function hide() {
 		if (document.body.firstChild.id == 'sfnav-wrapper') removeElement();		
 	}
+
+
 
 	function createElement() {		
 		this.rootEl = document.createElement('div');
@@ -135,7 +145,7 @@ background->tab: inject angular app
 		
 	});
 
-})();
+};
 
 
  

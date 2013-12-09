@@ -5,11 +5,14 @@ angular.module('forceNavigator')
 
   	angular.bootstrap(document.getElementById('sfnav-wrapper'), ['chieffancypants.loadingBar']);
   	$scope.isDisplayed = true;
+  	$scope.isSettings = false;
 
   	chromeStorage.init().then(function(data) {
   		siteSvc.init();
 	  	$scope.items = siteSvc.items;
 	  	$scope.stats = siteSvc.stats;
+	  	$scope.shortcut = chromeStorage.data.shortcut;
+	  	$scope.newShortcut = angular.copy($scope.shortcut.main);
   	});
 
 
@@ -33,6 +36,10 @@ angular.module('forceNavigator')
  			return $scope.stats[item.name].totalHits === undefined ? 0 : -1 * $scope.stats[item.name].totalHits;
 
  		return 0;
+ 	}
+
+ 	$scope.kill = function() {
+ 		$window.sfnav.hide();
  	}
 
  	$scope.go = function(index) {
