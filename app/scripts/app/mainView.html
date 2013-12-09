@@ -1,4 +1,3 @@
-
 <div class="sfnav-wrapper" ng-show="isDisplayed">
     <div id="sfnav" class="sfnav" ng-show="!isSettings" click-anywhere-but-here="kill()">
         <div id="sfnav-search" class="sfnav-search">
@@ -20,9 +19,9 @@
     <div class="sfnav-config sfnav" ng-show="isSettings" ng-click="" click-anywhere-but-here="kill()">
         <div class="sfnav-search">
             <input type="checkbox" ng-model="disableKeyListener"/>
-            <input type="text" key-combo ng-model="newShortcut" ng-show="!disableKeyListener"/>
-            <input type="text" ng-model="newShortcut" ng-show="disableKeyListener"/>
-            <button class="keycombo-save" ng-click="shortcut.main = newShortcut">Save</button>
+            <input type="text" key-combo ng-model="newShortcut" ng-show="!disableKeyListener" ng-change="shortcut.main = newShortcut"/>
+            <input type="text" ng-model="newShortcut" ng-show="disableKeyListener" ng-change="shortcut.main = newShortcut"/>
+            <a href="" class="keycombo-save" ng-click="resetEverything()">Reset Everything</a>
         </div>
     </div>
 </div>

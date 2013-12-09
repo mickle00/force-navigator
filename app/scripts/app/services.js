@@ -3,73 +3,73 @@
 angular.module('chromeStorage', [])
 .factory('chromeStorage', function($q, $rootScope) {
 
-	 
-		// ## _csResponse
-		//
-		// Private helper function that's used to return a callback to
-		// wrapped `chrome.storage.*` methods.
-		//
-		// It will **resolve** the provided `$.Deferred` object
-		// with the response, or **reject** it if there was an
-		// error.
-		function _csResponse(dfd) {
-		return function() {
-		  var err = chrome.runtime.lastError;
-		  if (!err)
-			dfd.resolve.apply(dfd, arguments);
-		  else {
-			console.warn("chromeStorage error: '%s'", err.message);
-			dfd.reject(dfd, err.message, err);
-		  }
-		};
-		}
+ 
+	// ## _csResponse
+	//
+	// Private helper function that's used to return a callback to
+	// wrapped `chrome.storage.*` methods.
+	//
+	// It will **resolve** the provided `$.Deferred` object
+	// with the response, or **reject** it if there was an
+	// error.
+	function _csResponse(dfd) {
+	return function() {
+	  var err = chrome.runtime.lastError;
+	  if (!err)
+		dfd.resolve.apply(dfd, arguments);
+	  else {
+		console.warn("chromeStorage error: '%s'", err.message);
+		dfd.reject(dfd, err.message, err);
+	  }
+	};
+	}
 
-		// ## chrome.storage.* API
-		// Private factory functions for wrapping API methods
+	// ## chrome.storage.* API
+	// Private factory functions for wrapping API methods
 
-		// ### wrapMethod
-		//
-		// For wrapping **clear** and **getBytesInUse**
-		function wrapMethod(method) {
-		return function(cb) {
-		  var dfd = $q.defer();
+	// ### wrapMethod
+	//
+	// For wrapping **clear** and **getBytesInUse**
+	function wrapMethod(method) {
+	return function(cb) {
+	  var dfd = $q.defer();
 
-		  if (typeof cb === 'function')
-			dfd.promise.finally(cb);
+	  if (typeof cb === 'function')
+		dfd.promise.finally(cb);
 
-		  this.storage[method](_csResponse(dfd));
+	  this.storage[method](_csResponse(dfd));
 
-		  return dfd.promise;
-		};
-		}
+	  return dfd.promise;
+	};
+	}
 
-		// ### wrapAccessor
-		//
-		// For wrapping **get**, **set**, and **remove**.
-		function wrapAccessor(method) {
-		return function(items, cb) {
-		  var dfd = $q.defer();
+	// ### wrapAccessor
+	//
+	// For wrapping **get**, **set**, and **remove**.
+	function wrapAccessor(method) {
+	return function(items, cb) {
+	  var dfd = $q.defer();
 
-		  if (typeof cb === 'function')
-			dfd.promise.finally(cb);
+	  if (typeof cb === 'function')
+		dfd.promise.finally(cb);
 
-		  this.storage[method](items, _csResponse(dfd));
+	  this.storage[method](items, _csResponse(dfd));
 
-		  return dfd.promise;
-		};
-		}
-		
-		var initData = function() {
-			// var dObj = $q.defer();
-			return obj.get(null).then(function(results) { 
-				obj.data = results; 
-				// $rootScope.$broadcast('storageLoaded');
-			});	
-			// return dObj.promise;	
-		}
+	  return dfd.promise;
+	};
+	}
+	
+	var initData = function() {
+		// var dObj = $q.defer();
+		return obj.get(null).then(function(results) { 
+			obj.data = results; 
+			// $rootScope.$broadcast('storageLoaded');
+		});	
+		// return dObj.promise;	
+	}
 
 	  
-var obj =  {
+	var obj =  {
 
 		storage: chrome.storage['local'],
 		
@@ -121,8 +121,133 @@ var obj =  {
 	}, true);
 
 	return obj;
-
 });	
+
+sfNav.service('salesforceSetupMenu', function($window, $q,$cookies,$location,$http) {
+
+	this.isAsync = true;
+	var serviceName = 'service.user.salesforce.setup';
+	var orgId;
+	var apiUrl;
+
+	if($cookies.sid !== undefined)
+	{
+		var sessionId = $cookies.sid;
+		var orgId = $cookies.sid.split('!')[0];
+ 
+		var apiVersion = 'v28.0';
+	}
+	
+	var urlArray = $location.$$absUrl.split('.');
+	var instance;
+	var r = /cs\d{1,2}|na\d{1,2}/;
+	for (var i = 0; i < urlArray.length; i++) {
+		if(r.exec(urlArray[i]) != null) {
+			instance = r.exec(urlArray[i]);
+			break;
+		}
+	}
+
+	if (instance === undefined) {
+		apiUrl = $location.origin;
+	}
+	else
+	{
+		apiUrl = 'https://' + instance + '.salesforce.com';
+	}
+
+    function _parseSetupTree(html)
+    {
+		var collection = {
+			collectionId : 'collection.user.salesforce.setup.' + orgId,
+			serviceId : serviceName,
+			items : []
+		};
+
+        var allLinks = html.getElementById('setupNavTree').getElementsByClassName("parent");
+        var strName;
+        var as;
+        var strNameMain;
+        var strName;
+        for(var i = 0; i<allLinks.length;i++)
+        {
+
+            var as = allLinks[i].getElementsByTagName("a");
+            for(var j = 0;j<as.length;j++)
+            {
+                if(as[j].id.indexOf("_font") != -1)
+                {
+                    strNameMain = as[j].text + ' > ';
+                    break;
+                }
+
+            }
+            var children = allLinks[i].getElementsByClassName("childContainer")[0].getElementsByTagName("a");
+            for(var j = 0;j<children.length;j++)
+            {
+                if(children[j].text.length > 2)
+                {
+                    strName = strNameMain + children[j].text;
+					var item = 
+					{
+						type: 'url',
+						name : strName,
+						url : children[j].href,
+						label : strName,
+						icon : 'fa fa-cogs'	
+					};
+					collection.items.push(item);                    
+                }
+            }
+
+        }
+        return collection;
+    }
+
+
+	this.doAction = function(selectedItem)
+	{
+		var dfd = $q.defer();
+
+		if(selectedItem.type== 'url')
+		{
+			$window.location.href = selectedItem.url;
+			dfd.resolve();
+		}
+		return dfd.promise;
+	}
+
+	this.$getData = function(existingCollections) {
+
+		var dfd = $q.defer();
+
+		// siteSvc sends the existing collections
+		// if a collection needs to be refreshed,
+		// it won't be sent as part of the existing collections
+
+		for(var key in existingCollections)
+		{
+			if(key === 'collection.user.salesforce.setup.' + orgId)
+			{
+				dfd.resolve();
+				return dfd.promise;
+			}
+		}
+
+		$http({	method: 'GET', 
+						url: apiUrl + '/setup/forcecomHomepage.apexp?setupid=ForceCom',
+						responseType: 'document' })
+		.success(function(data, status, headers, config) {
+			dfd.resolve(_parseSetupTree(data));
+		})
+		.error(function(data, status, headers, config) {
+			dfd.reject(data);
+		});
+
+		return dfd.promise; 	 		
+
+	}
+});
 
 sfNav.service('salesforceSvc', function($q,$window, $cookies, $location, $http) {
 
@@ -234,9 +359,6 @@ sfNav.service('salesforceSvc', function($q,$window, $cookies, $location, $http) 
 		return dfd.promise; 	 		
 
 	}
-
-
-
 });
 
 sfNav.service('jiraSvc', function($q, $window, $cookies, $location, $http) {
@@ -322,6 +444,7 @@ sfNav.service('jiraSvc', function($q, $window, $cookies, $location, $http) {
 
 	}
 });
+
 sfNav.service('forceToolingSvc', function($q, $cookies, $location, $http) {
 
 	this.isAsync = true;
@@ -445,8 +568,7 @@ sfNav.service('forceToolingSvc', function($q, $cookies, $location, $http) {
 	}
 });
 
-sfNav.service('siteSvc', function ($q,$injector, $rootScope, $location) {
-
+sfNav.service('siteSvc', function ($q,$injector, $rootScope, $location) {	
 	var chromeStorage = $injector.get('chromeStorage');
 	var services = {};
 	var items = [];
@@ -622,6 +744,5 @@ sfNav.service('siteSvc', function ($q,$injector, $rootScope, $location) {
 		collections[collection.collectionId] = angular.copy(servicesDef[collection.serviceId]);
 		collections[collection.collectionId].lastRefreshed = now.getTime();
 	}
-
 
 });

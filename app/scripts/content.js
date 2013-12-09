@@ -10,8 +10,11 @@ background->tab: inject angular app
 
 var sfnav = new function() {
 
-	chrome.extension.onMessage.addListener(
-	    function(request, sender, sendResponse) {
+ 
+
+	chrome.extension.onMessage.addListener(function(request, sender, sendResponse) {
+
+
 
 	        switch(request.name) {
 	            case 'toggle':
@@ -41,6 +44,10 @@ var sfnav = new function() {
 		hide();
 	}
 
+	this.destroy = function() {
+		destroyApp();
+	}
+
 	function toggle() {
 		if(typeof this.rootEl === 'undefined')
 		{
@@ -63,12 +70,16 @@ var sfnav = new function() {
 	}
 
 	function hide() {
-		if (document.body.firstChild.id == 'sfnav-wrapper') removeElement();		
+		if (document.body.firstChild.id == 'sfnav-wrapper') 
+			{
+				removeElement();		
+			}
 	}
 
 
 
 	function createElement() {		
+		if(this.rootEl !== undefined) return;
 		this.rootEl = document.createElement('div');
 		this.rootEl.id = 'sfnav-wrapper';
 		this.rootEl.setAttribute('ng-app', 'forceNavigator');
@@ -80,7 +91,7 @@ var sfnav = new function() {
 	}
 	function insertElement() {
 		document.body.insertBefore(this.rootEl, document.body.firstChild);
-		document.getElementById('sfnav-search-field').focus();
+		// document.getElementById('sfnav-search-field').focus();
 		document.body.classList.add('sfnav-noscroll');
 		Mousetrap.bindGlobal('esc', function() {
 			hide(); 
@@ -93,67 +104,20 @@ var sfnav = new function() {
 		Mousetrap.unbind('esc');
 	}
 
-	// TODO: need some mechanism for defaults because this sucks
-	chrome.storage.local.get("site.https://*.salesforce.com/*", function(results) {
-		if(Object.keys(results).length !== 0) return;
+	function destroyApp()
+	{
+		// var app = angular.element(document.getElementById('sfnav-wrapper'));
+		// app.injector.invoke(function($rootScope) {
+	 //        $rootScope.$apply(function() {
+	 //             // get angular to tear down pretty much everything for us
+	 //            $rootScope.templateUrl = null;
+	 //        });
+	 //    });
+	 //    // hack to get browser object to unhook from global events
+	 //    app.injector.get('$browser').destroy();
+	 //    app.injector = null;
+	 	location.reload();
+	    // hide();
+	}
 
-		var defaultStuff = 
-		{
-		"shortcut": {"main":"mod+capslock"},
-		  "site.https://*.salesforce.com/*": 
-		  {
-		    "collections": 
-		    {
-		      
-		    },
-			"services": 
-			{
-				"service.user.salesforce": 
-				{
-				  "ngServiceName": "salesforceSvc",
-				  "refreshFrequency": 2
-				},
-				"service.user.forceTooling": 
-				{
-				  "ngServiceName": "forceToolingSvc",
-				  "refreshFrequency": 2
-				}
-			},		  
-			"stats":
-			{
-				
-			}		    
-		  },
-		  "site.https://*.jira.com/*": 
-		  {
-		    "collections": 
-		    {
-		      
-		    },
-			"services": 
-			{
-				"service.user.jira": 
-				{
-				  "ngServiceName": "jiraSvc",
-				  "refreshFrequency": 2
-				}
-			},		  
-			"stats":
-			{
-				
-			}		    
-		  },		  
-		  "settings": 
-		  {
-		    "lazyloadScripts": false
-		  },
-
-		}
-		chrome.storage.local.set(defaultStuff);
-		
-	});
-
-};
-
-
- 
+}

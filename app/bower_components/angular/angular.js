@@ -4356,7 +4356,15 @@ function Browser(window, document, $log, $sniffer) {
     }
     return false;
   };
-
+  
+  // https://github.com/angular/angular.js/issues/1537#issuecomment-10184033
+  // self.destroy = function () {
+  //       if (urlChangeInit) {      // html5 history api - popstate event
+  //           if ($sniffer.history) jqLite(window).unbind('popstate', fireUrlChange);
+  //           // hashchange event
+  //           if ($sniffer.hashchange) jqLite(window).unbind('hashchange', fireUrlChange);
+  //       }
+  //   }
 }
 
 function $BrowserProvider(){

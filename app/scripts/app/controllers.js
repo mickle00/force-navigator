@@ -44,6 +44,11 @@ angular.module('forceNavigator')
  		$window.sfnav.hide();
  	}
 
+ 	$scope.resetEverything = function() {
+ 		chrome.storage.local.clear();
+ 		$window.sfnav.destroy();
+ 	}
+
  	$scope.go = function(index) {
  		// $scope.stats = $scope.stats || {};
  		$scope.stats[$scope.filteredItems[index].name] = $scope.stats[$scope.filteredItems[index].name] || {};

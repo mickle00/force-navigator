@@ -79,7 +79,74 @@ chrome.storage.local.get(null, function(results) {
  
  
 
+  // CRAP BELOW
+  // CRAP BELOW
+  // CRAP BELOW
+  // CRAP BELOW
+  // TODO: need some mechanism for defaults because this sucks
+  chrome.storage.local.get("site.https://*.salesforce.com/*", function(results) {
+    if(Object.keys(results).length !== 0) return;
 
+    var defaultStuff = 
+    {
+    "shortcut": {"main":"mod+f13"},
+      "site.https://*.salesforce.com/*": 
+      {
+        "collections": 
+        {
+          
+        },
+      "services": 
+      {
+        "service.user.salesforce.se": 
+        {
+          "ngServiceName": "salesforceSvc",
+          "refreshFrequency": 2
+        },        
+        "service.user.salesforce": 
+        {
+          "ngServiceName": "salesforceSvc",
+          "refreshFrequency": 2
+        },
+        "service.user.forceTooling": 
+        {
+          "ngServiceName": "forceToolingSvc",
+          "refreshFrequency": 2
+        }
+      },      
+      "stats":
+      {
+        
+      }       
+      },
+      "site.https://*.jira.com/*": 
+      {
+        "collections": 
+        {
+          
+        },
+      "services": 
+      {
+        "service.user.jira": 
+        {
+          "ngServiceName": "jiraSvc",
+          "refreshFrequency": 2
+        }
+      },      
+      "stats":
+      {
+        
+      }       
+      },      
+      "settings": 
+      {
+        "lazyloadScripts": false
+      },
+
+    }
+  
+    chrome.storage.local.set(defaultStuff);
+  });
 
 // chrome.browserAction.onClicked.addListener(function(tab) {
 //   chrome.tabs.create({'url': chrome.extension.getURL('advancedsettings.html')}, function(tab) {

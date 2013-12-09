@@ -2,11 +2,18 @@
  #sfnav-wrapper input::-webkit-input-speech-button {
    width: 15px;height: 30px;background-color: #0F0;
 }
+
+#sfnav-wrapper .sfnav-search a {
+  color:#0F0;
+} 
 #sfnav-wrapper, .sfnav-wrapper {
 	position:fixed;
+  background-color:rgba(0, 0, 0, 0.5);
 	z-index:99999999;
 	width:100%;
 	height:100%;
+  top: 0;
+  left: 0;
 }
 #sfnav-wrapper .sfnav {
 	position:relative;
@@ -55,7 +62,7 @@ margin-left: auto;
   cursor: pointer;
   font-size: 14px;
   line-height: 1.214;
-  margin-top: 2px;
+  margin-top: 0px;
   margin-left:0;
   padding: 8px 42px 8px 25px;
   position: relative;
