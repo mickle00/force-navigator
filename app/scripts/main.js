@@ -1,4 +1,4 @@
-// @copyright 2012+ Daniel Nakov / Silverline CRM 
+// @copyright 2012+ Daniel Nakov / Silverline CRM
 // http://silverlinecrm.com
 
 var sfnav = (function() {
@@ -20,29 +20,29 @@ var sfnav = (function() {
     var ftClient;
     var customObjects = {};
     var META_DATATYPES = {
-        "AUTONUMBER": {name:"AutoNumber",code:"auto", params:0},  
-        "CHECKBOX": {name:"Checkbox",code:"cb", params:0},  
-        "CURRENCY": {name:"Currency",code:"curr", params:2},  
-        "DATE": {name:"Date",code:"d", params:0},  
-        "DATETIME": {name:"DateTime",code:"dt", params:0},  
-        "EMAIL": {name:"Email",code:"e", params:0}, 
-        "FORMULA": {name:"FORMULA",code:"form"}, 
-        "GEOLOCATION": {name:"Location",code:"geo"},  
-        "HIERARCHICALRELATIONSHIP": {name:"Hierarchy",code:"hr" },  
-        "LOOKUP": {name:"Lookup",code:"look"},  
-        "MASTERDETAIL": {name:"MasterDetail",code:"md"},  
-        "NUMBER": {name:"Number",code:"n"},  
-        "PERCENT": {name:"Percent",code:"per"},  
-        "PHONE": {name:"Phone",code:"ph"},  
-        "PICKLIST": {name:"Picklist",code:"pl"},  
-        "PICKLISTMS": {name:"MultiselectPicklist",code:"plms"},  
-        "ROLLUPSUMMARY": {name:"Summary",code:"rup"},  
-        "TEXT": {name:"Text",code:"t"},  
-        "TEXTENCRYPTED": {name:"EcryptedText",code:"te"},  
-        "TEXTAREA": {name:"TextArea",code:"ta"},  
-        "TEXTAREALONG": {name:"LongTextArea",code:"tal"},  
-        "TEXTAREARICH": {name:"Html",code:"tar"}, 
-        "URL": {name:"Url",code:"url"}  
+        "AUTONUMBER": {name:"AutoNumber",code:"auto", params:0},
+        "CHECKBOX": {name:"Checkbox",code:"cb", params:0},
+        "CURRENCY": {name:"Currency",code:"curr", params:2},
+        "DATE": {name:"Date",code:"d", params:0},
+        "DATETIME": {name:"DateTime",code:"dt", params:0},
+        "EMAIL": {name:"Email",code:"e", params:0},
+        "FORMULA": {name:"FORMULA",code:"form"},
+        "GEOLOCATION": {name:"Location",code:"geo"},
+        "HIERARCHICALRELATIONSHIP": {name:"Hierarchy",code:"hr" },
+        "LOOKUP": {name:"Lookup",code:"look"},
+        "MASTERDETAIL": {name:"MasterDetail",code:"md"},
+        "NUMBER": {name:"Number",code:"n"},
+        "PERCENT": {name:"Percent",code:"per"},
+        "PHONE": {name:"Phone",code:"ph"},
+        "PICKLIST": {name:"Picklist",code:"pl"},
+        "PICKLISTMS": {name:"MultiselectPicklist",code:"plms"},
+        "ROLLUPSUMMARY": {name:"Summary",code:"rup"},
+        "TEXT": {name:"Text",code:"t"},
+        "TEXTENCRYPTED": {name:"EcryptedText",code:"te"},
+        "TEXTAREA": {name:"TextArea",code:"ta"},
+        "TEXTAREALONG": {name:"LongTextArea",code:"tal"},
+        "TEXTAREARICH": {name:"Html",code:"tar"},
+        "URL": {name:"Url",code:"url"}
     };
 
 /**
@@ -74,7 +74,7 @@ var sfnav = (function() {
                 }
                 return;
             }
-            
+
             _global_callbacks[keys] = true;
         };
 
@@ -102,7 +102,7 @@ var sfnav = (function() {
         oldins = this.firstChild.nodeValue;
         setVisibleSearch("hidden");
         setVisible("hidden");
-        invokeCommand(this.firstChild.nodeValue);    
+        invokeCommand(this.firstChild.nodeValue);
         return true;
     }
 
@@ -224,12 +224,12 @@ var sfnav = (function() {
                 addWord(Object.keys(META_DATATYPES)[i]);
             }
             */
-            setVisible('visible');  
+            setVisible('visible');
         }
         else if(ins.substring(0,3) == 'cf ' && ins.split(' ').length > 4)
-        {  
+        {
             clearOutput();
-        }  
+        }
         else
         {
             words = getWord(ins, cmds);
@@ -244,30 +244,30 @@ var sfnav = (function() {
                 setVisible("hidden");
                 posi = -1;
             }
-        }     
+        }
     }
 
-    function httpGet(url, callback) 
+    function httpGet(url, callback)
     {
      var req = new XMLHttpRequest();
      req.open("GET", url, true);
      req.setRequestHeader("Authorization", sid);
      req.onload = function(response) {
-         callback(response);   
+         callback(response);
      }
-     req.send();    
+     req.send();
     }
     function setVisible(visi){
         var x = document.getElementById("sfnav_shadow");
         var t = document.getElementById("sfnav_quickSearch");
-        
+
         x.style.position = 'relative';
 
         x.style.visibility = visi;
     }
     function setVisibleSearch(visi)
     {
-  
+
 
         var t = document.getElementById("sfnav_search_box");
         t.style.visibility = visi;
@@ -276,7 +276,7 @@ var sfnav = (function() {
 
     function lookAt(){
         var ins = document.getElementById("sfnav_quickSearch").value;
-   
+
         if (oldins == ins && ins.length > 0) return;
         else if (posi > -1);
         else if (ins.length > 0){
@@ -312,7 +312,7 @@ var sfnav = (function() {
         setVisible("visible");
     }
 
-    function addError(text) 
+    function addError(text)
     {
         clearOutput();
         var err = document.createElement("div");
@@ -326,7 +326,7 @@ var sfnav = (function() {
             err.appendChild(document.createTextNode(text[i].message));
             err.appendChild(document.createElement('br'));
         }
-        
+
         /*
         var ta = document.createElement('textarea');
         ta.className = 'sfnav-error-textarea';
@@ -375,7 +375,7 @@ var sfnav = (function() {
             {
 
                 if(key.toLowerCase().indexOf(tmpSplit[i].toLowerCase()) != -1)
-                {  
+                {
                     match = true;
                 }
                 else
@@ -383,15 +383,15 @@ var sfnav = (function() {
                     match = false;
                     break;
                 }
-            }   
-            if(match) arrFound.push({num : 1, key : key}); 
+            }
+            if(match) arrFound.push({num : 1, key : key});
         }
     }
-    arrFound.sort(function(a,b) { 
+    arrFound.sort(function(a,b) {
         return b.num - a.num;
     });
     for(var i = 0;i<arrFound.length;i++)
-        words[words.length] = arrFound[i].key;                 
+        words[words.length] = arrFound[i].key;
 
     return words;
     }
@@ -403,15 +403,15 @@ var sfnav = (function() {
     function invokeCommand(cmd) {
         if(typeof cmds[cmd] != 'undefined' && (cmds[cmd].url != null || cmds[cmd].url == ''))
         {
-            window.location.href = cmds[cmd].url; 
+            window.location.href = cmds[cmd].url;
             return true;
-        }  
+        }
         if(cmd.toLowerCase() == 'refresh metadata')
         {
             getAllObjectMetadata();
             return true;
         }
-        if(cmd.toLowerCase() == 'setup')  
+        if(cmd.toLowerCase() == 'setup')
         {
             window.location.href = serverInstance + '.salesforce.com/setup/forcecomHomepage.apexp?setupid=ForceCom';
             return true;
@@ -430,9 +430,9 @@ var sfnav = (function() {
         var arrSplit = cmd.split(' ');
         var dataType = '';
         var fieldMetadata;
-        
+
         if(arrSplit.length >= 3)
-        {    
+        {
             for(var key in META_DATATYPES)
             {
                 if(META_DATATYPES[key].name.toLowerCase() === arrSplit[3].toLowerCase())
@@ -447,25 +447,25 @@ var sfnav = (function() {
             var helpText = null;
             var typeLength = arrSplit[4];
             var rightDecimals, leftDecimals;
-            if(parseInt(arrSplit[5]) != NaN ) 
+            if(parseInt(arrSplit[5]) != NaN )
             {
                 rightDecimals = parseInt(arrSplit[5]);
                 leftDecimals = typeLength;
             }
-            else  
+            else
             {
                 leftDecimals = 0;
                 rightDecimals = 0;
             }
 
 
-            
-            
+
+
             ftClient.queryByName('CustomField', fieldName, sObjectName, function(success) {
                 addSuccess(success);
                 fieldMeta = new  forceTooling.CustomFields.CustomField(arrSplit[1], arrSplit[2], dataType, null, arrSplit[4], parseInt(leftDecimals),parseInt(rightDecimals),null);
-                
-                ftClient.update('CustomField', fieldMeta, 
+
+                ftClient.update('CustomField', fieldMeta,
                     function(success) {
                         console.log(success);
                         addSuccess(success);
@@ -481,7 +481,7 @@ var sfnav = (function() {
             });
 
 
-        }        
+        }
     }
 
     function createField(cmd)
@@ -515,17 +515,17 @@ var sfnav = (function() {
             var helpText = null;
             var typeLength = arrSplit[4];
             var rightDecimals, leftDecimals;
-            if(parseInt(arrSplit[5]) != NaN ) 
+            if(parseInt(arrSplit[5]) != NaN )
             {
                 rightDecimals = parseInt(arrSplit[5]);
                 leftDecimals = parseInt(typeLength);
             }
-            else  
+            else
             {
                 leftDecimals = 0;
                 rightDecimals = 0;
             }
-            
+
             var fieldMeta;
 
             switch(arrSplit[3].toUpperCase())
@@ -589,7 +589,7 @@ var sfnav = (function() {
                 fieldMeta = new  forceTooling.CustomFields.CustomField(sObjectName, sObjectId, fieldName, dataType, null, typeLength, null,null,null,null,0);
                 break;
                 case 'TEXTENCRYPTED':
-                fieldMeta = new  forceTooling.CustomFields.CustomField(sObjectName, sObjectId, fieldName, dataType, null, null, null,null,null,null,0);  
+                fieldMeta = new  forceTooling.CustomFields.CustomField(sObjectName, sObjectId, fieldName, dataType, null, null, null,null,null,null,0);
                 break;
                 case 'TEXTAREA':
                 fieldMeta = new  forceTooling.CustomFields.CustomField(sObjectName, sObjectId, fieldName, dataType, null, typeLength, null,null,null,null,0);
@@ -604,11 +604,11 @@ var sfnav = (function() {
                 fieldMeta = new  forceTooling.CustomFields.CustomField(sObjectName, sObjectId, fieldName, dataType, null, null, null,null,null,null,0);
                 break;
 
-            }    
+            }
 
             ftClient.setSessionToken(getCookie('sid'), SFAPI_VERSION, serverInstance + '.salesforce.com');
             showLoadingIndicator();
-            ftClient.create('CustomField', fieldMeta, 
+            ftClient.create('CustomField', fieldMeta,
                 function(success) {
                     console.log(success);
                    hideLoadingIndicator();
@@ -624,19 +624,19 @@ var sfnav = (function() {
     }
 
     function getMetadata(_data) {
-        if(_data.length == 0) return; 
+        if(_data.length == 0) return;
         var metadata = JSON.parse(_data);
 
         var mRecord = {};
         var act = {};
         metaData = {};
- 
+
 
         for(var i=0;i<metadata.sobjects.length;i++)
         {
             if(metadata.sobjects[i].keyPrefix != null)
             {
-                mRecord = {};   
+                mRecord = {};
                 mRecord.label = metadata.sobjects[i].label;
                 mRecord.labelPlural = metadata.sobjects[i].labelPlural;
                 mRecord.keyPrefix = metadata.sobjects[i].keyPrefix;
@@ -654,7 +654,7 @@ var sfnav = (function() {
                 act.keyPrefix = metadata.sobjects[i].keyPrefix;
                 act.url = serverInstance + '.salesforce.com/' + metadata.sobjects[i].keyPrefix;
                 act.url += '/e';
-                cmds['New ' + mRecord.label] = act; 
+                cmds['New ' + mRecord.label] = act;
 
 
             }
@@ -662,10 +662,10 @@ var sfnav = (function() {
 
         store('Store Commands', cmds);
         store('Store Metadata', metaData)
-    }   
+    }
 
     function store(action, payload) {
-        
+
         var req = {}
         req.action = action;
         req.key = clientId;
@@ -674,7 +674,7 @@ var sfnav = (function() {
         chrome.extension.sendMessage(req, function(response) {
 
         });
-        
+
         // var storagePayload = {};
         // storagePayload[action] = payload;
         // chrome.storage.local.set(storagePayload, function() {
@@ -683,23 +683,23 @@ var sfnav = (function() {
     }
 
     function getAllObjectMetadata() {
-        
+
         sid = "Bearer " + getCookie('sid');
         var theurl = getServerInstance() + '.salesforce.com/services/data/' + SFAPI_VERSION + '/sobjects/';
 
         cmds['Refresh Metadata'] = {};
-        cmds['Setup'] = {}; 
+        cmds['Setup'] = {};
         var req = new XMLHttpRequest();
         req.open("GET", theurl, true);
         req.setRequestHeader("Authorization", sid);
         req.onload = function(response) {
-         getMetadata(response.target.responseText);   
+         getMetadata(response.target.responseText);
      }
      req.send();
      getSetupTree();
-     getCustomObjects();
+     // getCustomObjects();
      getCustomObjectsDef();
-    }    
+    }
 
     function parseSetupTree(html)
     {
@@ -721,13 +721,13 @@ var sfnav = (function() {
                 }
 
             }
-            var children = allLinks[i].getElementsByClassName("childContainer")[0].getElementsByTagName("a");
+            var children = allLinks[i].querySelectorAll('.childContainer > .setupLeaf > a');
             for(var j = 0;j<children.length;j++)
             {
                 if(children[j].text.length > 2)
                 {
                     strName = strNameMain + children[j].text;
-                    cmds[strName] = {url: children[j].href, key: strName};
+                    if(cmds[strName] == null) cmds[strName] = {url: children[j].href, key: strName};
                 }
             }
 
@@ -736,17 +736,17 @@ var sfnav = (function() {
     }
 
     function getSetupTree() {
- 
+
         var theurl = serverInstance + '.salesforce.com/setup/forcecomHomepage.apexp?setupid=ForceCom'
         var req = new XMLHttpRequest();
         req.onload = function() {
-         parseSetupTree(this.response);   
+         parseSetupTree(this.response);
      }
      req.open("GET", theurl);
      req.responseType = 'document';
 
-     req.send();   
-    }    
+     req.send();
+    }
 
     function getCustomObjects()
     {
@@ -754,21 +754,21 @@ var sfnav = (function() {
         var req = new XMLHttpRequest();
         req.onload = function() {
             parseCustomObjectTree(this.response);
-        }   
+        }
      req.open("GET", theurl);
      req.responseType = 'document';
 
-     req.send();                
+     req.send();
     }
 
     function parseCustomObjectTree(html)
     {
 
-        $(html).find('th a').each(function(el) { 
+        $(html).find('th a').each(function(el) {
             cmds['Setup > Custom Object > ' + this.text] = {url: this.href, key: this.text};
         });
 
-        store('Store Commands', cmds);        
+        store('Store Commands', cmds);
     }
 
     function getCookie(c_name)
@@ -784,39 +784,39 @@ var sfnav = (function() {
                 return unescape(y);
             }
         }
-    } 
+    }
     function getServerInstance()
     {
         var url = document.URL + "";
         var urlParseArray = url.split(".");
         var i;
         var returnUrl;
-        
+
         if(url.indexOf("salesforce") != -1)
         {
             returnUrl = url.substring(0, url.indexOf("salesforce")-1);
             return returnUrl;
-        } 
-        
+        }
+
         if(url.indexOf("visual.force") != -1)
         {
             returnUrl = 'https:// ' + urlParseArray[1];
             return returnUrl;
-        }  
-        
+        }
+
         return returnUrl;
     }
 
     function initShortcuts() {
-        
-      chrome.extension.sendMessage({'action':'Get Settings'}, 
+
+      chrome.extension.sendMessage({'action':'Get Settings'},
           function(response) {
-            
+
             shortcut = response['shortcut'];
             bindShortcut(shortcut);
         }
         );
-        
+
         // chrome.storage.local.get('settings', function(results) {
         //     if(typeof results.settings.shortcut === 'undefined')
         //     {
@@ -827,7 +827,7 @@ var sfnav = (function() {
         //     {
         //         bindShortcut(results.settings.shortcut);
         //     }
-        // });   
+        // });
     }
     function bindShortcut(shortcut)
     {
@@ -835,7 +835,7 @@ var sfnav = (function() {
         Mousetrap.bindGlobal(shortcut, function(e) {
             setVisibleSearch("visible");
             return false;
-        });    
+        });
 
         Mousetrap.wrap(document.getElementById('sfnav_quickSearch')).bind('esc', function(e) {
 
@@ -851,13 +851,13 @@ var sfnav = (function() {
         Mousetrap.wrap(document.getElementById('sfnav_quickSearch')).bind('enter', function(e) {
             var position = posi;
             var origText = '', newText = '';
-            if(position <0) position = 0; 
+            if(position <0) position = 0;
 
             origText = document.getElementById("sfnav_quickSearch").value;
             if(typeof outp.childNodes[position] != 'undefined')
             {
                 newText = outp.childNodes[position].firstChild.nodeValue;
-                
+
             }
 
 
@@ -874,7 +874,7 @@ var sfnav = (function() {
                 firstChild = outp.childNodes[posi].firstChild.nodeValue;
             else
                 firstChild = null;
-            
+
             var textfield = document.getElementById("sfnav_quickSearch");
 
             if (words.length > 0 && posi < words.length-1)
@@ -883,10 +883,10 @@ var sfnav = (function() {
                 if(outp.childNodes[posi] != null)
                     firstChild = outp.childNodes[posi].firstChild.nodeValue;
                 else
-                    firstChild = null;            
+                    firstChild = null;
                 if (posi >=1) outp.childNodes[posi-1].classList.remove('sfnav_selected');
                 else input = textfield.value;
-                outp.childNodes[posi].classList.add('sfnav_selected');           
+                outp.childNodes[posi].classList.add('sfnav_selected');
                 textfield.value = firstChild;
                 if(textfield.value.indexOf('<') != -1 && textfield.value.indexOf('>') != -1)
                 {
@@ -913,7 +913,7 @@ var sfnav = (function() {
             if(outp.childNodes[posi] != null)
                 firstChild = outp.childNodes[posi].firstChild.nodeValue;
             else
-                firstChild = null;            
+                firstChild = null;
             if (posi >=0){
                 outp.childNodes[posi+1].classList.remove('sfnav_selected');
                 outp.childNodes[posi].classList.add('sfnav_selected');
@@ -929,7 +929,7 @@ var sfnav = (function() {
                 textfield.setSelectionRange(textfield.value.indexOf('<'), textfield.value.length);
                 textfield.focus();
                 return false;
-            }              
+            }
 
 
         }
@@ -945,8 +945,8 @@ var sfnav = (function() {
 
     document.getElementById('sfnav_quickSearch').onkeyup = function() {
 
-        lookAt();     
-        return true;   
+        lookAt();
+        return true;
     }
 
     }
@@ -961,17 +961,19 @@ var sfnav = (function() {
     }
     function getCustomObjectsDef()
     {
-           
-        ftClient.query('Select+Id,+DeveloperName+FROM+CustomObject', 
+
+        ftClient.query('Select+Id,+DeveloperName,+NamespacePrefix+FROM+CustomObject',
             function(success)
             {
                 for(var i=0;i<success.records.length;i++)
                 {
                     customObjects[success.records[i].DeveloperName.toLowerCase()] = {Id: success.records[i].Id};
+                    var apiName = (success.records[i].NamespacePrefix == null ? '' : success.records[i].NamespacePrefix + '__') + success.records[i].DeveloperName + '__c';
+                    cmds['Setup > Custom Object > ' + apiName] = {url: '/' + success.records[i].Id, key: apiName};
                 }
             },
             function(error)
-            {   
+            {
                 console.log(error);
             });
 
@@ -985,8 +987,8 @@ var sfnav = (function() {
         div.setAttribute('id', 'sfnav_search_box');
         var loaderURL = chrome.extension.getURL("images/ajax-loader.gif");
         div.innerHTML = '<div class="sfnav_wrapper"><input type="text" id="sfnav_quickSearch" autocomplete="off"/><img id="sfnav_loader" src= "'+ loaderURL +'"/></div><div class="sfnav_shadow" id="sfnav_shadow"/><div class="sfnav_output" id="sfnav_output"/>';
-        document.body.appendChild(div); 
- 
+        document.body.appendChild(div);
+
         outp = document.getElementById("sfnav_output");
         hideLoadingIndicator();
         initShortcuts();
@@ -996,31 +998,31 @@ var sfnav = (function() {
         //     console.log(results);
         // });
 
-        
-        chrome.extension.sendMessage({action:'Get Commands', 'key': clientId}, 
+
+        chrome.extension.sendMessage({action:'Get Commands', 'key': clientId},
           function(response) {
             cmds = response;
 
-            if(cmds == null || cmds.length == 0) 
+            if(cmds == null || cmds.length == 0)
             {
                 cmds = {};
                 metaData = {};
-               
+
                 getAllObjectMetadata();
-                
+
             }
             else
             {
 
-            }        
+            }
         });
 
-        chrome.extension.sendMessage({action:'Get Metadata', 'key': clientId}, 
+        chrome.extension.sendMessage({action:'Get Metadata', 'key': clientId},
           function(response) {
-            metaData = response;     
+            metaData = response;
         });
-        
-        
+
+
     }
 
     init();

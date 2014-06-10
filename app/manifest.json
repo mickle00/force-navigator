@@ -1,10 +1,10 @@
 {
     "name": "Salesforce Navigator",
-    "version": "0.5.15",
+    "version": "0.5.18",
     "manifest_version": 2,
     "default_locale": "en",
     "browser_action": {
-        "default_icon": "images/32.png",
+        "default_icon": "images/38-white.png",
         "default_popup": "popup.html"
     },
     "background": {
@@ -12,6 +12,9 @@
             "scripts/background.js"
         ],
         "persistent": true
+    },
+    "icons": {
+        "128": "images/128.png"
     },
     "web_accessible_resources": [
         "images/ajax-loader.gif"
