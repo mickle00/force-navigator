@@ -800,10 +800,9 @@ var sfnav = (function() {
 
         if(url.indexOf("visual.force") != -1)
         {
-            returnUrl = 'https:// ' + urlParseArray[1];
+            returnUrl = 'https://' + urlParseArray[1];
             return returnUrl;
         }
-
         return returnUrl;
     }
 
