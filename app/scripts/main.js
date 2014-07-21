@@ -413,7 +413,7 @@ var sfnav = (function() {
         }
         if(cmd.toLowerCase() == 'setup')
         {
-            window.location.href = serverInstance + '.salesforce.com/setup/forcecomHomepage.apexp?setupid=ForceCom';
+            window.location.href = serverInstance + '.salesforce.com/ui/setup/Setup';
             return true;
         }
         if(cmd.toLowerCase().substring(0,3) == 'cf ')
@@ -737,7 +737,7 @@ var sfnav = (function() {
 
     function getSetupTree() {
 
-        var theurl = serverInstance + '.salesforce.com/setup/forcecomHomepage.apexp?setupid=ForceCom'
+        var theurl = serverInstance + '.salesforce.com/ui/setup/Setup'
         var req = new XMLHttpRequest();
         req.onload = function() {
          parseSetupTree(this.response);
