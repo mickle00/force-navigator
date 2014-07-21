@@ -973,7 +973,7 @@ var sfnav = (function() {
             },
             function(error)
             {
-                console.log(error);
+                getCustomObjects();
             });
 
     }
