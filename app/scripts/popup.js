@@ -3,15 +3,15 @@
 
  	document.addEventListener('DOMContentLoaded', function () {
 
-  document.getElementById('save').addEventListener('click', save);
-  main();
-});
+        document.getElementById('save').addEventListener('click', save);
+        main();
+    });
 
-chrome.browserAction.setBadgeText({text:""});
+
 
 function main() {
 
-
+chrome.browserAction.setBadgeText({text:""});
  chrome.extension.sendMessage({'action':'Get Settings'},
       function(response) {
       	console.log(response);
