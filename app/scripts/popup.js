@@ -1,24 +1,25 @@
-// @copyright 2012+ Daniel Nakov / SilverlineCRM 
+// @copyright 2012+ Daniel Nakov / SilverlineCRM
 // http://silverlinecrm.com
 
  	document.addEventListener('DOMContentLoaded', function () {
- 
+
   document.getElementById('save').addEventListener('click', save);
   main();
 });
- 
+
+chrome.browserAction.setBadgeText({text:""});
 
 function main() {
 
 
- chrome.extension.sendMessage({'action':'Get Settings'}, 
+ chrome.extension.sendMessage({'action':'Get Settings'},
       function(response) {
       	console.log(response);
       	document.getElementById('shortcut').value = response['shortcut'];
-      	
+
       }
      );
-  
+
   // chrome.storage.local.get('shortcut', function(results) {
   //   console.log(results);
   //   if(typeof results.settings === 'undefined')
@@ -43,13 +44,13 @@ function main() {
   // });
 
 
-	 chrome.extension.sendMessage({'action':'Set Settings', 'key':'shortcut', 'payload':payload}, 
+	 chrome.extension.sendMessage({'action':'Set Settings', 'key':'shortcut', 'payload':payload},
 	      function(response) {
 	      	  chrome.tabs.getSelected(null, function(tab) {
             var code = 'window.location.reload();';
             chrome.tabs.executeScript(tab.id, {code: code});
           });
 	      }
-	     ); 	
+	     );
 
  }

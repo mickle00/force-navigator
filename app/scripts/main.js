@@ -5,8 +5,13 @@ var sfnav = (function() {
     var outp;
     var oldins;
     var posi = -1;
-
+    var newTabKeys = [
+        "ctrl+enter",
+        "command+enter",
+        "shift+enter"
+    ]
     var input;
+    var isVisible = false;
     var key;
     var metaData = {};
     var serverInstance = getServerInstance();
@@ -102,7 +107,7 @@ var sfnav = (function() {
         oldins = this.firstChild.nodeValue;
         setVisibleSearch("hidden");
         setVisible("hidden");
-        invokeCommand(this.firstChild.nodeValue);
+        invokeCommand(this.firstChild.nodeValue,false,'click');
         return true;
     }
 
@@ -267,7 +272,8 @@ var sfnav = (function() {
     }
     function setVisibleSearch(visi)
     {
-
+        if(visi == "hidden") isVisible = false;
+        else isVisible = true;
 
         var t = document.getElementById("sfnav_search_box");
         t.style.visibility = visi;
@@ -289,8 +295,11 @@ var sfnav = (function() {
         oldins = ins;
     }
     function addWord(word){
-        var sp = document.createElement("div");
+        var d = document.createElement("div");
+        var sp = document.createElement("a");
         sp.className=  "sfnav_child";
+        sp.setAttribute("href", cmds[word].url);
+
         sp.appendChild(document.createTextNode(word));
         sp.onmouseover = mouseHandler;
         sp.onmouseout = mouseHandlerOut;
@@ -400,10 +409,18 @@ var sfnav = (function() {
         outp.childNodes[_posi].style.color = _forg;
     }
 
-    function invokeCommand(cmd) {
-        if(typeof cmds[cmd] != 'undefined' && (cmds[cmd].url != null || cmds[cmd].url == ''))
+    function invokeCommand(cmd, newtab, event) {
+        if(event != 'click' && typeof cmds[cmd] != 'undefined' && (cmds[cmd].url != null || cmds[cmd].url == ''))
         {
-            window.location.href = cmds[cmd].url;
+            if(newtab)
+            {
+                var w = window.open(cmds[cmd].url, '_newtab');
+                w.blur();
+                window.focus();
+            } else {
+                window.location.href = cmds[cmd].url;
+            }
+
             return true;
         }
         if(cmd.toLowerCase() == 'refresh metadata')
@@ -694,7 +711,7 @@ var sfnav = (function() {
         req.setRequestHeader("Authorization", sid);
         req.onload = function(response) {
          getMetadata(response.target.responseText);
-     }
+        }
      req.send();
      getSetupTree();
      // getCustomObjects();
@@ -828,6 +845,27 @@ var sfnav = (function() {
         //     }
         // });
     }
+
+    function kbdCommand(e, key) {
+        var position = posi;
+        var origText = '', newText = '';
+        if(position <0) position = 0;
+
+        origText = document.getElementById("sfnav_quickSearch").value;
+        if(typeof outp.childNodes[position] != 'undefined')
+        {
+            newText = outp.childNodes[position].firstChild.nodeValue;
+
+        }
+
+        var newtab = newTabKeys.indexOf(key) >= 0 ? true : false;
+        if(!newtab)
+            setVisible("hidden");
+
+        if(!invokeCommand(newText, newtab))
+            invokeCommand(origText, newtab);
+    }
+
     function bindShortcut(shortcut)
     {
 
@@ -847,23 +885,11 @@ var sfnav = (function() {
 
         });
 
-        Mousetrap.wrap(document.getElementById('sfnav_quickSearch')).bind('enter', function(e) {
-            var position = posi;
-            var origText = '', newText = '';
-            if(position <0) position = 0;
+        Mousetrap.wrap(document.getElementById('sfnav_quickSearch')).bind('enter', kbdCommand);
 
-            origText = document.getElementById("sfnav_quickSearch").value;
-            if(typeof outp.childNodes[position] != 'undefined')
-            {
-                newText = outp.childNodes[position].firstChild.nodeValue;
-
-            }
-
-
-            setVisible("hidden");
-            if(!invokeCommand(newText))
-                invokeCommand(origText);
-        });
+        for (var i = 0; i < newTabKeys.length; i++) {
+            Mousetrap.wrap(document.getElementById('sfnav_quickSearch')).bind(newTabKeys[i], kbdCommand);
+        };
 
         Mousetrap.wrap(document.getElementById('sfnav_quickSearch')).bind('down', function(e) {
             var firstChild;
@@ -1020,6 +1046,8 @@ var sfnav = (function() {
           function(response) {
             metaData = response;
         });
+
+
 
 
     }
