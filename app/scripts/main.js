@@ -296,10 +296,15 @@ var sfnav = (function() {
     }
     function addWord(word){
         var d = document.createElement("div");
-        var sp = document.createElement("a");
-        sp.className=  "sfnav_child";
-        sp.setAttribute("href", cmds[word].url);
+        var sp;
+        if(cmds[word].url != null && cmds[word].url != "") {
+            sp = document.createElement("a");
+            sp.setAttribute("href", cmds[word].url);
 
+        } else {
+            sp = d;
+        }
+        sp.className=  "sfnav_child";
         sp.appendChild(document.createTextNode(word));
         sp.onmouseover = mouseHandler;
         sp.onmouseout = mouseHandlerOut;
@@ -425,7 +430,11 @@ var sfnav = (function() {
         }
         if(cmd.toLowerCase() == 'refresh metadata')
         {
+            showLoadingIndicator();
             getAllObjectMetadata();
+            setTimeout(function() {
+                hideLoadingIndicator();
+            }, 30000)
             return true;
         }
         if(cmd.toLowerCase() == 'setup')
@@ -711,6 +720,7 @@ var sfnav = (function() {
         req.setRequestHeader("Authorization", sid);
         req.onload = function(response) {
          getMetadata(response.target.responseText);
+
         }
      req.send();
      getSetupTree();
@@ -758,6 +768,7 @@ var sfnav = (function() {
         var req = new XMLHttpRequest();
         req.onload = function() {
          parseSetupTree(this.response);
+         hideLoadingIndicator();
      }
      req.open("GET", theurl);
      req.responseType = 'document';
