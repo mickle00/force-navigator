@@ -3,7 +3,7 @@ var metadata = {};
 chrome.browserAction.setPopup({popup:"popup.html"});
 chrome.runtime.onInstalled.addListener(function(info) {
     // if(info.details == "update" || info.details == "install") {
-        chrome.browserAction.setBadgeText({text:"1"});
+        // chrome.browserAction.setBadgeText({text:"1"});
     // }
 })
 
