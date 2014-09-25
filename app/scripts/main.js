@@ -17,7 +17,7 @@ var sfnav = (function() {
     var serverInstance = getServerInstance();
     var cmds = {};
     var isCtrl = false;
-    var clientId;
+    var clientId, omnomnom, hash;
     var loaded=false;
     var shortcut;
     var sid;
@@ -694,7 +694,7 @@ var sfnav = (function() {
 
         var req = {}
         req.action = action;
-        req.key = clientId;
+        req.key = hash;
         req.payload = payload;
 
         chrome.extension.sendMessage(req, function(response) {
@@ -710,6 +710,9 @@ var sfnav = (function() {
 
     function getAllObjectMetadata() {
 
+        // session ID is different and useless in VF
+        if(document.URL.indexOf("visual.force") !== -1) return;
+
         sid = "Bearer " + getCookie('sid');
         var theurl = getServerInstance() + '.salesforce.com/services/data/' + SFAPI_VERSION + '/sobjects/';
 
@@ -722,10 +725,12 @@ var sfnav = (function() {
          getMetadata(response.target.responseText);
 
         }
-     req.send();
-     getSetupTree();
-     // getCustomObjects();
-     getCustomObjectsDef();
+        req.send();
+
+        getSetupTree();
+        // getCustomObjects();
+        getCustomObjectsDef();
+
     }
 
     function parseSetupTree(html)
@@ -1029,13 +1034,17 @@ var sfnav = (function() {
         hideLoadingIndicator();
         initShortcuts();
 
-        clientId = getCookie('sid').split('!')[0];
+        omnomnom = getCookie('sid');
+
+        clientId = omnomnom.split('!')[0];
+
+        hash = clientId + '!' + omnomnom.substring(omnomnom.length - 10, omnomnom.length);
         // chrome.storage.local.get(['Commands','Metadata'], function(results) {
         //     console.log(results);
         // });
 
 
-        chrome.extension.sendMessage({action:'Get Commands', 'key': clientId},
+        chrome.extension.sendMessage({action:'Get Commands', 'key': hash},
           function(response) {
             cmds = response;
 
@@ -1053,7 +1062,7 @@ var sfnav = (function() {
             }
         });
 
-        chrome.extension.sendMessage({action:'Get Metadata', 'key': clientId},
+        chrome.extension.sendMessage({action:'Get Metadata', 'key': hash},
           function(response) {
             metaData = response;
         });
@@ -1063,6 +1072,7 @@ var sfnav = (function() {
 
     }
 
-    init();
+    if(getCookie('sid') == null || getCookie('sid').split('!').length != 2) return;
+    else init();
 
 })();

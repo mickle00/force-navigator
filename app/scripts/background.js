@@ -16,13 +16,15 @@ chrome.extension.onMessage.addListener(
   function(request, sender, sendResponse) {
     if(request.action == 'Store Commands')
     {
-      commands[request.key] = request.payload;
+      commands[request.key] = commands[request.key.split('!')[0]] = request.payload;
       sendResponse({});
     }
     if(request.action == 'Get Commands')
     {
-      if(commands != null)
+      if(commands[request.key] != null)
         sendResponse(commands[request.key]);
+      else if(commands[request.key.split('!')[0]] != null)
+        sendResponse(commands[request.key.split('!')[0]]);
       else
         sendResponse(null);
     }
@@ -37,7 +39,7 @@ chrome.extension.onMessage.addListener(
       else
       {
         var sett = {};
-        sett['shortcut'] = 'shift+space';
+        sett['shortcut'] = 'ctrl+shift+space';
         localStorage.setItem('sfnav_settings', JSON.stringify(sett));
         sendResponse(sett);
       }
@@ -55,13 +57,15 @@ chrome.extension.onMessage.addListener(
     }
     if(request.action == 'Store Metadata')
     {
-      metadata[request.key] = request.payload;
+      metadata[request.key] = metadata[request.key.split('!')[0]] = request.payload;
       sendResponse({});
     }
     if(request.action == 'Get Metadata')
     {
-      if(metadata != null)
+      if(metadata[request.key] != null)
         sendResponse(metadata[request.key]);
+      else if(metadata[request.key.split('!')[0]] != null)
+        sendResponse(metadata[request.key.split('!')[0]]);
       else
         sendResponse(null);
     }
