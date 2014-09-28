@@ -711,7 +711,7 @@ var sfnav = (function() {
     function getAllObjectMetadata() {
 
         // session ID is different and useless in VF
-        if(document.URL.indexOf("visual.force") !== -1) return;
+        if(location.origin.indexOf("visual.force") !== -1) return;
 
         sid = "Bearer " + getCookie('sid');
         var theurl = getServerInstance() + '.salesforce.com/services/data/' + SFAPI_VERSION + '/sobjects/';
@@ -820,7 +820,7 @@ var sfnav = (function() {
     }
     function getServerInstance()
     {
-        var url = document.URL + "";
+        var url = location.origin + "";
         var urlParseArray = url.split(".");
         var i;
         var returnUrl;
@@ -1072,7 +1072,7 @@ var sfnav = (function() {
 
     }
 
-    if(getCookie('sid') == null || getCookie('sid').split('!').length != 2) return;
+    if(serverInstance == null || getCookie('sid') == null || getCookie('sid').split('!').length != 2) return;
     else init();
 
 })();
