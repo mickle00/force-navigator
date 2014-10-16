@@ -297,7 +297,7 @@ var sfnav = (function() {
     function addWord(word){
         var d = document.createElement("div");
         var sp;
-        if(cmds[word].url != null && cmds[word].url != "") {
+        if(cmds[word] != null && cmds[word].url != null && cmds[word].url != "") {
             sp = document.createElement("a");
             sp.setAttribute("href", cmds[word].url);
 
@@ -439,7 +439,7 @@ var sfnav = (function() {
         }
         if(cmd.toLowerCase() == 'setup')
         {
-            window.location.href = serverInstance + '.salesforce.com/ui/setup/Setup';
+            window.location.href = serverInstance + '/ui/setup/Setup';
             return true;
         }
         if(cmd.toLowerCase().substring(0,3) == 'cf ')
@@ -557,68 +557,68 @@ var sfnav = (function() {
             switch(arrSplit[3].toUpperCase())
             {
                 case 'AUTONUMBER':
-                fieldMeta = new  forceTooling.CustomFields.CustomField(sObjectName, sObjectId, fieldName, dataType, null, null, null,null,null,null,0);
+                fieldMeta = new  forceTooling.CustomFields.CustomField(sObjectName, sObjectId, fieldName, dataType, null, null, null,null,null,null,null);
                 break;
                 case 'CHECKBOX':
-                fieldMeta = new  forceTooling.CustomFields.CustomField(sObjectName, sObjectId, fieldName, dataType, null, null, null,null,null,null,0);
+                fieldMeta = new  forceTooling.CustomFields.CustomField(sObjectName, sObjectId, fieldName, dataType, null, null, null,null,null,null,null);
                 break;
                 case 'CURRENCY':
-                fieldMeta = new  forceTooling.CustomFields.CustomField(sObjectName, sObjectId, fieldName, dataType, null, null, leftDecimals, rightDecimals,null,null,0);
+                fieldMeta = new  forceTooling.CustomFields.CustomField(sObjectName, sObjectId, fieldName, dataType, null, null, leftDecimals, rightDecimals,null,null,null);
                 break;
                 case 'DATE':
-                fieldMeta = new  forceTooling.CustomFields.CustomField(sObjectName, sObjectId, fieldName, dataType, null, null, null,null,null,null,0);
+                fieldMeta = new  forceTooling.CustomFields.CustomField(sObjectName, sObjectId, fieldName, dataType, null, null, null,null,null,null,null);
                 break;
                 case 'DATETIME':
-                fieldMeta = new  forceTooling.CustomFields.CustomField(sObjectName, sObjectId, fieldName, dataType, null, null, null,null,null,null,0);
+                fieldMeta = new  forceTooling.CustomFields.CustomField(sObjectName, sObjectId, fieldName, dataType, null, null, null,null,null,null,null);
                 break;
                 case 'EMAIL':
-                fieldMeta = new  forceTooling.CustomFields.CustomField(sObjectName, sObjectId, fieldName, dataType, null, null, null,null,null,null,0);
+                fieldMeta = new  forceTooling.CustomFields.CustomField(sObjectName, sObjectId, fieldName, dataType, null, null, null,null,null,null,null);
                 break;
                 case 'FORMULA':
 
                 break;
                 case 'GEOLOCATION':
-                fieldMeta = new  forceTooling.CustomFields.CustomField(sObjectName, sObjectId, fieldName, dataType, null, null, null, arrSplit[4],null,null,0);
+                fieldMeta = new  forceTooling.CustomFields.CustomField(sObjectName, sObjectId, fieldName, dataType, null, null, null, arrSplit[4],null,null,null);
                 break;
                 case 'HIERARCHICALRELATIONSHIP':
-                fieldMeta = new  forceTooling.CustomFields.CustomField(sObjectName, sObjectId, fieldName, dataType, null, null, null,null,null,arrSplit[4],0);
+                fieldMeta = new  forceTooling.CustomFields.CustomField(sObjectName, sObjectId, fieldName, dataType, null, null, null,null,null,arrSplit[4],null);
                 break;
                 case 'LOOKUP':
-                fieldMeta = new  forceTooling.CustomFields.CustomField(sObjectName, sObjectId, fieldName, dataType, null, null, null,null,null,arrSplit[4],0);
+                fieldMeta = new  forceTooling.CustomFields.CustomField(sObjectName, sObjectId, fieldName, dataType, null, null, null,null,null,arrSplit[4],null);
                 break;
                 case 'MASTERDETAIL':
-                fieldMeta = new  forceTooling.CustomFields.CustomField(sObjectName, sObjectId, fieldName, dataType, null, null, null,null,null,arrSplit[4],0);
+                fieldMeta = new  forceTooling.CustomFields.CustomField(sObjectName, sObjectId, fieldName, dataType, null, null, null,null,null,arrSplit[4],null);
                 break;
                 case 'NUMBER':
-                fieldMeta = new  forceTooling.CustomFields.CustomField(sObjectName, sObjectId, fieldName, dataType, null, null, leftDecimals, rightDecimals,null,null,0);
+                fieldMeta = new  forceTooling.CustomFields.CustomField(sObjectName, sObjectId, fieldName, dataType, null, null, leftDecimals, rightDecimals,null,null,null);
                 break;
                 case 'PERCENT':
-                fieldMeta = new  forceTooling.CustomFields.CustomField(sObjectName, sObjectId, fieldName, dataType, null, null, leftDecimals, rightDecimals,null,null,0);
+                fieldMeta = new  forceTooling.CustomFields.CustomField(sObjectName, sObjectId, fieldName, dataType, null, null, leftDecimals, rightDecimals,null,null,null);
                 break;
                 case 'PHONE':
-                fieldMeta = new  forceTooling.CustomFields.CustomField(sObjectName, sObjectId, fieldName, dataType, null, null, null,null,null,null,0);
+                fieldMeta = new  forceTooling.CustomFields.CustomField(sObjectName, sObjectId, fieldName, dataType, null, null, null,null,null,null,null);
                 break;
                 case 'PICKLIST':
                 var plVal = [];
                 plVal.push(new forceTooling.CustomFields.PicklistValue('CHANGEME'));
-                fieldMeta = new  forceTooling.CustomFields.CustomField(sObjectName, sObjectId, fieldName, dataType, null, null, null,null,plVal,null,0);
+                fieldMeta = new  forceTooling.CustomFields.CustomField(sObjectName, sObjectId, fieldName, dataType, null, null, null,null,plVal,null,null);
                 break;
                 case 'PICKLISTMS':
                 var plVal = [];
                 plVal.push(new forceTooling.CustomFields.PicklistValue('CHANGEME'));
-                fieldMeta = new  forceTooling.CustomFields.CustomField(sObjectName, sObjectId, fieldName, dataType, null, null, null,null,plVal,null,0);
+                fieldMeta = new  forceTooling.CustomFields.CustomField(sObjectName, sObjectId, fieldName, dataType, null, null, null,null,plVal,null,null);
                 break;
                 case 'ROLLUPSUMMARY':
 
                 break;
                 case 'TEXT':
-                fieldMeta = new  forceTooling.CustomFields.CustomField(sObjectName, sObjectId, fieldName, dataType, null, typeLength, null,null,null,null,0);
+                fieldMeta = new  forceTooling.CustomFields.CustomField(sObjectName, sObjectId, fieldName, dataType, null, typeLength, null,null,null,null,null);
                 break;
                 case 'TEXTENCRYPTED':
-                fieldMeta = new  forceTooling.CustomFields.CustomField(sObjectName, sObjectId, fieldName, dataType, null, null, null,null,null,null,0);
+                fieldMeta = new  forceTooling.CustomFields.CustomField(sObjectName, sObjectId, fieldName, dataType, null, null, null,null,null,null,null);
                 break;
                 case 'TEXTAREA':
-                fieldMeta = new  forceTooling.CustomFields.CustomField(sObjectName, sObjectId, fieldName, dataType, null, typeLength, null,null,null,null,0);
+                fieldMeta = new  forceTooling.CustomFields.CustomField(sObjectName, sObjectId, fieldName, dataType, null, typeLength, null,null,null,null,null);
                 break;
                 case 'TEXTAREALONG':
                 fieldMeta = new  forceTooling.CustomFields.CustomField(sObjectName, sObjectId, fieldName, dataType, null, typeLength, null,null,null,null,arrSplit[4]);
@@ -627,12 +627,12 @@ var sfnav = (function() {
                 fieldMeta = new  forceTooling.CustomFields.CustomField(sObjectName, sObjectId, fieldName, dataType, null, typeLength, null,null,null,null,arrSplit[4]);
                 break;
                 case 'URL':
-                fieldMeta = new  forceTooling.CustomFields.CustomField(sObjectName, sObjectId, fieldName, dataType, null, null, null,null,null,null,0);
+                fieldMeta = new  forceTooling.CustomFields.CustomField(sObjectName, sObjectId, fieldName, dataType, null, null, null,null,null,null,null);
                 break;
 
             }
 
-            ftClient.setSessionToken(getCookie('sid'), SFAPI_VERSION, serverInstance + '.salesforce.com');
+            ftClient.setSessionToken(getCookie('sid'), SFAPI_VERSION, serverInstance + '');
             showLoadingIndicator();
             ftClient.create('CustomField', fieldMeta,
                 function(success) {
@@ -672,13 +672,13 @@ var sfnav = (function() {
                 act = {};
                 act.key = metadata.sobjects[i].name;
                 act.keyPrefix = metadata.sobjects[i].keyPrefix;
-                act.url = serverInstance + '.salesforce.com/' + metadata.sobjects[i].keyPrefix;
+                act.url = serverInstance + '/' + metadata.sobjects[i].keyPrefix;
 
                 cmds['List ' + mRecord.labelPlural] = act;
                 act = {};
                 act.key = metadata.sobjects[i].name;
                 act.keyPrefix = metadata.sobjects[i].keyPrefix;
-                act.url = serverInstance + '.salesforce.com/' + metadata.sobjects[i].keyPrefix;
+                act.url = serverInstance + '/' + metadata.sobjects[i].keyPrefix;
                 act.url += '/e';
                 cmds['New ' + mRecord.label] = act;
 
@@ -687,7 +687,7 @@ var sfnav = (function() {
         }
 
         store('Store Commands', cmds);
-        store('Store Metadata', metaData)
+        // store('Store Metadata', metaData)
     }
 
     function store(action, payload) {
@@ -714,7 +714,7 @@ var sfnav = (function() {
         if(location.origin.indexOf("visual.force") !== -1) return;
 
         sid = "Bearer " + getCookie('sid');
-        var theurl = getServerInstance() + '.salesforce.com/services/data/' + SFAPI_VERSION + '/sobjects/';
+        var theurl = getServerInstance() + '/services/data/' + SFAPI_VERSION + '/sobjects/';
 
         cmds['Refresh Metadata'] = {};
         cmds['Setup'] = {};
@@ -769,7 +769,7 @@ var sfnav = (function() {
 
     function getSetupTree() {
 
-        var theurl = serverInstance + '.salesforce.com/ui/setup/Setup'
+        var theurl = serverInstance + '/ui/setup/Setup'
         var req = new XMLHttpRequest();
         req.onload = function() {
          parseSetupTree(this.response);
@@ -783,7 +783,7 @@ var sfnav = (function() {
 
     function getCustomObjects()
     {
-        var theurl = serverInstance + '.salesforce.com/p/setup/custent/CustomObjectsPage';
+        var theurl = serverInstance + '/p/setup/custent/CustomObjectsPage';
         var req = new XMLHttpRequest();
         req.onload = function() {
             parseCustomObjectTree(this.response);
@@ -827,13 +827,19 @@ var sfnav = (function() {
 
         if(url.indexOf("salesforce") != -1)
         {
-            returnUrl = url.substring(0, url.indexOf("salesforce")-1);
+            returnUrl = url.substring(0, url.indexOf("salesforce")) + "salesforce.com";
+            return returnUrl;
+        }
+
+        if(url.indexOf("cloudforce") != -1)
+        {
+            returnUrl = url.substring(0, url.indexOf("cloudforce")) + "cloudforce.com";
             return returnUrl;
         }
 
         if(url.indexOf("visual.force") != -1)
         {
-            returnUrl = 'https://' + urlParseArray[1];
+            returnUrl = 'https://' + urlParseArray[1] + '';
             return returnUrl;
         }
         return returnUrl;
@@ -1022,7 +1028,7 @@ var sfnav = (function() {
     function init()
     {
         ftClient = new forceTooling.Client();
-        ftClient.setSessionToken(getCookie('sid'), SFAPI_VERSION, serverInstance + '.salesforce.com');
+        ftClient.setSessionToken(getCookie('sid'), SFAPI_VERSION, serverInstance + '');
 
         var div = document.createElement('div');
         div.setAttribute('id', 'sfnav_search_box');
@@ -1062,10 +1068,10 @@ var sfnav = (function() {
             }
         });
 
-        chrome.extension.sendMessage({action:'Get Metadata', 'key': hash},
-          function(response) {
-            metaData = response;
-        });
+        // chrome.extension.sendMessage({action:'Get Metadata', 'key': hash},
+        //   function(response) {
+        //     metaData = response;
+        // });
 
 
 

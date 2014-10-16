@@ -27,7 +27,7 @@
 /* JavaScript library to wrap REST API on Visualforce. Leverages Ajax Proxy
  * (see http://bit.ly/sforce_ajax_proxy for details).
  *
- * Note that you must add the REST endpoint hostname for your instance (i.e. 
+ * Note that you must add the REST endpoint hostname for your instance (i.e.
  * https://na1.salesforce.com/ or similar) as a remote site - in the admin
  * console, go to Your Name | Setup | Security Controls | Remote Site Settings
  */
@@ -38,14 +38,14 @@ if (forceTooling === undefined) {
   forceTooling = {};
 }
 
-if (forceTooling.ApexLogs === undefined) {  
+if (forceTooling.ApexLogs === undefined) {
   forceTooling.ApexLogs = {};
 
   forceTooling.ApexLogs.queryString = 'SELECT Id,Application,DurationMilliseconds,Location,LogLength,LogUserId,Operation,Request,StartTime,Status FROM ApexLog';
 }
 
-if (forceTooling.CustomFields === undefined) {  
-  forceTooling.CustomFields = {}; 
+if (forceTooling.CustomFields === undefined) {
+  forceTooling.CustomFields = {};
 
   // The main wrapper that needs to be an input to the create method.
   // Right now, the constructor for this takes a reasonable amount of inputs.
@@ -54,11 +54,11 @@ if (forceTooling.CustomFields === undefined) {
   forceTooling.CustomFields.CustomField =  function(sobject,sobjectId, name,type,helpText,length,leftDecimals,rightDecimals,picklistValues, referenceTo, visibleLines){
     this.Metadata = new forceTooling.CustomFields.Metadata(name,sobject,type,helpText,length,leftDecimals,rightDecimals,picklistValues, referenceTo, visibleLines);
     this.FullName = sobject + '.' + this.Metadata.fullName;
-    if(sobjectId === null) this.TableEnumOrId = sobject;
-    else this.TableEnumOrId = sobjectId;
+    // if(sobjectId === null) this.TableEnumOrId = sobject;
+    // else this.TableEnumOrId = sobjectId;
   };
 
-  // Should be instantiated as new Metadata(fieldName or label,forceTooling.CustomFields.TYPES,a string of helptext, the length As Integer(for text fields), # of decimals to the left, # of decimals to the right) 
+  // Should be instantiated as new Metadata(fieldName or label,forceTooling.CustomFields.TYPES,a string of helptext, the length As Integer(for text fields), # of decimals to the left, # of decimals to the right)
   // Most of the fields that are possible will probably never be used. That doesn't mean we should never create a constructor for all these fields.
   forceTooling.CustomFields.Metadata = function(name,sobject, type,helpText,length,leftDecimals,rightDecimals,picklistValues, referenceTo, visibleLines){
     var tempName = name;
@@ -81,9 +81,9 @@ if (forceTooling.CustomFields === undefined) {
     this.type = type;
     this.inlineHelpText = helpText;
     this.length = parseInt(length);
-    this.precision = parseInt(leftDecimals + rightDecimals);
+    if(this.precision != null) this.precision = parseInt(leftDecimals + rightDecimals);
     this.scale = rightDecimals;
-    if(picklistValues !== null) 
+    if(picklistValues !== null)
     {
       this.picklist = { sorted: false, restrictedPicklist: null, controllingField: null};
       this.picklist.picklistValues = picklistValues;
@@ -105,12 +105,13 @@ if (forceTooling.CustomFields === undefined) {
     this.writeRequiresMasterRead = false;
 
     // unused ints
-    this.relationshipOrder = 0;
-    this.startingNumber = 0;
-    this.visibleLines = visibleLines;
-    
+    // this.relationshipOrder = 0;
+    // this.startingNumber = 0;
+    if(visibleLines != null) this.visibleLines = visibleLines;
+
     // unused strings
-    this.defaultValue = null;
+    if(this.type == 'Checkbox') this.defaultValue = false;
+
     if(referenceTo != null) this.deleteConstraint = 'SetNull';
     this.description = null;
     this.displayFormat = null;
@@ -127,7 +128,7 @@ if (forceTooling.CustomFields === undefined) {
   };
 
   // For future use:
-  // Should create an array of forceTooling.CustomFields.PicklistValues to pass as an input to Metadata. 
+  // Should create an array of forceTooling.CustomFields.PicklistValues to pass as an input to Metadata.
   // Right now, all the fields seem semi-useless except for name.
   // we can't set the default value because it's a reserved word.
   forceTooling.CustomFields.PicklistValue = function(name){
@@ -142,7 +143,7 @@ if (forceTooling.CustomFields === undefined) {
     this.reviewed = false;
     this.won = null;
     this.probability = null;
-    
+
     //string fields
     this.forecastCategory = null;
     this.color = null;
@@ -189,7 +190,7 @@ if (forceTooling.Client === undefined) {
   }
 
   /**
-   * The Client provides a convenient wrapper for the Force.com REST API, 
+   * The Client provides a convenient wrapper for the Force.com REST API,
    * allowing JavaScript in Visualforce pages to use the API via the Ajax Proxy.
    * @param [clientId=null] 'Consumer Key' in the Remote Access app settings
    * @param [loginUrl='https://login.salesforce.com/'] Login endpoint
@@ -258,7 +259,7 @@ if (forceTooling.Client === undefined) {
    * @param sessionId a salesforce.com session ID. In a Visualforce page,
    *                   use '{!$Api.sessionId}' to obtain a session ID.
    * @param [apiVersion="21.0"] Force.com API version
-   * @param [instanceUrl] Omit this if running on Visualforce; otherwise 
+   * @param [instanceUrl] Omit this if running on Visualforce; otherwise
    *                   use the value from the OAuth token.
    */
   forceTooling.Client.prototype.setSessionToken = function(sessionId, apiVersion, instanceUrl) {
@@ -266,10 +267,10 @@ if (forceTooling.Client === undefined) {
     this.apiVersion = (typeof apiVersion === 'undefined' || apiVersion === null) ? 'v27.0': apiVersion;
     if (typeof instanceUrl === 'undefined' || instanceUrl === null) {
           // location.hostname can be of the form 'abc.na1.visual.force.com',
-          // 'na1.salesforce.com' or 'abc.my.salesforce.com' (custom domains). 
+          // 'na1.salesforce.com' or 'abc.my.salesforce.com' (custom domains).
           // Split on '.', and take the [1] or [0] element as appropriate
           var elements = location.hostname.split(".");
-          
+
           var instance = null;
           if(elements.length == 4 && elements[1] === 'my') {
             instance = elements[0] + '.' + elements[1];
@@ -278,9 +279,9 @@ if (forceTooling.Client === undefined) {
           } else {
             instance = elements[1];
           }
-          
+
           this.instanceUrl = "https://" + instance + ".salesforce.com";
-    } 
+    }
     else {
       this.instanceUrl = instanceUrl;
     }
@@ -392,7 +393,7 @@ if (forceTooling.Client === undefined) {
   forceTooling.Client.prototype.update = function(metaDataType, id, payload, callback, error) {
     return this.ajax('/' + this.apiVersion + '/tooling/sobjects/' + metaDataType + '/' + id + '?_HttpMethod=PATCH', callback, error, "POST", JSON.stringify(payload));
   };
-  
+
   // query
   forceTooling.Client.prototype.query = function(queryString, callback, error) {
     return this.ajax('/' + this.apiVersion + '/tooling/query/?q=' + queryString, callback, error);
@@ -431,5 +432,5 @@ if (forceTooling.Client === undefined) {
   forceTooling.Client.prototype.queryLogBodyByLogId = function(id, callback, error) {
     return this.ajax('/' + this.apiVersion + '/tooling/sobjects/ApexLog/'+ id +'/Body/');
   };
-  
+
 }
