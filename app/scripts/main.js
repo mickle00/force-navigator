@@ -246,10 +246,14 @@ var sfnav = (function() {
                 input = document.getElementById("sfnav_quickSearch").value;
             }
             else{
+                clearOutput();
                 setVisible("hidden");
                 posi = -1;
             }
         }
+        var firstEl = document.querySelector('#sfnav_output :first-child');
+
+        if(posi == -1 && firstEl != null) firstEl.className = "sfnav_child sfnav_selected"
     }
 
     function httpGet(url, callback)
@@ -289,6 +293,7 @@ var sfnav = (function() {
             addElements(ins);
         }
         else{
+            document.querySelector('#sfnav_output').innerHTML = '';
             setVisible("hidden");
             posi = -1;
         }
@@ -881,8 +886,10 @@ var sfnav = (function() {
         }
 
         var newtab = newTabKeys.indexOf(key) >= 0 ? true : false;
-        if(!newtab)
+        if(!newtab){
+            clearOutput();
             setVisible("hidden");
+        }
 
         if(!invokeCommand(newText, newtab))
             invokeCommand(origText, newtab);
@@ -927,6 +934,7 @@ var sfnav = (function() {
             if (words.length > 0 && posi < words.length-1)
             {
                 posi++;
+                if(posi == 0) posi = 1;
                 if(outp.childNodes[posi] != null)
                     firstChild = outp.childNodes[posi].firstChild.nodeValue;
                 else
@@ -1033,7 +1041,8 @@ var sfnav = (function() {
         var div = document.createElement('div');
         div.setAttribute('id', 'sfnav_search_box');
         var loaderURL = chrome.extension.getURL("images/ajax-loader.gif");
-        div.innerHTML = '<div class="sfnav_wrapper"><input type="text" id="sfnav_quickSearch" autocomplete="off"/><img id="sfnav_loader" src= "'+ loaderURL +'"/></div><div class="sfnav_shadow" id="sfnav_shadow"/><div class="sfnav_output" id="sfnav_output"/>';
+        var logoURL = chrome.extension.getURL("images/128.png");
+        div.innerHTML = '<div class="sfnav_wrapper"><input type="text" id="sfnav_quickSearch" autocomplete="off"/><img id="sfnav_loader" src= "'+ loaderURL +'"/><img id="sfnav_logo" src= "'+ logoURL +'"/></div><div class="sfnav_shadow" id="sfnav_shadow"/><div class="sfnav_output" id="sfnav_output"/>';
         document.body.appendChild(div);
 
         outp = document.getElementById("sfnav_output");

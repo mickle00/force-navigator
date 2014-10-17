@@ -1,5 +1,6 @@
  #sfnav_search_box {
- 	height:50%;
+ 	/*height:50%;*/
+  opacity: 0.98;
  	overflow:hidden;
  	z-index: 9999;
  	background-color:#1797c0;
@@ -12,40 +13,73 @@
  	padding:9px;
  	width:50%;
  	visibility: hidden;
- 	-moz-box-shadow:    0 0 0 8px  rgba(107,107,107,.5);
-  -webkit-box-shadow: 0 0 0 8px  rgba(107,107,107,.5);
-  box-shadow:         0 0 0 8px  rgba(107,107,107,.5);
+    box-shadow: rgba(0, 0, 0, 0.490196) 0px 6px 20px 0px;
+    border-top-left-radius: 2px;
+    border-top-right-radius: 2px;
+    border-bottom-right-radius: 2px;
+    border-bottom-left-radius: 2px;
+
+    background-color: white;
+  font-family: Helvetica, Arial, sans-serif;
  }
  #sfnav_search_box .sfnav_wrapper {
  	background:white;
- 	padding:13px 0 10px 8px;
+ 	/*padding:13px 0 10px 8px;*/
  	position:relative;
+  height: 48px;
+  display: flex;
  }
   #sfnav_search_box .sfnav_output {
-  	height:100%;
+    max-height:240px;
  	overflow:auto;
  }
  .sfnav_shadow {
  	max-height:100%;
  	overflow:auto;
- 	padding-top: 15px;
+ 	/*padding-top: 15px;*/
  }
  .sfnav_child {
     display:block;
- 	font:bold 18px Helvetica, Arial, sans-serif;
- 	color:white;
- 	text-shadow: 1px 1px 1px rgba(0,0,0,0.3);
+ 	/*font:bold 18px Helvetica, Arial, sans-serif;*/
+ 	color:#000;
+  font-size: 16px;
+  text-decoration: none;
+ 	/*text-shadow: 1px 1px 1px rgba(0,0,0,0.3);*/
  }
  #sfnav_search_box input {
+  position: relative;
+  flex: 1;
+  /* margin-top: auto; */
+  /* margin-bottom: auto; */
+  display: inline-block;
+  /* top: 0; */
  	width:90%;
  	outline: none;
  	background-color:white;
  	border:none;
  	color:black;
- 	font:bold 24px Helvetica, Arial, sans-serif;
+  font-size:24px;
+ 	/*font:bold 24px Helvetica, Arial, sans-serif;*/
  }
  .sfnav_selected {
- 	background-color:#d9edf3;
+ 	background-color:#f0f0f0;
  	color:black;
+
  }
+
+#sfnav_logo {
+  width:48px;
+  height:48px;
+  display: inline-block;
+}
+
+#sfnav_loader {
+  visibility: hidden;
+  display: inline-block;
+  /* flex: 1; */
+  width: 16px;
+  height: 16px;
+  margin-top: auto;
+  margin-bottom: auto;
+}
 
