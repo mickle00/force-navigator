@@ -21,7 +21,7 @@ var sfnav = (function() {
     var loaded=false;
     var shortcut;
     var sid;
-    var SFAPI_VERSION = 'v28.0';
+    var SFAPI_VERSION = 'v33.0';
     var ftClient;
     var customObjects = {};
     var META_DATATYPES = {
@@ -89,7 +89,7 @@ var sfnav = (function() {
      var mouseHandler=
      function(){
         this.classList.add('sfnav_selected');
-
+		mouseClickLoginAsUserId = this.getAttribute("id");
         return true;
     }
 
@@ -111,6 +111,13 @@ var sfnav = (function() {
         return true;
     }
 
+	var mouseClickLoginAsUserId;
+	var mouseClickLoginAs=
+    function(){
+        loginAsPerform(mouseClickLoginAsUserId);
+        return true;
+    }
+	
     function getSingleObjectMetadata()
     {
         var recordId = document.URL.split('/')[3];
@@ -118,9 +125,16 @@ var sfnav = (function() {
 
     }
     function addElements(ins)
-    {
+    {      
+		if(ins.substring(0,9) == 'login as ')
+        {
 
-        if(ins.substring(0,3) == 'cf ' && ins.split(' ').length < 4)
+            clearOutput();
+            addWord('Usage: login as <FirstName> <LastName> OR <Username>');
+            setVisible('visible');
+
+        }
+		else if(ins.substring(0,3) == 'cf ' && ins.split(' ').length < 4)
         {
 
             clearOutput();
@@ -309,12 +323,20 @@ var sfnav = (function() {
         } else {
             sp = d;
         }
+		
+		if(cmds[word] != null && cmds[word].id != null && cmds[word].id != "") {
+			sp.id = cmds[word].id;
+		}
+		
         sp.className=  "sfnav_child";
         sp.appendChild(document.createTextNode(word));
         sp.onmouseover = mouseHandler;
         sp.onmouseout = mouseHandlerOut;
-        sp.onclick = mouseClick;
-        outp.appendChild(sp);
+		sp.onclick = mouseClick;
+        if(sp.id !== undefined){
+			sp.onclick = mouseClickLoginAs;
+		}
+		outp.appendChild(sp);
     }
 
     function addSuccess(text)
@@ -452,7 +474,12 @@ var sfnav = (function() {
             createField(cmd);
             return true;
         }
-
+		if(cmd.toLowerCase().substring(0,9) == 'login as ')
+        {
+            loginAs(cmd);
+            return true;
+        }
+		
         return false;
     }
 
@@ -653,6 +680,66 @@ var sfnav = (function() {
         }
 
     }
+	
+	function loginAs(cmd) {
+		var arrSplit = cmd.split(' ');
+		var searchValue = arrSplit[2];
+		if(arrSplit[3] !== undefined)
+			searchValue += '+' + arrSplit[3];
+		
+		var query = 'SELECT+Id,+Name,+Username+FROM+User+WHERE+Name+LIKE+\'%25' + searchValue + '%25\'+OR+Username+LIKE+\'%25' + searchValue + '%25\'';
+		console.log(query);
+		
+		ftClient.query(query,
+			function(success) {
+				console.log(success);
+				var numberOfUserRecords = success.records.length;
+				if(numberOfUserRecords < 1){
+					addError([{"message":"No user for your search exists."}]);
+				} else if(numberOfUserRecords > 1){
+					loginAsShowOptions(success.records);
+				} else {
+					var userId = success.records[0].Id;
+					loginAsPerform(userId);
+				}
+			},
+			function(error)
+			{
+				console.log(error);
+				addError(error.responseJSON);
+			}
+		);
+	}
+	
+	function loginAsShowOptions(records){
+		for(var i = 0; i < records.length; ++i){
+			var cmd = 'Login As ' + records[i].Name;
+			cmds[cmd] = {key: cmd, id: records[i].Id};
+			addWord(cmd);
+		}
+		setVisible('visible');
+	}
+	
+	function loginAsPerform(userId) {
+		xmlhttp = new XMLHttpRequest();
+		xmlhttp.onreadystatechange = function() {
+			if (xmlhttp.readyState == XMLHttpRequest.DONE ) {
+			   document.write(xmlhttp.responseText );
+			   document.close();
+			   setTimeout(function() {
+					document.getElementsByName("login")[0].click();
+			   }, 1000);  
+			}
+		}
+		xmlhttp.open("GET", userDetailPage(userId), true);
+		xmlhttp.send();
+	}
+	
+	function userDetailPage(userId) {
+		var loginLocation = window.location.protocol + '//' + window.location.host + '/' + userId + '?noredirect=1';
+		console.log(loginLocation);
+		return loginLocation;
+	}
 
     function getMetadata(_data) {
         if(_data.length == 0) return;
