@@ -740,35 +740,39 @@ var sfnav = (function() {
 
     function parseSetupTree(html)
     {
-        var allLinks = html.getElementById('setupNavTree').getElementsByClassName("parent");
+        var textLeafSelector = '.setupLeaf > a[id*="_font"]';
+        var all = html.querySelectorAll(textLeafSelector);
         var strName;
         var as;
         var strNameMain;
         var strName;
-        for(var i = 0; i<allLinks.length;i++)
-        {
+        [].map.call(all, function(item) {
+            var hasTopParent = false, hasParent = false;
+            var parent, topParent;
+            var parentEl, topParentEl;
 
-            var as = allLinks[i].getElementsByTagName("a");
-            for(var j = 0;j<as.length;j++)
-            {
-                if(as[j].id.indexOf("_font") != -1)
-                {
-                    strNameMain = 'Setup > ' + as[j].text + ' > ';
-                    break;
-                }
+            if (item.parentElement != null && item.parentElement.parentElement != null && item.parentElement.parentElement.parentElement != null
+                && item.parentElement.parentElement.parentElement.className.indexOf('parent') !== -1) {
 
+                hasParent = true;
+                parentEl = item.parentElement.parentElement.parentElement;
+                parent = parentEl.querySelector('.setupFolder').innerText;
             }
-            var children = allLinks[i].querySelectorAll('.childContainer > .setupLeaf > a');
-            for(var j = 0;j<children.length;j++)
-            {
-                if(children[j].text.length > 2)
-                {
-                    strName = strNameMain + children[j].text;
-                    if(cmds[strName] == null) cmds[strName] = {url: children[j].href, key: strName};
-                }
+            if(hasParent && parentEl.parentElement != null && parentEl.parentElement.parentElement != null
+                && parentEl.parentElement.parentElement.className.indexOf('parent') !== -1) {
+                hasTopParent = true;
+                topParentEl = parentEl.parentElement.parentElement;
+                topParent = topParentEl.querySelector('.setupFolder').innerText;
             }
 
-        }
+            strNameMain = 'Setup > ' + (hasTopParent ? (topParent + ' > ') : '');
+            strNameMain += (hasParent ? (parent + ' > ') : '');
+
+            strName = strNameMain + item.innerText;
+
+            if(cmds[strName] == null) cmds[strName] = {url: item.href, key: strName};
+
+        });
         store('Store Commands', cmds);
     }
 
