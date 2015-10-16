@@ -11,7 +11,6 @@ var sfnav = (function() {
         "shift+enter"
     ]
     var input;
-    var isVisible = false;
     var key;
     var metaData = {};
     var serverInstance = getServerInstance();
@@ -280,19 +279,22 @@ var sfnav = (function() {
      }
      req.send();
     }
+    function getVisible(){
+        return document.getElementById("sfnav_shadow").style.visibility;
+    }
+    function isVisible() {
+        return document.getElementById("sfnav_shadow").style.visibility == 'visible';
+    }
     function setVisible(visi){
         var x = document.getElementById("sfnav_shadow");
-        var t = document.getElementById("sfnav_quickSearch");
-
         x.style.position = 'relative';
-
         x.style.visibility = visi;
+    }
+    function isVisibleSearch() {
+        return document.getElementById("sfnav_quickSearch").style.visibility == 'visible';
     }
     function setVisibleSearch(visi)
     {
-        if(visi == "hidden") isVisible = false;
-        else isVisible = true;
-
         var t = document.getElementById("sfnav_search_box");
         t.style.visibility = visi;
         if(visi=='visible') document.getElementById("sfnav_quickSearch").focus();
@@ -990,14 +992,18 @@ var sfnav = (function() {
             return false;
         });
 
-        Mousetrap.wrap(document.getElementById('sfnav_quickSearch')).bind('esc', function(e) {
+        Mousetrap.bindGlobal('esc', function(e) {
 
-            document.getElementById("sfnav_quickSearch").blur();
-            clearOutput();
-            document.getElementById("sfnav_quickSearch").value = '';
+            if (isVisible() || isVisibleSearch()) {
 
-            setVisible("hidden");
-            setVisibleSearch("hidden");
+                document.getElementById("sfnav_quickSearch").blur();
+                clearOutput();
+                document.getElementById("sfnav_quickSearch").value = '';
+    
+                setVisible("hidden");
+                setVisibleSearch("hidden");
+                
+            }
 
         });
 
