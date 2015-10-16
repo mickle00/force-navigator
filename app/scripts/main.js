@@ -116,7 +116,7 @@ var sfnav = (function() {
         loginAsPerform(mouseClickLoginAsUserId);
         return true;
     }
-	
+
     function getSingleObjectMetadata()
     {
         var recordId = document.URL.split('/')[3];
@@ -124,7 +124,7 @@ var sfnav = (function() {
 
     }
     function addElements(ins)
-    {      
+    {
 		if(ins.substring(0,9) == 'login as ')
         {
 
@@ -283,7 +283,7 @@ var sfnav = (function() {
         return document.getElementById("sfnav_shadow").style.visibility;
     }
     function isVisible() {
-        return document.getElementById("sfnav_shadow").style.visibility == 'visible';
+        return document.getElementById("sfnav_shadow").style.visibility !== 'hidden';
     }
     function setVisible(visi){
         var x = document.getElementById("sfnav_shadow");
@@ -291,7 +291,7 @@ var sfnav = (function() {
         x.style.visibility = visi;
     }
     function isVisibleSearch() {
-        return document.getElementById("sfnav_quickSearch").style.visibility == 'visible';
+        return document.getElementById("sfnav_quickSearch").style.visibility !== 'hidden';
     }
     function setVisibleSearch(visi)
     {
@@ -325,11 +325,11 @@ var sfnav = (function() {
         } else {
             sp = d;
         }
-		
+
 		if(cmds[word] != null && cmds[word].id != null && cmds[word].id != "") {
 			sp.id = cmds[word].id;
 		}
-		
+
         sp.className=  "sfnav_child";
         sp.appendChild(document.createTextNode(word));
         sp.onmouseover = mouseHandler;
@@ -481,7 +481,7 @@ var sfnav = (function() {
             loginAs(cmd);
             return true;
         }
-		
+
         return false;
     }
 
@@ -682,16 +682,16 @@ var sfnav = (function() {
         }
 
     }
-	
+
 	function loginAs(cmd) {
 		var arrSplit = cmd.split(' ');
 		var searchValue = arrSplit[2];
 		if(arrSplit[3] !== undefined)
 			searchValue += '+' + arrSplit[3];
-		
+
 		var query = 'SELECT+Id,+Name,+Username+FROM+User+WHERE+Name+LIKE+\'%25' + searchValue + '%25\'+OR+Username+LIKE+\'%25' + searchValue + '%25\'';
 		console.log(query);
-		
+
 		ftClient.query(query,
 			function(success) {
 				console.log(success);
@@ -712,7 +712,7 @@ var sfnav = (function() {
 			}
 		);
 	}
-	
+
 	function loginAsShowOptions(records){
 		for(var i = 0; i < records.length; ++i){
 			var cmd = 'Login As ' + records[i].Name;
@@ -721,7 +721,7 @@ var sfnav = (function() {
 		}
 		setVisible('visible');
 	}
-	
+
 	function loginAsPerform(userId) {
 		xmlhttp = new XMLHttpRequest();
 		xmlhttp.onreadystatechange = function() {
@@ -730,13 +730,13 @@ var sfnav = (function() {
 			   document.close();
 			   setTimeout(function() {
 					document.getElementsByName("login")[0].click();
-			   }, 1000);  
+			   }, 1000);
 			}
 		}
 		xmlhttp.open("GET", userDetailPage(userId), true);
 		xmlhttp.send();
 	}
-	
+
 	function userDetailPage(userId) {
 		var loginLocation = window.location.protocol + '//' + window.location.host + '/' + userId + '?noredirect=1';
 		console.log(loginLocation);
@@ -1003,10 +1003,10 @@ var sfnav = (function() {
                 document.getElementById("sfnav_quickSearch").blur();
                 clearOutput();
                 document.getElementById("sfnav_quickSearch").value = '';
-    
+
                 setVisible("hidden");
                 setVisibleSearch("hidden");
-                
+
             }
 
         });

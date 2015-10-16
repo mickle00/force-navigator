@@ -122,7 +122,7 @@ module.exports = function (grunt) {
                 dest: '<%= yeoman.dist %>'
             },
             html: [
-                '<%= yeoman.app %>/popup.html' 
+                '<%= yeoman.app %>/popup.html'
             ]
         },
         usemin: {
@@ -223,7 +223,7 @@ module.exports = function (grunt) {
         chromeManifest: {
             dist: {
                 options: {
-                    buildnumber: true,
+                    buildnumber: false,
                     background: {
                         target:'scripts/background.js'
                     }
