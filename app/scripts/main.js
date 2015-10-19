@@ -326,19 +326,19 @@ var sfnav = (function() {
             sp = d;
         }
 
-		if(cmds[word] != null && cmds[word].id != null && cmds[word].id != "") {
-			sp.id = cmds[word].id;
-		}
+    		if(cmds[word] != null && cmds[word].id != null && cmds[word].id != "") {
+    			sp.id = cmds[word].id;
+    		}
 
         sp.className=  "sfnav_child";
         sp.appendChild(document.createTextNode(word));
         sp.onmouseover = mouseHandler;
         sp.onmouseout = mouseHandlerOut;
-		sp.onclick = mouseClick;
-        if(sp.id !== undefined){
-			sp.onclick = mouseClickLoginAs;
-		}
-		outp.appendChild(sp);
+        sp.onclick = mouseClick;
+        if(sp.id && sp.length > 0){
+    	       sp.onclick = mouseClickLoginAs;
+        }
+    		outp.appendChild(sp);
     }
 
     function addSuccess(text)
