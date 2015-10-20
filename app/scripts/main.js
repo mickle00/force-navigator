@@ -11,7 +11,6 @@ var sfnav = (function() {
         "shift+enter"
     ]
     var input;
-    var isVisible = false;
     var key;
     var metaData = {};
     var serverInstance = getServerInstance();
@@ -117,7 +116,7 @@ var sfnav = (function() {
         loginAsPerform(mouseClickLoginAsUserId);
         return true;
     }
-	
+
     function getSingleObjectMetadata()
     {
         var recordId = document.URL.split('/')[3];
@@ -125,7 +124,7 @@ var sfnav = (function() {
 
     }
     function addElements(ins)
-    {      
+    {
 		if(ins.substring(0,9) == 'login as ')
         {
 
@@ -280,19 +279,22 @@ var sfnav = (function() {
      }
      req.send();
     }
+    function getVisible(){
+        return document.getElementById("sfnav_shadow").style.visibility;
+    }
+    function isVisible() {
+        return document.getElementById("sfnav_shadow").style.visibility !== 'hidden';
+    }
     function setVisible(visi){
         var x = document.getElementById("sfnav_shadow");
-        var t = document.getElementById("sfnav_quickSearch");
-
         x.style.position = 'relative';
-
         x.style.visibility = visi;
+    }
+    function isVisibleSearch() {
+        return document.getElementById("sfnav_quickSearch").style.visibility !== 'hidden';
     }
     function setVisibleSearch(visi)
     {
-        if(visi == "hidden") isVisible = false;
-        else isVisible = true;
-
         var t = document.getElementById("sfnav_search_box");
         t.style.visibility = visi;
         if(visi=='visible') document.getElementById("sfnav_quickSearch").focus();
@@ -323,20 +325,20 @@ var sfnav = (function() {
         } else {
             sp = d;
         }
-		
-		if(cmds[word] != null && cmds[word].id != null && cmds[word].id != "") {
-			sp.id = cmds[word].id;
-		}
-		
+
+    		if(cmds[word] != null && cmds[word].id != null && cmds[word].id != "") {
+    			sp.id = cmds[word].id;
+    		}
+
         sp.className=  "sfnav_child";
         sp.appendChild(document.createTextNode(word));
         sp.onmouseover = mouseHandler;
         sp.onmouseout = mouseHandlerOut;
-		sp.onclick = mouseClick;
-        if(sp.id !== undefined){
-			sp.onclick = mouseClickLoginAs;
-		}
-		outp.appendChild(sp);
+        sp.onclick = mouseClick;
+        if(sp.id && sp.length > 0){
+    	       sp.onclick = mouseClickLoginAs;
+        }
+    		outp.appendChild(sp);
     }
 
     function addSuccess(text)
@@ -479,7 +481,7 @@ var sfnav = (function() {
             loginAs(cmd);
             return true;
         }
-		
+
         return false;
     }
 
@@ -680,16 +682,16 @@ var sfnav = (function() {
         }
 
     }
-	
+
 	function loginAs(cmd) {
 		var arrSplit = cmd.split(' ');
 		var searchValue = arrSplit[2];
 		if(arrSplit[3] !== undefined)
 			searchValue += '+' + arrSplit[3];
-		
+
 		var query = 'SELECT+Id,+Name,+Username+FROM+User+WHERE+Name+LIKE+\'%25' + searchValue + '%25\'+OR+Username+LIKE+\'%25' + searchValue + '%25\'';
 		console.log(query);
-		
+
 		ftClient.query(query,
 			function(success) {
 				console.log(success);
@@ -710,7 +712,7 @@ var sfnav = (function() {
 			}
 		);
 	}
-	
+
 	function loginAsShowOptions(records){
 		for(var i = 0; i < records.length; ++i){
 			var cmd = 'Login As ' + records[i].Name;
@@ -719,7 +721,7 @@ var sfnav = (function() {
 		}
 		setVisible('visible');
 	}
-	
+
 	function loginAsPerform(userId) {
 		xmlhttp = new XMLHttpRequest();
 		xmlhttp.onreadystatechange = function() {
@@ -728,13 +730,13 @@ var sfnav = (function() {
 			   document.close();
 			   setTimeout(function() {
 					document.getElementsByName("login")[0].click();
-			   }, 1000);  
+			   }, 1000);
 			}
 		}
 		xmlhttp.open("GET", userDetailPage(userId), true);
 		xmlhttp.send();
 	}
-	
+
 	function userDetailPage(userId) {
 		var loginLocation = window.location.protocol + '//' + window.location.host + '/' + userId + '?noredirect=1';
 		console.log(loginLocation);
@@ -827,35 +829,39 @@ var sfnav = (function() {
 
     function parseSetupTree(html)
     {
-        var allLinks = html.getElementById('setupNavTree').getElementsByClassName("parent");
+        var textLeafSelector = '.setupLeaf > a[id*="_font"]';
+        var all = html.querySelectorAll(textLeafSelector);
         var strName;
         var as;
         var strNameMain;
         var strName;
-        for(var i = 0; i<allLinks.length;i++)
-        {
+        [].map.call(all, function(item) {
+            var hasTopParent = false, hasParent = false;
+            var parent, topParent;
+            var parentEl, topParentEl;
 
-            var as = allLinks[i].getElementsByTagName("a");
-            for(var j = 0;j<as.length;j++)
-            {
-                if(as[j].id.indexOf("_font") != -1)
-                {
-                    strNameMain = 'Setup > ' + as[j].text + ' > ';
-                    break;
-                }
+            if (item.parentElement != null && item.parentElement.parentElement != null && item.parentElement.parentElement.parentElement != null
+                && item.parentElement.parentElement.parentElement.className.indexOf('parent') !== -1) {
 
+                hasParent = true;
+                parentEl = item.parentElement.parentElement.parentElement;
+                parent = parentEl.querySelector('.setupFolder').innerText;
             }
-            var children = allLinks[i].querySelectorAll('.childContainer > .setupLeaf > a');
-            for(var j = 0;j<children.length;j++)
-            {
-                if(children[j].text.length > 2)
-                {
-                    strName = strNameMain + children[j].text;
-                    if(cmds[strName] == null) cmds[strName] = {url: children[j].href, key: strName};
-                }
+            if(hasParent && parentEl.parentElement != null && parentEl.parentElement.parentElement != null
+                && parentEl.parentElement.parentElement.className.indexOf('parent') !== -1) {
+                hasTopParent = true;
+                topParentEl = parentEl.parentElement.parentElement;
+                topParent = topParentEl.querySelector('.setupFolder').innerText;
             }
 
-        }
+            strNameMain = 'Setup > ' + (hasTopParent ? (topParent + ' > ') : '');
+            strNameMain += (hasParent ? (parent + ' > ') : '');
+
+            strName = strNameMain + item.innerText;
+
+            if(cmds[strName] == null) cmds[strName] = {url: item.href, key: strName};
+
+        });
         store('Store Commands', cmds);
     }
 
@@ -990,14 +996,18 @@ var sfnav = (function() {
             return false;
         });
 
-        Mousetrap.wrap(document.getElementById('sfnav_quickSearch')).bind('esc', function(e) {
+        Mousetrap.bindGlobal('esc', function(e) {
 
-            document.getElementById("sfnav_quickSearch").blur();
-            clearOutput();
-            document.getElementById("sfnav_quickSearch").value = '';
+            if (isVisible() || isVisibleSearch()) {
 
-            setVisible("hidden");
-            setVisibleSearch("hidden");
+                document.getElementById("sfnav_quickSearch").blur();
+                clearOutput();
+                document.getElementById("sfnav_quickSearch").value = '';
+
+                setVisible("hidden");
+                setVisibleSearch("hidden");
+
+            }
 
         });
 
