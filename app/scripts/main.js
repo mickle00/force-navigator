@@ -420,14 +420,26 @@ var sfnav = (function() {
                 if(key.toLowerCase().indexOf(tmpSplit[i].toLowerCase()) != -1)
                 {
                     match = true;
+                    sortValue = 1;
+                } 
+                
+                if(dict[key]['synonyms'] !== undefined){
+                    for(var j = 0;j<dict[key]['synonyms'].length;j++){
+                        keySynonym = dict[key]['synonyms'][j];
+                        if(keySynonym.toLowerCase().indexOf(tmpSplit[i].toLowerCase()) != -1)
+                        {
+                            match = true;
+                            sortValue = 0.5;
+                        }
+                    }
                 }
-                else
+                
+                if (!match)
                 {
-                    match = false;
                     break;
                 }
             }
-            if(match) arrFound.push({num : 1, key : key});
+            if(match) arrFound.push({num : sortValue, key : key});
         }
     }
     arrFound.sort(function(a,b) {
@@ -751,7 +763,6 @@ var sfnav = (function() {
         var act = {};
         metaData = {};
 
-
         for(var i=0;i<metadata.sobjects.length;i++)
         {
             if(metadata.sobjects[i].keyPrefix != null)
@@ -767,15 +778,16 @@ var sfnav = (function() {
                 act.key = metadata.sobjects[i].name;
                 act.keyPrefix = metadata.sobjects[i].keyPrefix;
                 act.url = serverInstance + '/' + metadata.sobjects[i].keyPrefix;
-
                 cmds['List ' + mRecord.labelPlural] = act;
+                cmds['List ' + mRecord.labelPlural]['synonyms'] = [metadata.sobjects[i].name];
+
                 act = {};
                 act.key = metadata.sobjects[i].name;
                 act.keyPrefix = metadata.sobjects[i].keyPrefix;
                 act.url = serverInstance + '/' + metadata.sobjects[i].keyPrefix;
                 act.url += '/e';
                 cmds['New ' + mRecord.label] = act;
-
+                cmds['New ' + mRecord.label]['synonyms'] = [metadata.sobjects[i].name];
 
             }
         }
@@ -1096,7 +1108,6 @@ var sfnav = (function() {
     });
 
     document.getElementById('sfnav_quickSearch').onkeyup = function() {
-
         lookAt();
         return true;
     }
