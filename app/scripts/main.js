@@ -422,14 +422,17 @@ var sfnav = (function() {
                     match = true;
                     sortValue = 1;
                 } 
-                
-                if(dict[key]['synonyms'] !== undefined){
-                    for(var j = 0;j<dict[key]['synonyms'].length;j++){
-                        keySynonym = dict[key]['synonyms'][j];
-                        if(keySynonym.toLowerCase().indexOf(tmpSplit[i].toLowerCase()) != -1)
-                        {
-                            match = true;
-                            sortValue = 0.5;
+                else 
+                {
+                    match = false;
+                    if(dict[key]['synonyms'] !== undefined){
+                        for(var j = 0;j<dict[key]['synonyms'].length;j++){
+                            keySynonym = dict[key]['synonyms'][j];
+                            if(keySynonym.toLowerCase().indexOf(tmpSplit[i].toLowerCase()) != -1)
+                            {
+                                match = true;
+                                sortValue = 0.5;
+                            }
                         }
                     }
                 }
