@@ -23,7 +23,6 @@ var sfnav = (function() {
   var SFAPI_VERSION = 'v33.0';
   var ftClient;
   var customObjects = {};
-  var searchValue;
   var META_DATATYPES = {
     "AUTONUMBER": {name:"AutoNumber",code:"auto", params:0},
     "CHECKBOX": {name:"Checkbox",code:"cb", params:0},
@@ -301,16 +300,15 @@ var sfnav = (function() {
     if(visi=='visible') document.getElementById("sfnav_quickSearch").focus();
   }
 
-  function lookAt(e){
+  function lookAt(){
     let newSearchVal = document.getElementById('sfnav_quickSearch').value
-    if (newSearchVal !== '' && !e) {
+    if (newSearchVal !== '') {
       addElements(newSearchVal);
     }
     else{
       document.querySelector('#sfnav_output').innerHTML = '';
       setVisible("hidden");
       posi = -1;
-      searchValue = null
     }
   }
   function addWord(word){
