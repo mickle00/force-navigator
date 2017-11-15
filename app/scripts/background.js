@@ -14,7 +14,7 @@ chrome.browserAction.onClicked.addListener(function() {
     chrome.browserAction.setPopup({popup:"popup.html"});
 });
 
-chrome.extension.onMessage.addListener(
+chrome.runtime.onMessage.addListener(
   function(request, sender, sendResponse) {
 
     var orgKey = request.key != null ? request.key.split('!')[0] : null;
