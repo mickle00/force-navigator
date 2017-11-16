@@ -796,7 +796,7 @@ var sfnav = (function() {
     req.key = hash;
     req.payload = payload;
 
-    chrome.extension.sendMessage(req, function(response) {
+    chrome.runtime.sendMessage(req, function(response) {
 
     });
 
@@ -950,11 +950,12 @@ var sfnav = (function() {
 
   function initShortcuts() {
 
-    chrome.extension.sendMessage({'action':'Get Settings'},
+    chrome.runtime.sendMessage({'action':'Get Settings'},
       function(response) {
-
-        shortcut = response['shortcut'];
-        bindShortcut(shortcut);
+        if (response !== undefined) {
+          shortcut = response['shortcut'];
+          bindShortcut(shortcut);
+        }
       }
     );
 
@@ -1136,7 +1137,7 @@ var sfnav = (function() {
     // });
 
 
-    chrome.extension.sendMessage({
+    chrome.runtime.sendMessage({
       action:'Get Commands', 'key': hash},
       function(response) {
         cmds = response;
@@ -1148,7 +1149,7 @@ var sfnav = (function() {
         }
       });
 
-    // chrome.extension.sendMessage({action:'Get Metadata', 'key': hash},
+    // chrome.runtime.sendMessage({action:'Get Metadata', 'key': hash},
     //   function(response) {
     //     metaData = response;
     // });
