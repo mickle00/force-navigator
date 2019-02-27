@@ -1031,7 +1031,7 @@ var sfnav = (function() {
   }
 
   function bindShortcut(shortcut) {
-
+console.log("bound shortcut", shortcut)
     let searchBar = document.getElementById('sfnav_quickSearch');
 
     Mousetrap.bindGlobal(shortcut, function(e) {
@@ -1106,6 +1106,7 @@ var sfnav = (function() {
   }
   function init()
   {
+console.log("loaded SF Navigator")
     ftClient = new forceTooling.Client();
     ftClient.setSessionToken(getCookie('sid'), SFAPI_VERSION, serverInstance + '');
 
