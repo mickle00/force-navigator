@@ -454,6 +454,7 @@ var sfnav = (function() {
   }
 
   function invokeCommand(cmd, newtab, event) {
+console.log("invokedCommand: ", cmd, newtab, event)
     if(event != 'click' && typeof cmds[cmd] != 'undefined' && (cmds[cmd].url != null || cmds[cmd].url == ''))
       {
         if(newtab)
@@ -462,7 +463,12 @@ var sfnav = (function() {
             w.blur();
             window.focus();
           } else {
-            window.location.href = cmds[cmd].url;
+console.log(cmds[cmd].url)
+/*
+invokedCommand:  Setup > Customize > Contacts > Fields false undefined
+main.js:466 https://jstart.my.salesforce.com/p/setup/layout/LayoutFieldList?type=Contact&setupid=ContactFields&retURL=%2Fui%2Fsetup%2FSetup%3Fsetupid%3DContact
+*/
+//            window.location.href = cmds[cmd].url;
           }
 
         return true;
@@ -928,6 +934,10 @@ var sfnav = (function() {
     var i;
     var returnUrl;
 
+    if(url.indexOf("lightning.force") != -1) {
+        returnUrl = url.substring(0, url.indexOf("lightning.force")) + "lightning.force.com";
+        return returnUrl;
+    }
     if(url.indexOf("salesforce") != -1)
       {
         returnUrl = url.substring(0, url.indexOf("salesforce")) + "salesforce.com";
@@ -1031,7 +1041,6 @@ var sfnav = (function() {
   }
 
   function bindShortcut(shortcut) {
-console.log("bound shortcut", shortcut)
     let searchBar = document.getElementById('sfnav_quickSearch');
 
     Mousetrap.bindGlobal(shortcut, function(e) {
@@ -1106,7 +1115,6 @@ console.log("bound shortcut", shortcut)
   }
   function init()
   {
-console.log("loaded SF Navigator")
     ftClient = new forceTooling.Client();
     ftClient.setSessionToken(getCookie('sid'), SFAPI_VERSION, serverInstance + '');
 
@@ -1160,7 +1168,10 @@ console.log("loaded SF Navigator")
 
   }
 
-  if(serverInstance == null || getCookie('sid') == null || getCookie('sid').split('!').length != 2) return;
+  if(serverInstance == null || getCookie('sid') == null || getCookie('sid').split('!').length != 2) {
+    console.log('error', serverInstance, getCookie('sid'))
+    return
+  }
   else init();
 
 })();
