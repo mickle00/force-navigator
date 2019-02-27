@@ -1,4 +1,6 @@
-# Salesforce Navigator
+# Salesforce Navigator for Lightning
+
+##This will be an attempt to update the amazing Salesforce Navigator to be compatible with Lightning.
 
 This extension helps you get to any salesforce page quickly. Just type in what you need to do.
 
