@@ -269,11 +269,10 @@ var sfnav = (function() {
     if(posi == -1 && firstEl != null) firstEl.className = "sfnav_child sfnav_selected"
   }
 
-  function httpGet(url, callback)
-  {
+  function httpGet(url, callback) {
     var req = new XMLHttpRequest();
     req.open("GET", url, true);
-    req.setRequestHeader("Authorization", sid);
+    req.setRequestHeader("Authorization", sid.trim());
     req.onload = function(response) {
       callback(response);
     }
@@ -465,9 +464,11 @@ var sfnav = (function() {
       //https://jstart.my.salesforce.com/p/setup/layout/LayoutFieldList?type=Contact&setupid=ContactFields&retURL=%2Fui%2Fsetup%2FSetup%3Fsetupid%3DContact
       // https://jstart.lightning.force.com/lightning/setup/ObjectManager/Case/FieldsAndRelationships/view
       let link = cmd.split(">").map(function (L) {return L.trim()})
-      let ltngObject = link[ link.length - 2 ]
-      let ltngTarget = classicToLightingMap[ link[ link.length - 1 ]]
-      theurl = serverInstance + '/lightning/setup/ObjectManager/' + ltngObject + '/' + ltngTarget + '/view'
+      let ltngObject = link[ link.length - 2 ].replace(/\s/g, "")
+      let ltngTarget = link[ link.length - 1 ]
+      if(Object.keys(classicToLightingMap).includes(link[ link.length - 1 ]))
+        ltngTarget = classicToLightingMap[ link[ link.length - 1 ]]
+      theurl = serverInstance + '/lightning/setup/ObjectManager/' + ltngObject + '/' + ltngTarget.replace(/\s/g, "") + '/view'
     } else {
       theurl = cmds[cmd].url
     }
@@ -477,7 +478,8 @@ var sfnav = (function() {
         w.blur()
         window.focus()
       } else {
-       window.location.href = theurl
+console.log(theurl)
+        // window.location.href = theurl
      }
      return true;
    }
@@ -767,7 +769,7 @@ var sfnav = (function() {
   function getMetadata(_data) {
     if(_data.length == 0) return;
     var metadata = JSON.parse(_data);
-
+console.log(_data)
     var mRecord = {};
     var act = {};
     metaData = {};
@@ -824,16 +826,18 @@ var sfnav = (function() {
     if(location.origin.indexOf("visual.force") !== -1) return;
 
     sid = "Bearer " + getCookie('sid');
+    // will need to swap out for classic URL so that we can actually read the api
     var theurl = getServerInstance() + '/services/data/' + SFAPI_VERSION + '/sobjects/';
 
     cmds['Refresh Metadata'] = {};
     cmds['Setup'] = {};
     var req = new XMLHttpRequest();
+console.log(theurl, sid)
     req.open("GET", theurl, true);
-    req.setRequestHeader("Authorization", sid);
+    req.setRequestHeader("Authorization", sid.trim());
+    req.setRequestHeader("Accept", "application/json");
     req.onload = function(response) {
       getMetadata(response.target.responseText);
-
     }
     req.send();
 
@@ -918,19 +922,16 @@ var sfnav = (function() {
     store('Store Commands', cmds);
   }
 
-  function getCookie(c_name)
-  {
+  function getCookie(c_name) {
     var i,x,y,ARRcookies=document.cookie.split(";");
-    for (i=0;i<ARRcookies.length;i++)
-      {
-        x=ARRcookies[i].substr(0,ARRcookies[i].indexOf("="));
-        y=ARRcookies[i].substr(ARRcookies[i].indexOf("=")+1);
-        x=x.replace(/^\s+|\s+$/g,"");
-        if (x==c_name)
-          {
-            return unescape(y);
-          }
-      }
+    for (i=0;i<ARRcookies.length;i++) {
+      x=ARRcookies[i].substr(0,ARRcookies[i].indexOf("="));
+      y=ARRcookies[i].substr(ARRcookies[i].indexOf("=")+1);
+      x=x.replace(/^\s+|\s+$/g,"");
+      if (x==c_name) {
+          return unescape(y);
+        }
+    }
   }
   function getServerInstance()
   {
@@ -1118,8 +1119,7 @@ var sfnav = (function() {
       });
 
   }
-  function init()
-  {
+  function init() {
     ftClient = new forceTooling.Client();
     ftClient.setSessionToken(getCookie('sid'), SFAPI_VERSION, serverInstance + '');
 
