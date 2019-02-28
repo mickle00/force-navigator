@@ -57,13 +57,15 @@ chrome.runtime.onMessage.addListener(
         sendResponse(sett);
       }
     }
-    if(request.action == 'Set Settings')
-    {
+    if(request.action == 'Set Settings') {
       var settings = localStorage.getItem('sfnav_settings');
-      if(settings != null)
-      {
+      if(settings != null) {
         var sett = JSON.parse(settings);
-        sett[request.key] = request.payload;
+        let payloadKeys = Object.keys(request.payload)
+        for (var i = 0; i < payloadKeys.length; i++) {
+          key = payloadKeys[i]
+          sett[key] = request.payload[key];
+        }
         localStorage.setItem('sfnav_settings', JSON.stringify(sett));
       }
       sendResponse({});
