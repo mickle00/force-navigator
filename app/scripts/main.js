@@ -454,52 +454,57 @@ var sfnav = (function() {
   }
 
   function invokeCommand(cmd, newtab, event) {
-console.log("invokedCommand: ", cmd, newtab, event)
-    if(event != 'click' && typeof cmds[cmd] != 'undefined' && (cmds[cmd].url != null || cmds[cmd].url == ''))
-      {
-        if(newtab)
-          {
-            var w = window.open(cmds[cmd].url, '_newtab');
-            w.blur();
-            window.focus();
-          } else {
-console.log(cmds[cmd].url)
-/*
-invokedCommand:  Setup > Customize > Contacts > Fields false undefined
-main.js:466 https://jstart.my.salesforce.com/p/setup/layout/LayoutFieldList?type=Contact&setupid=ContactFields&retURL=%2Fui%2Fsetup%2FSetup%3Fsetupid%3DContact
-*/
-//            window.location.href = cmds[cmd].url;
-          }
-
-        return true;
-      }
-    if(cmd.toLowerCase() == 'refresh metadata')
-      {
-        showLoadingIndicator();
-        getAllObjectMetadata();
-        setTimeout(function() {
-          hideLoadingIndicator();
-        }, 30000)
-        return true;
-      }
-    if(cmd.toLowerCase() == 'setup')
-      {
-        window.location.href = serverInstance + '/ui/setup/Setup';
-        return true;
-      }
-    if(cmd.toLowerCase().substring(0,3) == 'cf ')
-      {
-        createField(cmd);
-        return true;
-      }
-    if(cmd.toLowerCase().substring(0,9) == 'login as ')
-      {
-        loginAs(cmd);
-        return true;
-      }
-
-    return false;
+    console.log("invokedCommand: ", cmd, newtab, event)
+    console.log(cmds[cmd], cmds)
+    let classicToLightingMap = {
+      'Fields': 'FieldsAndRelationships',
+      'Layouts':'PageLayouts'
+    }
+    let theurl = ''
+    if(serverInstance.includes("lightning")) {
+      //https://jstart.my.salesforce.com/p/setup/layout/LayoutFieldList?type=Contact&setupid=ContactFields&retURL=%2Fui%2Fsetup%2FSetup%3Fsetupid%3DContact
+      // https://jstart.lightning.force.com/lightning/setup/ObjectManager/Case/FieldsAndRelationships/view
+      let link = cmd.split(">").map(function (L) {return L.trim()})
+      let ltngObject = link[ link.length - 2 ]
+      let ltngTarget = classicToLightingMap[ link[ link.length - 1 ]]
+      theurl = serverInstance + '/lightning/setup/ObjectManager/' + ltngObject + '/' + ltngTarget + '/view'
+    } else {
+      theurl = cmds[cmd].url
+    }
+    if(event != 'click' && typeof cmds[cmd] != 'undefined' && (cmds[cmd].url != null || cmds[cmd].url == '')) {
+      if(newtab) {
+        var w = window.open(theurl, '_newtab')
+        w.blur()
+        window.focus()
+      } else {
+       window.location.href = theurl
+     }
+     return true;
+   }
+   if(cmd.toLowerCase() == 'refresh metadata') {
+    showLoadingIndicator();
+    getAllObjectMetadata();
+    setTimeout(function() {
+      hideLoadingIndicator();
+    }, 30000)
+    return true;
   }
+  if(cmd.toLowerCase() == 'setup') {
+    window.location.href = serverInstance + '/ui/setup/Setup';
+    return true;
+  }
+  if(cmd.toLowerCase().substring(0,3) == 'cf ') {
+    createField(cmd);
+    return true;
+  }
+  if(cmd.toLowerCase().substring(0,9) == 'login as ')
+  {
+    loginAs(cmd);
+    return true;
+  }
+
+  return false;
+}
 
   function updateField(cmd)
   {
