@@ -6,19 +6,19 @@
     <style>
     body {width:400px;}
     </style>
-    <p>Enter key combination: e.g. "ctrl+space"</p>
-      <input type="text" name="shortcut" class="shortcut" id="shortcut">
-    <p>tip: CTRL+Enter, CMD+Enter, SHIFT+Enter open up selected in a new tab</p>
-    
-    <p>Enter App Token: </p>
-      <input type="text" name="token" class="token" id="token">
     <p>
-      <input type="button" value="Save" id="save">
+      <label for="shortcut">Enter key combination: e.g. "ctrl+space"</label><br/>
+      <input type="text" name="shortcut" class="shortcut" id="shortcut"/><br/>
+      <em>tip: CTRL+Enter, CMD+Enter, SHIFT+Enter open up selected in a new tab</em>
     </p>
+    <p>
+      <input type="checkbox" name="detailedMode" class="detailedMode" id="detailedMode"/>
+      <label for="detailedMode">Use Detailed Mode? (allows direct access to custom object subpages, potential performance hit)</label>
+    </p>
+    <input type="button" value="Save" id="save">
 
     <p>If you have any issues with stuff missing, type "refresh metadata" in the navigator, hit enter, then refresh the page and try again.</p>
-
-    <p>Submit any issues on <a href="https://github.com/dnakov/force-navigator" target="_blank">github</a> :)</p>
+    <p>Submit any issues on <a href="https://github.com/dannysummerlin/force-navigator" target="_blank">github</a> :)</p>
     <script src="scripts/popup.js"></script>
   </body>
 </html>

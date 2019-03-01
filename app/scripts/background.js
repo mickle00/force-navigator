@@ -16,35 +16,43 @@ chrome.browserAction.onClicked.addListener(function() {
 
 chrome.runtime.onMessage.addListener(
   function(request, sender, sendResponse) {
-
     var orgKey = request.key != null ? request.key.split('!')[0] : null;
 
-    if(request.action == 'Store Commands')
-    {
-      Object.keys(commands).forEach(function(key) {
+    if(request.action == 'Store Commands') {
+      Object.keys(lastUpdated).forEach(function(key) {
         if(key != request.key && key.split('!')[0] == orgKey)
-          delete commands[key];
-      });
-      commands[request.key] = commands[orgKey] = request.payload;
-      lastUpdated[orgKey] = new Date();
+          delete commands[key]
+          delete lastUpdated[key]
+      })
+      commands[request.key] = request.payload
+      lastUpdated[request.key] = new Date()
       sendResponse({});
     }
-    if(request.action == 'Get Commands')
-    {
+    if(request.action == 'Clear Commands') {
+      delete commands[request.key]
+      delete lastUpdated[request.key]
+      // Object.keys(commands).forEach(function(key) {
+      //   if(key == orgKey || key.split('!')[0] == orgKey) {
+      //     delete commands[key]
+      //     delete lastUpdated[key]
+      //   }
+      // })
+      sendResponse({})
+    }
+    if(request.action == 'Get Commands') {
       if(commands[request.key] != null)
-        sendResponse(commands[request.key]);
-      else if(commands[orgKey] != null &&
-        lastUpdated[orgKey] != null &&
-        new Date().getTime() - lastUpdated[orgKey].getTime() < 1000*60*60)
+        sendResponse(commands[request.key])
+      // else if(commands[orgKey] != null &&
+      //   lastUpdated[orgKey] != null &&
+      //   new Date().getTime() - lastUpdated[orgKey].getTime() < 1000*60*60)
 
-          sendResponse(commands[orgKey]);
+      //     sendResponse(commands[orgKey]);
       else
         sendResponse(null);
     }
     if(request.action == 'Get Settings')
     {
       var settings = localStorage.getItem('sfnav_settings');
-      console.log('settings: ' + settings);
       if(settings != null)
       {
         sendResponse(JSON.parse(settings));
@@ -64,10 +72,11 @@ chrome.runtime.onMessage.addListener(
         let payloadKeys = Object.keys(request.payload)
         for (var i = 0; i < payloadKeys.length; i++) {
           key = payloadKeys[i]
-          sett[key] = request.payload[key];
+          sett[key] = request.payload[key]
         }
-        localStorage.setItem('sfnav_settings', JSON.stringify(sett));
+        localStorage.setItem('sfnav_settings', JSON.stringify(sett))
       }
+      commands = lastUpdated = {}
       sendResponse({});
     }
     if(request.action == 'Store Metadata')
