@@ -48,6 +48,19 @@ var sfnav = (function() {
     "TEXTAREARICH": {name:"Html",code:"tar"},
     "URL": {name:"Url",code:"url"}
   };
+  let classicToLightingMap = {
+    'Fields': "/FieldsAndRelationships/view",
+    'Page Layouts': '/PageLayouts/view',
+    'Buttons, Links, and Actions': '/ButtonsLinksActions/view',
+    'Compact Layouts': '/CompactLayouts/view',
+    'Field Sets': '/FieldSets/view',
+    'Limits': '/Limits/view',
+    'Record Types': '/RecordTypes/view',
+    'Related Lookup Filters': '/RelatedLookupFilters/view',
+    'Search Layouts': '/SearchLayouts/view',
+    'Triggers': '/Triggers/view',
+    'Validation Rules': '/ValidationRules/view'
+  }
 
   /**
    * adds a bindGlobal method to Mousetrap that allows you to
@@ -453,33 +466,24 @@ var sfnav = (function() {
   }
 
   function invokeCommand(cmd, newtab, event) {
-    console.log("invokedCommand: ", cmd, newtab, event)
-    console.log(cmds[cmd], cmds)
-    let classicToLightingMap = {
-      'Fields': 'FieldsAndRelationships',
-      'Layouts':'PageLayouts'
-    }
-    let theurl = ''
-    if(serverInstance.includes("lightning")) {
-      //https://jstart.my.salesforce.com/p/setup/layout/LayoutFieldList?type=Contact&setupid=ContactFields&retURL=%2Fui%2Fsetup%2FSetup%3Fsetupid%3DContact
-      // https://jstart.lightning.force.com/lightning/setup/ObjectManager/Case/FieldsAndRelationships/view
-      let link = cmd.split(">").map(function (L) {return L.trim()})
-      let ltngObject = link[ link.length - 2 ].replace(/\s/g, "")
-      let ltngTarget = link[ link.length - 1 ]
-      if(Object.keys(classicToLightingMap).includes(link[ link.length - 1 ]))
-        ltngTarget = classicToLightingMap[ link[ link.length - 1 ]]
-      theurl = serverInstance + '/lightning/setup/ObjectManager/' + ltngObject + '/' + ltngTarget.replace(/\s/g, "") + '/view'
-    } else {
-      theurl = cmds[cmd].url
-    }
+    let theurl = cmds[cmd].url
+    // if(serverInstance.includes("lightning")) {
+    //   //https://jstart.my.salesforce.com/p/setup/layout/LayoutFieldList?type=Contact&setupid=ContactFields&retURL=%2Fui%2Fsetup%2FSetup%3Fsetupid%3DContact
+    //   // https://jstart.lightning.force.com/lightning/setup/ObjectManager/Case/FieldsAndRelationships/view
+    //   let link = cmd.split(">").map(function (L) {return L.trim()})
+    //   let ltngObject = link[ link.length - 2 ].replace(/\s/g, "")
+    //   let ltngTarget = link[ link.length - 1 ]
+    //   if(Object.keys(classicToLightingMap).includes(link[ link.length - 1 ]))
+    //     ltngTarget = classicToLightingMap[ link[ link.length - 1 ]]
+    //   theurl = serverInstance + '/lightning/setup/ObjectManager/' + ltngObject + '/' + ltngTarget.replace(/\s/g, "") + '/view'
+    // }
     if(event != 'click' && typeof cmds[cmd] != 'undefined' && (cmds[cmd].url != null || cmds[cmd].url == '')) {
       if(newtab) {
         var w = window.open(theurl, '_newtab')
         w.blur()
         window.focus()
       } else {
-console.log(theurl)
-        // window.location.href = theurl
+        window.location.href = theurl
      }
      return true;
    }
@@ -824,7 +828,7 @@ console.log(_data)
 
     // session ID is different and useless in VF
     if(location.origin.indexOf("visual.force") !== -1) return;
-
+/* skipping metadata search for now
     sid = "Bearer " + getCookie('sid');
     // will need to swap out for classic URL so that we can actually read the api
     var theurl = getServerInstance() + '/services/data/' + SFAPI_VERSION + '/sobjects/';
@@ -840,15 +844,14 @@ console.log(theurl, sid)
       getMetadata(response.target.responseText);
     }
     req.send();
-
+*/
     getSetupTree();
     // getCustomObjects();
     getCustomObjectsDef();
 
   }
 
-  function parseSetupTree(html)
-  {
+  function parseSetupTree(html) {
     var textLeafSelector = '.setupLeaf > a[id*="_font"]';
     var all = html.querySelectorAll(textLeafSelector);
     var strName;
@@ -878,10 +881,38 @@ console.log(theurl, sid)
       strNameMain += (hasParent ? (parent + ' > ') : '');
 
       strName = strNameMain + item.innerText;
+      let theurl = item.href
+      if(serverInstance.includes("lightning") && strNameMain.includes("Customize") && Object.keys(classicToLightingMap).includes(item.innerText)) {
+        if(cmds['List ' + parent ] == null) { cmds['List ' + parent ] = {url: serverInstance + "/lightning/o/" + pluralize(parent, 1).replace(/\s/g,"") + "/list", key: "List " + parent} }
+        if(cmds['New ' + pluralize(parent, 1) ] == null) { cmds['New ' + pluralize(parent, 1) ] = {url: serverInstance + "/lightning/o/" + pluralize(parent, 1).replace(/\s/g,"") + "/new", key: "New " + pluralize(parent, 1)} }
+        theurl = serverInstance + "/lightning/setup/ObjectManager/" + pluralize(parent, 1).replace(/\s/g, "")
+        theurl += classicToLightingMap[item.innerText]
+      }
 
-      if(cmds[strName] == null) cmds[strName] = {url: item.href, key: strName};
-
+      if(cmds[strName] == null) cmds[strName] = {url: theurl, key: strName};
     });
+    store('Store Commands', cmds);
+  }
+
+  function parseCustomObjectTree(html) {
+    let mapKeys = Object.keys(classicToLightingMap)
+    $(html).find('th a').each(function(el) {
+      if(serverInstance.includes("lightning")) {
+        let objectId = this.href.match(/\/(\w+)\?/)[1]
+        let theurl = serverInstance + "/lightning/setup/ObjectManager/" + objectId
+// objectId is the customObject record, need to find how to get the keyPrefix to make it work
+//        cmds['List ' + this.text ] = {url: serverInstance + "/" + objectId.substr(0,3), key: "List " + this.text};
+        cmds['Setup > Custom Object > ' + this.text + ' > Details'] = {url: theurl + "/Details/view", key: this.text + " > Fields"};
+        for (var i = 0; i < mapKeys.length; i++) {
+          let key = mapKeys[i]
+          let urlElement = classicToLightingMap[ key ]
+          cmds['Setup > Custom Object > ' + this.text + ' > ' + key] = {url: theurl + urlElement, key: this.text + " > " + key}
+        }
+      } else {
+        cmds['Setup > Custom Object > ' + this.text] = {url: this.href, key: this.text};
+      }
+    });
+
     store('Store Commands', cmds);
   }
 
@@ -912,15 +943,6 @@ console.log(theurl, sid)
     req.send();
   }
 
-  function parseCustomObjectTree(html)
-  {
-
-    $(html).find('th a').each(function(el) {
-      cmds['Setup > Custom Object > ' + this.text] = {url: this.href, key: this.text};
-    });
-
-    store('Store Commands', cmds);
-  }
 
   function getCookie(c_name) {
     var i,x,y,ARRcookies=document.cookie.split(";");
@@ -1102,7 +1124,6 @@ console.log(theurl, sid)
   }
   function getCustomObjectsDef()
   {
-
     ftClient.query('Select+Id,+DeveloperName,+NamespacePrefix+FROM+CustomObject',
       function(success)
       {
