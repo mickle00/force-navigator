@@ -1,6 +1,6 @@
 {
-    "name": "Salesforce Navigator",
-    "version": "0.8.3",
+    "name": "Salesforce Navigator for Lightning",
+    "version": "0.9.0",
     "manifest_version": 2,
     "default_locale": "en",
     "browser_action": {
@@ -34,6 +34,7 @@
                 "scripts/jquery.js",
                 "scripts/mousetrap.min.js",
                 "scripts/forceTooling.js",
+                "scripts/pluralize.js",
                 "scripts/main.js",
                 "scripts/popup.js"
             ],

@@ -48,6 +48,19 @@ var sfnav = (function() {
     "TEXTAREARICH": {name:"Html",code:"tar"},
     "URL": {name:"Url",code:"url"}
   };
+  let classicToLightingMap = {
+    'Fields': "/FieldsAndRelationships/view",
+    'Page Layouts': '/PageLayouts/view',
+    'Buttons, Links, and Actions': '/ButtonsLinksActions/view',
+    'Compact Layouts': '/CompactLayouts/view',
+    'Field Sets': '/FieldSets/view',
+    'Limits': '/Limits/view',
+    'Record Types': '/RecordTypes/view',
+    'Related Lookup Filters': '/RelatedLookupFilters/view',
+    'Search Layouts': '/SearchLayouts/view',
+    'Triggers': '/Triggers/view',
+    'Validation Rules': '/ValidationRules/view'
+  }
 
   /**
    * adds a bindGlobal method to Mousetrap that allows you to
@@ -269,11 +282,10 @@ var sfnav = (function() {
     if(posi == -1 && firstEl != null) firstEl.className = "sfnav_child sfnav_selected"
   }
 
-  function httpGet(url, callback)
-  {
+  function httpGet(url, callback) {
     var req = new XMLHttpRequest();
     req.open("GET", url, true);
-    req.setRequestHeader("Authorization", sid);
+    req.setRequestHeader("Authorization", sid.trim());
     req.onload = function(response) {
       callback(response);
     }
@@ -454,46 +466,51 @@ var sfnav = (function() {
   }
 
   function invokeCommand(cmd, newtab, event) {
-    if(event != 'click' && typeof cmds[cmd] != 'undefined' && (cmds[cmd].url != null || cmds[cmd].url == ''))
-      {
-        if(newtab)
-          {
-            var w = window.open(cmds[cmd].url, '_newtab');
-            w.blur();
-            window.focus();
-          } else {
-            window.location.href = cmds[cmd].url;
-          }
-
-        return true;
-      }
-    if(cmd.toLowerCase() == 'refresh metadata')
-      {
-        showLoadingIndicator();
-        getAllObjectMetadata();
-        setTimeout(function() {
-          hideLoadingIndicator();
-        }, 30000)
-        return true;
-      }
-    if(cmd.toLowerCase() == 'setup')
-      {
-        window.location.href = serverInstance + '/ui/setup/Setup';
-        return true;
-      }
-    if(cmd.toLowerCase().substring(0,3) == 'cf ')
-      {
-        createField(cmd);
-        return true;
-      }
-    if(cmd.toLowerCase().substring(0,9) == 'login as ')
-      {
-        loginAs(cmd);
-        return true;
-      }
-
-    return false;
+    let theurl = cmds[cmd].url
+    // if(serverInstance.includes("lightning")) {
+    //   //https://jstart.my.salesforce.com/p/setup/layout/LayoutFieldList?type=Contact&setupid=ContactFields&retURL=%2Fui%2Fsetup%2FSetup%3Fsetupid%3DContact
+    //   // https://jstart.lightning.force.com/lightning/setup/ObjectManager/Case/FieldsAndRelationships/view
+    //   let link = cmd.split(">").map(function (L) {return L.trim()})
+    //   let ltngObject = link[ link.length - 2 ].replace(/\s/g, "")
+    //   let ltngTarget = link[ link.length - 1 ]
+    //   if(Object.keys(classicToLightingMap).includes(link[ link.length - 1 ]))
+    //     ltngTarget = classicToLightingMap[ link[ link.length - 1 ]]
+    //   theurl = serverInstance + '/lightning/setup/ObjectManager/' + ltngObject + '/' + ltngTarget.replace(/\s/g, "") + '/view'
+    // }
+    if(event != 'click' && typeof cmds[cmd] != 'undefined' && (cmds[cmd].url != null || cmds[cmd].url == '')) {
+      if(newtab) {
+        var w = window.open(theurl, '_newtab')
+        w.blur()
+        window.focus()
+      } else {
+        window.location.href = theurl
+     }
+     return true;
+   }
+   if(cmd.toLowerCase() == 'refresh metadata') {
+    showLoadingIndicator();
+    getAllObjectMetadata();
+    setTimeout(function() {
+      hideLoadingIndicator();
+    }, 30000)
+    return true;
   }
+  if(cmd.toLowerCase() == 'setup') {
+    window.location.href = serverInstance + '/ui/setup/Setup';
+    return true;
+  }
+  if(cmd.toLowerCase().substring(0,3) == 'cf ') {
+    createField(cmd);
+    return true;
+  }
+  if(cmd.toLowerCase().substring(0,9) == 'login as ')
+  {
+    loginAs(cmd);
+    return true;
+  }
+
+  return false;
+}
 
   function updateField(cmd)
   {
@@ -756,7 +773,7 @@ var sfnav = (function() {
   function getMetadata(_data) {
     if(_data.length == 0) return;
     var metadata = JSON.parse(_data);
-
+console.log(_data)
     var mRecord = {};
     var act = {};
     metaData = {};
@@ -811,29 +828,30 @@ var sfnav = (function() {
 
     // session ID is different and useless in VF
     if(location.origin.indexOf("visual.force") !== -1) return;
-
+/* skipping metadata search for now
     sid = "Bearer " + getCookie('sid');
+    // will need to swap out for classic URL so that we can actually read the api
     var theurl = getServerInstance() + '/services/data/' + SFAPI_VERSION + '/sobjects/';
 
     cmds['Refresh Metadata'] = {};
     cmds['Setup'] = {};
     var req = new XMLHttpRequest();
+console.log(theurl, sid)
     req.open("GET", theurl, true);
-    req.setRequestHeader("Authorization", sid);
+    req.setRequestHeader("Authorization", sid.trim());
+    req.setRequestHeader("Accept", "application/json");
     req.onload = function(response) {
       getMetadata(response.target.responseText);
-
     }
     req.send();
-
+*/
     getSetupTree();
     // getCustomObjects();
     getCustomObjectsDef();
 
   }
 
-  function parseSetupTree(html)
-  {
+  function parseSetupTree(html) {
     var textLeafSelector = '.setupLeaf > a[id*="_font"]';
     var all = html.querySelectorAll(textLeafSelector);
     var strName;
@@ -863,10 +881,38 @@ var sfnav = (function() {
       strNameMain += (hasParent ? (parent + ' > ') : '');
 
       strName = strNameMain + item.innerText;
+      let theurl = item.href
+      if(serverInstance.includes("lightning") && strNameMain.includes("Customize") && Object.keys(classicToLightingMap).includes(item.innerText)) {
+        if(cmds['List ' + parent ] == null) { cmds['List ' + parent ] = {url: serverInstance + "/lightning/o/" + pluralize(parent, 1).replace(/\s/g,"") + "/list", key: "List " + parent} }
+        if(cmds['New ' + pluralize(parent, 1) ] == null) { cmds['New ' + pluralize(parent, 1) ] = {url: serverInstance + "/lightning/o/" + pluralize(parent, 1).replace(/\s/g,"") + "/new", key: "New " + pluralize(parent, 1)} }
+        theurl = serverInstance + "/lightning/setup/ObjectManager/" + pluralize(parent, 1).replace(/\s/g, "")
+        theurl += classicToLightingMap[item.innerText]
+      }
 
-      if(cmds[strName] == null) cmds[strName] = {url: item.href, key: strName};
-
+      if(cmds[strName] == null) cmds[strName] = {url: theurl, key: strName};
     });
+    store('Store Commands', cmds);
+  }
+
+  function parseCustomObjectTree(html) {
+    let mapKeys = Object.keys(classicToLightingMap)
+    $(html).find('th a').each(function(el) {
+      if(serverInstance.includes("lightning")) {
+        let objectId = this.href.match(/\/(\w+)\?/)[1]
+        let theurl = serverInstance + "/lightning/setup/ObjectManager/" + objectId
+// objectId is the customObject record, need to find how to get the keyPrefix to make it work
+//        cmds['List ' + this.text ] = {url: serverInstance + "/" + objectId.substr(0,3), key: "List " + this.text};
+        cmds['Setup > Custom Object > ' + this.text + ' > Details'] = {url: theurl + "/Details/view", key: this.text + " > Fields"};
+        for (var i = 0; i < mapKeys.length; i++) {
+          let key = mapKeys[i]
+          let urlElement = classicToLightingMap[ key ]
+          cmds['Setup > Custom Object > ' + this.text + ' > ' + key] = {url: theurl + urlElement, key: this.text + " > " + key}
+        }
+      } else {
+        cmds['Setup > Custom Object > ' + this.text] = {url: this.href, key: this.text};
+      }
+    });
+
     store('Store Commands', cmds);
   }
 
@@ -897,29 +943,17 @@ var sfnav = (function() {
     req.send();
   }
 
-  function parseCustomObjectTree(html)
-  {
 
-    $(html).find('th a').each(function(el) {
-      cmds['Setup > Custom Object > ' + this.text] = {url: this.href, key: this.text};
-    });
-
-    store('Store Commands', cmds);
-  }
-
-  function getCookie(c_name)
-  {
+  function getCookie(c_name) {
     var i,x,y,ARRcookies=document.cookie.split(";");
-    for (i=0;i<ARRcookies.length;i++)
-      {
-        x=ARRcookies[i].substr(0,ARRcookies[i].indexOf("="));
-        y=ARRcookies[i].substr(ARRcookies[i].indexOf("=")+1);
-        x=x.replace(/^\s+|\s+$/g,"");
-        if (x==c_name)
-          {
-            return unescape(y);
-          }
-      }
+    for (i=0;i<ARRcookies.length;i++) {
+      x=ARRcookies[i].substr(0,ARRcookies[i].indexOf("="));
+      y=ARRcookies[i].substr(ARRcookies[i].indexOf("=")+1);
+      x=x.replace(/^\s+|\s+$/g,"");
+      if (x==c_name) {
+          return unescape(y);
+        }
+    }
   }
   function getServerInstance()
   {
@@ -928,6 +962,10 @@ var sfnav = (function() {
     var i;
     var returnUrl;
 
+    if(url.indexOf("lightning.force") != -1) {
+        returnUrl = url.substring(0, url.indexOf("lightning.force")) + "lightning.force.com";
+        return returnUrl;
+    }
     if(url.indexOf("salesforce") != -1)
       {
         returnUrl = url.substring(0, url.indexOf("salesforce")) + "salesforce.com";
@@ -1031,7 +1069,6 @@ var sfnav = (function() {
   }
 
   function bindShortcut(shortcut) {
-
     let searchBar = document.getElementById('sfnav_quickSearch');
 
     Mousetrap.bindGlobal(shortcut, function(e) {
@@ -1087,7 +1124,6 @@ var sfnav = (function() {
   }
   function getCustomObjectsDef()
   {
-
     ftClient.query('Select+Id,+DeveloperName,+NamespacePrefix+FROM+CustomObject',
       function(success)
       {
@@ -1104,8 +1140,7 @@ var sfnav = (function() {
       });
 
   }
-  function init()
-  {
+  function init() {
     ftClient = new forceTooling.Client();
     ftClient.setSessionToken(getCookie('sid'), SFAPI_VERSION, serverInstance + '');
 
@@ -1159,7 +1194,10 @@ var sfnav = (function() {
 
   }
 
-  if(serverInstance == null || getCookie('sid') == null || getCookie('sid').split('!').length != 2) return;
+  if(serverInstance == null || getCookie('sid') == null || getCookie('sid').split('!').length != 2) {
+    console.log('error', serverInstance, getCookie('sid'))
+    return
+  }
   else init();
 
 })();
