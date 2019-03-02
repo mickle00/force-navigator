@@ -19,6 +19,7 @@ var sfnav = (function() {
   var clientId, omnomnom, hash;
   var loaded=false;
   var shortcut;
+  var detailedMode
   var sid;
   var SFAPI_VERSION = 'v33.0';
   var ftClient;
@@ -136,119 +137,108 @@ var sfnav = (function() {
     var keyPrefix = recordId.substring(0,3);
 
   }
-  function addElements(ins)
-  {
-    if(ins.substring(0,9) == 'login as ')
-      {
+  function addElements(ins) {
+    if(ins.substring(0,9) == 'login as ') {
+      if(serverInstance.includes('lightning.force')) return;
+      clearOutput();
+      addWord('Usage: login as <FirstName> <LastName> OR <Username>');
+      setVisible('visible');
+    }
+    else if(ins.substring(0,3) == 'cf ' && ins.split(' ').length < 4) {
+      if(serverInstance.includes('lightning.force')) return;
+      clearOutput();
+      addWord('Usage: cf <Object API Name> <Field Name> <Data Type>');
+      setVisible('visible');
+    }
+    else if(ins.substring(0,3) == 'cf ' && ins.split(' ').length == 4) {
+      if(serverInstance.includes('lightning.force')) return;
+      clearOutput();
+      var wordArray = ins.split(' ');
+      words = getWord(wordArray[3], META_DATATYPES);
+      var words2 = [];
+      for(var i = 0; i<words.length; i++) {
+        switch(words[i].toUpperCase()) {
+          case 'AUTONUMBER':
+          words2.push(wordArray[0] + ' ' + wordArray[1] + ' ' + wordArray[2] + ' ' + words[i]);
+          break;
+          case 'CHECKBOX':
+          words2.push(wordArray[0] + ' ' + wordArray[1] + ' ' + wordArray[2] + ' ' + words[i]);
+          break;
+          case 'CURRENCY':
+          words2.push(wordArray[0] + ' ' + wordArray[1] + ' ' + wordArray[2] + ' ' + words[i] + ' <scale> <precision>') ;
+          break;
+          case 'DATE':
+          words2.push(wordArray[0] + ' ' + wordArray[1] + ' ' + wordArray[2] + ' ' + words[i]);
+          break;
+          case 'DATETIME':
+          words2.push(wordArray[0] + ' ' + wordArray[1] + ' ' + wordArray[2] + ' ' + words[i]);
+          break;
+          case 'EMAIL':
+          words2.push(wordArray[0] + ' ' + wordArray[1] + ' ' + wordArray[2] + ' ' + words[i]);
+          break;
+          case 'FORMULA':
 
-        clearOutput();
-        addWord('Usage: login as <FirstName> <LastName> OR <Username>');
-        setVisible('visible');
+          break;
+          case 'GEOLOCATION':
+          words2.push(wordArray[0] + ' ' + wordArray[1] + ' ' + wordArray[2] + ' ' + words[i] + ' <scale>');
+          break;
+          case 'HIERARCHICALRELATIONSHIP':
 
-      }
-    else if(ins.substring(0,3) == 'cf ' && ins.split(' ').length < 4)
-      {
+          break;
+          case 'LOOKUP':
+          words2.push(wordArray[0] + ' ' + wordArray[1] + ' ' + wordArray[2] + ' ' + words[i] + ' <lookup sObjectName>');
+          break;
+          case 'MASTERDETAIL':
 
-        clearOutput();
-        addWord('Usage: cf <Object API Name> <Field Name> <Data Type>');
-        setVisible('visible');
+          break;
+          case 'NUMBER':
+          words2.push(wordArray[0] + ' ' + wordArray[1] + ' ' + wordArray[2] + ' ' + words[i] + ' <scale> <precision>');
+          break;
+          case 'PERCENT':
+          words2.push(wordArray[0] + ' ' + wordArray[1] + ' ' + wordArray[2] + ' ' + words[i] + ' <scale> <precision>');
+          break;
+          case 'PHONE':
+          words2.push(wordArray[0] + ' ' + wordArray[1] + ' ' + wordArray[2] + ' ' + words[i]);
+          break;
+          case 'PICKLIST':
+          words2.push(wordArray[0] + ' ' + wordArray[1] + ' ' + wordArray[2] + ' ' + words[i]);
+          break;
+          case 'PICKLISTMS':
+          words2.push(wordArray[0] + ' ' + wordArray[1] + ' ' + wordArray[2] + ' ' + words[i]);
+          break;
+          case 'ROLLUPSUMMARY':
 
-      }
-    else if(ins.substring(0,3) == 'cf ' && ins.split(' ').length == 4)
-      {
-        clearOutput();
-        var wordArray = ins.split(' ');
+          break;
+          case 'TEXT':
+          words2.push(wordArray[0] + ' ' + wordArray[1] + ' ' + wordArray[2] + ' ' + words[i] + ' <length>');
+          break;
+          case 'TEXTENCRYPTED':
 
-        words = getWord(wordArray[3], META_DATATYPES);
-        var words2 = [];
-        for(var i = 0; i<words.length; i++)
-          {
-            switch(words[i].toUpperCase())
-            {
-              case 'AUTONUMBER':
-              words2.push(wordArray[0] + ' ' + wordArray[1] + ' ' + wordArray[2] + ' ' + words[i]);
-              break;
-              case 'CHECKBOX':
-              words2.push(wordArray[0] + ' ' + wordArray[1] + ' ' + wordArray[2] + ' ' + words[i]);
-              break;
-              case 'CURRENCY':
-              words2.push(wordArray[0] + ' ' + wordArray[1] + ' ' + wordArray[2] + ' ' + words[i] + ' <scale> <precision>') ;
-              break;
-              case 'DATE':
-              words2.push(wordArray[0] + ' ' + wordArray[1] + ' ' + wordArray[2] + ' ' + words[i]);
-              break;
-              case 'DATETIME':
-              words2.push(wordArray[0] + ' ' + wordArray[1] + ' ' + wordArray[2] + ' ' + words[i]);
-              break;
-              case 'EMAIL':
-              words2.push(wordArray[0] + ' ' + wordArray[1] + ' ' + wordArray[2] + ' ' + words[i]);
-              break;
-              case 'FORMULA':
-
-              break;
-              case 'GEOLOCATION':
-              words2.push(wordArray[0] + ' ' + wordArray[1] + ' ' + wordArray[2] + ' ' + words[i] + ' <scale>');
-              break;
-              case 'HIERARCHICALRELATIONSHIP':
-
-              break;
-              case 'LOOKUP':
-              words2.push(wordArray[0] + ' ' + wordArray[1] + ' ' + wordArray[2] + ' ' + words[i] + ' <lookup sObjectName>');
-              break;
-              case 'MASTERDETAIL':
-
-              break;
-              case 'NUMBER':
-              words2.push(wordArray[0] + ' ' + wordArray[1] + ' ' + wordArray[2] + ' ' + words[i] + ' <scale> <precision>');
-              break;
-              case 'PERCENT':
-              words2.push(wordArray[0] + ' ' + wordArray[1] + ' ' + wordArray[2] + ' ' + words[i] + ' <scale> <precision>');
-              break;
-              case 'PHONE':
-              words2.push(wordArray[0] + ' ' + wordArray[1] + ' ' + wordArray[2] + ' ' + words[i]);
-              break;
-              case 'PICKLIST':
-              words2.push(wordArray[0] + ' ' + wordArray[1] + ' ' + wordArray[2] + ' ' + words[i]);
-              break;
-              case 'PICKLISTMS':
-              words2.push(wordArray[0] + ' ' + wordArray[1] + ' ' + wordArray[2] + ' ' + words[i]);
-              break;
-              case 'ROLLUPSUMMARY':
-
-              break;
-              case 'TEXT':
-              words2.push(wordArray[0] + ' ' + wordArray[1] + ' ' + wordArray[2] + ' ' + words[i] + ' <length>');
-              break;
-              case 'TEXTENCRYPTED':
-
-              break;
-              case 'TEXTAREA':
-              words2.push(wordArray[0] + ' ' + wordArray[1] + ' ' + wordArray[2] + ' ' + words[i] + ' <length>');
-              break;
-              case 'TEXTAREALONG':
-              words2.push(wordArray[0] + ' ' + wordArray[1] + ' ' + wordArray[2] + ' ' + words[i] + ' <length> <visible lines>');
-              break;
-              case 'TEXTAREARICH':
-              words2.push(wordArray[0] + ' ' + wordArray[1] + ' ' + wordArray[2] + ' ' + words[i] + ' <length> <visible lines>');
-              break;
-              case 'URL':
-              words2.push(wordArray[0] + ' ' + wordArray[1] + ' ' + wordArray[2] + ' ' + words[i]);
-              break;
-
-            }
-
-
-          }
-        if (words2.length > 0){
-          clearOutput();
-          for (var i=0;i<words2.length; ++i) addWord (words2[i]);
-          setVisible("visible");
-          input = document.getElementById("sfnav_quickSearch").value;
+          break;
+          case 'TEXTAREA':
+          words2.push(wordArray[0] + ' ' + wordArray[1] + ' ' + wordArray[2] + ' ' + words[i] + ' <length>');
+          break;
+          case 'TEXTAREALONG':
+          words2.push(wordArray[0] + ' ' + wordArray[1] + ' ' + wordArray[2] + ' ' + words[i] + ' <length> <visible lines>');
+          break;
+          case 'TEXTAREARICH':
+          words2.push(wordArray[0] + ' ' + wordArray[1] + ' ' + wordArray[2] + ' ' + words[i] + ' <length> <visible lines>');
+          break;
+          case 'URL':
+          words2.push(wordArray[0] + ' ' + wordArray[1] + ' ' + wordArray[2] + ' ' + words[i]);
+          break;
         }
-        else{
-          setVisible("hidden");
-          posi = -1;
-        }
+      }
+      if (words2.length > 0){
+        clearOutput();
+        for (var i=0;i<words2.length; ++i) addWord (words2[i]);
+        setVisible("visible");
+        input = document.getElementById("sfnav_quickSearch").value;
+      }
+      else{
+        setVisible("hidden");
+        posi = -1;
+      }
         /*
            for(var i=0;i<Object.keys(META_DATATYPES).length;i++)
            {
@@ -256,27 +246,25 @@ var sfnav = (function() {
            }
          */
         setVisible('visible');
-      }
-    else if(ins.substring(0,3) == 'cf ' && ins.split(' ').length > 4)
-      {
-        clearOutput();
-      }
-    else
-      {
-        words = getWord(ins, cmds);
+    }
+    else if(ins.substring(0,3) == 'cf ' && ins.split(' ').length > 4) {
+      clearOutput();
+    }
+    else {
+      words = getWord(ins, cmds);
 
-        if (words.length > 0){
-          clearOutput();
-          for (var i=0;i<words.length; ++i) addWord (words[i]);
-          setVisible("visible");
-          input = document.getElementById("sfnav_quickSearch").value;
-        }
-        else{
-          clearOutput();
-          setVisible("hidden");
-          posi = -1;
-        }
+      if (words.length > 0){
+        clearOutput();
+        for (var i=0;i<words.length; ++i) addWord (words[i]);
+        setVisible("visible");
+        input = document.getElementById("sfnav_quickSearch").value;
       }
+      else{
+        clearOutput();
+        setVisible("hidden");
+        posi = -1;
+      }
+    }
     var firstEl = document.querySelector('#sfnav_output :first-child');
 
     if(posi == -1 && firstEl != null) firstEl.className = "sfnav_child sfnav_selected"
@@ -390,7 +378,7 @@ var sfnav = (function() {
     setVisible("visible");
   }
 
-  function clearOutput(){
+  function clearOutput() {
     if(typeof outp != 'undefined')
       {
         while (outp.hasChildNodes()){
@@ -399,7 +387,7 @@ var sfnav = (function() {
         }
       }
   }
-  function getWord(beginning, dict){
+  function getWord(beginning, dict) {
     var words = [];
     if(typeof beginning === 'undefined') return [];
 
@@ -467,7 +455,7 @@ var sfnav = (function() {
 
   function invokeCommand(cmd, newtab, event) {
     let theurl = cmds[cmd].url
-    // if(serverInstance.includes("lightning")) {
+    // if(serverInstance.includes("lightning.force")) {
     //   //https://jstart.my.salesforce.com/p/setup/layout/LayoutFieldList?type=Contact&setupid=ContactFields&retURL=%2Fui%2Fsetup%2FSetup%3Fsetupid%3DContact
     //   // https://jstart.lightning.force.com/lightning/setup/ObjectManager/Case/FieldsAndRelationships/view
     //   let link = cmd.split(">").map(function (L) {return L.trim()})
@@ -488,12 +476,17 @@ var sfnav = (function() {
      return true;
    }
    if(cmd.toLowerCase() == 'refresh metadata') {
-    showLoadingIndicator();
-    getAllObjectMetadata();
+    showLoadingIndicator()
+    var req = {}
+    req.action = 'Clear Commands'
+    req.key = getCmdHash()
+    chrome.runtime.sendMessage(req, function(response) {})
+
+    getAllObjectMetadata()
     setTimeout(function() {
-      hideLoadingIndicator();
+      hideLoadingIndicator()
     }, 30000)
-    return true;
+    return true
   }
   if(cmd.toLowerCase() == 'setup') {
     window.location.href = serverInstance + '/ui/setup/Setup';
@@ -740,13 +733,15 @@ var sfnav = (function() {
     );
   }
 
-  function loginAsShowOptions(records){
-    for(var i = 0; i < records.length; ++i){
-      var cmd = 'Login As ' + records[i].Name;
-      cmds[cmd] = {key: cmd, id: records[i].Id};
-      addWord(cmd);
+  function loginAsShowOptions(records) {
+    if(!serverInstance.includes("lightning.force")) {
+      for(var i = 0; i < records.length; ++i) {
+        var cmd = 'Login As ' + records[i].Name
+        cmds[cmd] = {key: cmd, id: records[i].Id}
+        addWord(cmd)
+      }
+      setVisible('visible')
     }
-    setVisible('visible');
   }
 
   function loginAsPerform(userId) {
@@ -773,7 +768,6 @@ var sfnav = (function() {
   function getMetadata(_data) {
     if(_data.length == 0) return;
     var metadata = JSON.parse(_data);
-console.log(_data)
     var mRecord = {};
     var act = {};
     metaData = {};
@@ -803,52 +797,38 @@ console.log(_data)
     })
 
     store('Store Commands', cmds);
-    // store('Store Metadata', metaData)
   }
 
   function store(action, payload) {
-
     var req = {}
     req.action = action;
-    req.key = hash;
+    req.key = getCmdHash();
     req.payload = payload;
 
-    chrome.runtime.sendMessage(req, function(response) {
-
-    });
-
-    // var storagePayload = {};
-    // storagePayload[action] = payload;
-    // chrome.storage.local.set(storagePayload, function() {
-    //     console.log('stored');
-    // });
+    chrome.runtime.sendMessage(req, function(response) {});
   }
 
   function getAllObjectMetadata() {
-
-    // session ID is different and useless in VF
+    // session ID is different and useless in VF and in Lightning
     if(location.origin.indexOf("visual.force") !== -1) return;
-/* skipping metadata search for now
-    sid = "Bearer " + getCookie('sid');
-    // will need to swap out for classic URL so that we can actually read the api
-    var theurl = getServerInstance() + '/services/data/' + SFAPI_VERSION + '/sobjects/';
+    serverInstance = getServerInstance()
 
     cmds['Refresh Metadata'] = {};
     cmds['Setup'] = {};
-    var req = new XMLHttpRequest();
-console.log(theurl, sid)
-    req.open("GET", theurl, true);
-    req.setRequestHeader("Authorization", sid.trim());
-    req.setRequestHeader("Accept", "application/json");
-    req.onload = function(response) {
-      getMetadata(response.target.responseText);
+    if(!serverInstance.includes('lightning.force')) {
+      sid = "Bearer " + getCookie('sid');
+      var theurl = getServerInstance() + '/services/data/' + SFAPI_VERSION + '/sobjects/';
+      var req = new XMLHttpRequest();
+      req.open("GET", theurl, true);
+      req.setRequestHeader("Authorization", sid.trim());
+      req.setRequestHeader("Accept", "application/json");
+      req.onload = function(response) {
+        getMetadata(response.target.responseText);
+      }
+      req.send();
     }
-    req.send();
-*/
     getSetupTree();
-    // getCustomObjects();
     getCustomObjectsDef();
-
   }
 
   function parseSetupTree(html) {
@@ -865,7 +845,6 @@ console.log(theurl, sid)
 
       if (item.parentElement != null && item.parentElement.parentElement != null && item.parentElement.parentElement.parentElement != null
           && item.parentElement.parentElement.parentElement.className.indexOf('parent') !== -1) {
-
         hasParent = true;
         parentEl = item.parentElement.parentElement.parentElement;
         parent = parentEl.querySelector('.setupFolder').innerText;
@@ -882,7 +861,7 @@ console.log(theurl, sid)
 
       strName = strNameMain + item.innerText;
       let theurl = item.href
-      if(serverInstance.includes("lightning") && strNameMain.includes("Customize") && Object.keys(classicToLightingMap).includes(item.innerText)) {
+      if(serverInstance.includes("lightning.force") && strNameMain.includes("Customize") && Object.keys(classicToLightingMap).includes(item.innerText)) {
         if(cmds['List ' + parent ] == null) { cmds['List ' + parent ] = {url: serverInstance + "/lightning/o/" + pluralize(parent, 1).replace(/\s/g,"") + "/list", key: "List " + parent} }
         if(cmds['New ' + pluralize(parent, 1) ] == null) { cmds['New ' + pluralize(parent, 1) ] = {url: serverInstance + "/lightning/o/" + pluralize(parent, 1).replace(/\s/g,"") + "/new", key: "New " + pluralize(parent, 1)} }
         theurl = serverInstance + "/lightning/setup/ObjectManager/" + pluralize(parent, 1).replace(/\s/g, "")
@@ -890,30 +869,34 @@ console.log(theurl, sid)
       }
 
       if(cmds[strName] == null) cmds[strName] = {url: theurl, key: strName};
-    });
-    store('Store Commands', cmds);
+    })
+    store('Store Commands', cmds)
   }
 
   function parseCustomObjectTree(html) {
     let mapKeys = Object.keys(classicToLightingMap)
     $(html).find('th a').each(function(el) {
-      if(serverInstance.includes("lightning")) {
-        let objectId = this.href.match(/\/(\w+)\?/)[1]
-        let theurl = serverInstance + "/lightning/setup/ObjectManager/" + objectId
+      if(serverInstance.includes("lightning.force")) {
+// HERE
 // objectId is the customObject record, need to find how to get the keyPrefix to make it work
 //        cmds['List ' + this.text ] = {url: serverInstance + "/" + objectId.substr(0,3), key: "List " + this.text};
-        cmds['Setup > Custom Object > ' + this.text + ' > Details'] = {url: theurl + "/Details/view", key: this.text + " > Fields"};
-        for (var i = 0; i < mapKeys.length; i++) {
-          let key = mapKeys[i]
-          let urlElement = classicToLightingMap[ key ]
-          cmds['Setup > Custom Object > ' + this.text + ' > ' + key] = {url: theurl + urlElement, key: this.text + " > " + key}
+        let objectId = this.href.match(/\/(\w+)\?/)[1]
+        let theurl = serverInstance + "/lightning/setup/ObjectManager/" + objectId
+        if(detailedMode) {
+          cmds['Setup > Custom Object > ' + this.text + ' > Details'] = {url: theurl + "/Details/view", key: this.text + " > Fields"};
+          for (var i = 0; i < mapKeys.length; i++) {
+            let key = mapKeys[i]
+            let urlElement = classicToLightingMap[ key ]
+            cmds['Setup > Custom Object > ' + this.text + ' > ' + key] = {url: theurl + urlElement, key: this.text + " > " + key}
+          }
+        } else {
+          cmds['Setup > Custom Object > ' + this.text] = {url: theurl + "/Details/view", key: this.text };
         }
       } else {
         cmds['Setup > Custom Object > ' + this.text] = {url: this.href, key: this.text};
       }
-    });
-
-    store('Store Commands', cmds);
+    })
+    store('Store Commands', cmds)
   }
 
   function getSetupTree() {
@@ -955,59 +938,48 @@ console.log(theurl, sid)
         }
     }
   }
-  function getServerInstance()
-  {
+  function getServerInstance() {
     var url = location.origin + "";
     var urlParseArray = url.split(".");
     var i;
     var returnUrl;
 
+/* why even? */
     if(url.indexOf("lightning.force") != -1) {
-        returnUrl = url.substring(0, url.indexOf("lightning.force")) + "lightning.force.com";
-        return returnUrl;
+      returnUrl = url.substring(0, url.indexOf("lightning.force")) + "lightning.force.com";
+      return returnUrl;
     }
-    if(url.indexOf("salesforce") != -1)
-      {
-        returnUrl = url.substring(0, url.indexOf("salesforce")) + "salesforce.com";
-        return returnUrl;
-      }
-
-    if(url.indexOf("cloudforce") != -1)
-      {
-        returnUrl = url.substring(0, url.indexOf("cloudforce")) + "cloudforce.com";
-        return returnUrl;
-      }
-
-    if(url.indexOf("visual.force") != -1)
-      {
-        returnUrl = 'https://' + urlParseArray[1] + '';
-        return returnUrl;
-      }
-    return returnUrl;
+    else if(url.indexOf("salesforce") != -1) {
+      returnUrl = url.substring(0, url.indexOf("salesforce")) + "salesforce.com";
+      return returnUrl;
+    }
+    else if(url.indexOf("cloudforce") != -1) {
+      returnUrl = url.substring(0, url.indexOf("cloudforce")) + "cloudforce.com";
+      return returnUrl;
+    }
+// */
+    else if(url.indexOf("visual.force") != -1) {
+      returnUrl = 'https://' + urlParseArray[1] + '';
+      return returnUrl;
+    }
+    // return url
   }
 
-  function initShortcuts() {
-
+  function initSettings() {
     chrome.runtime.sendMessage({'action':'Get Settings'},
       function(response) {
         if (response !== undefined) {
-          shortcut = response['shortcut'];
-          bindShortcut(shortcut);
+          shortcut = response['shortcut']
+          bindShortcut(shortcut)
+          if(detailedMode != response['detailedMode']) {
+            detailedMode = response['detailedMode']
+            cmds = {}
+            metaData = {}
+            getAllObjectMetadata()
+          }
         }
       }
-    );
-
-    // chrome.storage.local.get('settings', function(results) {
-    //     if(typeof results.settings.shortcut === 'undefined')
-    //     {
-    //         shortcut = 'shift+space';
-    //         bindShortcut(shortcut);
-    //     }
-    //     else
-    //     {
-    //         bindShortcut(results.settings.shortcut);
-    //     }
-    // });
+    )
   }
 
   function kbdCommand(e, key) {
@@ -1114,12 +1086,10 @@ console.log(theurl, sid)
 
   }
 
-  function showLoadingIndicator()
-  {
+  function showLoadingIndicator() {
     document.getElementById('sfnav_loader').style.visibility = 'visible';
   }
-  function hideLoadingIndicator()
-  {
+  function hideLoadingIndicator() {
     document.getElementById('sfnav_loader').style.visibility = 'hidden';
   }
   function getCustomObjectsDef()
@@ -1140,6 +1110,14 @@ console.log(theurl, sid)
       });
 
   }
+
+  function getCmdHash() {
+    omnomnom = getCookie('sid')
+    clientId = omnomnom.split('!')[0]
+    hash = clientId + '!' + omnomnom.substring(omnomnom.length - 10, omnomnom.length)
+    return hash
+  }
+
   function init() {
     ftClient = new forceTooling.Client();
     ftClient.setSessionToken(getCookie('sid'), SFAPI_VERSION, serverInstance + '');
@@ -1147,7 +1125,7 @@ console.log(theurl, sid)
     var div = document.createElement('div');
     div.setAttribute('id', 'sfnav_search_box');
     var loaderURL = chrome.extension.getURL("images/ajax-loader.gif");
-    var logoURL = chrome.extension.getURL("images/128.png");
+    var logoURL = chrome.extension.getURL("images/sfnav-128.png");
     div.innerHTML = `
     <div class="sfnav_wrapper">
       <input type="text" id="sfnav_quickSearch" autocomplete="off"/>
@@ -1160,39 +1138,21 @@ console.log(theurl, sid)
     document.body.appendChild(div);
     outp = document.getElementById("sfnav_output");
     hideLoadingIndicator();
-    initShortcuts();
-
-    omnomnom = getCookie('sid');
-
-    clientId = omnomnom.split('!')[0];
-
-    hash = clientId + '!' + omnomnom.substring(omnomnom.length - 10, omnomnom.length);
-    // chrome.storage.local.get(['Commands','Metadata'], function(results) {
-    //     console.log(results);
-    // });
-
+    initSettings();
+    hash = getCmdHash()
 
     chrome.runtime.sendMessage({
       action:'Get Commands', 'key': hash},
       function(response) {
         cmds = response;
         if(cmds == null || cmds.length == 0) {
-          cmds = {};
-          metaData = {};
-          getAllObjectMetadata();
-        } else {
+          cmds = {}
+          metaData = {}
+          getAllObjectMetadata()
         }
-      });
-
-    // chrome.runtime.sendMessage({action:'Get Metadata', 'key': hash},
-    //   function(response) {
-    //     metaData = response;
-    // });
-
-
-
-
+    })
   }
+
 
   if(serverInstance == null || getCookie('sid') == null || getCookie('sid').split('!').length != 2) {
     console.log('error', serverInstance, getCookie('sid'))

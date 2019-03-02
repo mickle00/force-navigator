@@ -6,3 +6,7 @@ dist
 app/bower_components
 test/bower_components
 package
+*.zip
+store-details/csp.png
+store-details/settings.png
+store-details/demo1.png

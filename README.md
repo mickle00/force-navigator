@@ -1,21 +1,24 @@
 # Salesforce Navigator for Lightning
 
-##This will be an attempt to update the amazing Salesforce Navigator to be compatible with Lightning.
+## Now supports Lightning
 
-This extension helps you get to any salesforce page quickly. Just type in what you need to do.
+This extension helps you get to any Salesforce page quickly. Just type in what you need to do.
 
-- All objects list views and create new pages are available (even for objects that don't have tabs). Type in "List <Object Name>" or "New <Object Name>"
-
+- All standard objects list views and create new pages are available (even for objects that don't have tabs). Type in "List <Object Name>" or "New <Object Name>"
+- Custom objects supported, used the Detailed Mode setting to toggle between direct Lightning setup page links and general links
+-- "List" and "New" are in progress, Lighting prevents simple REST API access to get at the key prefix
 - All setup links are available -- Type in "Setup" to see all. For example, if you want to get to the Account fields setup, type in "Account Fields". Or any custom object setup page, type "setup <Custom Object Name>"
+-- Many setup links take you to the Classic version, but that is a work in progress too
 
-- (beta) Thanks to the SF tooling API, you can now create fields. "cf Account newField TEXT 100."
+- (beta) Thanks to the SF tooling API, you can now create fields from Classic. "cf Account newField TEXT 100."
+- (beta) Thanks to the SF tooling API, you can now login as other users from Classic. "login as USERNAME"
 
-Check it out on the Chrome Web Store:
-[Salesforce Navigator](https://chrome.google.com/webstore/detail/salesforce-navigator/ecjmdlggbilopfkkhggmgebbmbiklcdo)
+**Applying for Chrome Web Store now**
 
-Maintainers: [Daniel Nakov](https://twitter.com/dnak0v) and [Wes Weingartner](https://twitter.com/wes1278) 
-
-[Silverline CRM](http://silverlinecrm.com)
+Maintainer(s):
+[Danny Summerlin](http://summerlin.co)
+open to others!
+_based on Salesforce Navigator by [Daniel Nakov](https://twitter.com/dnak0v) and [Wes Weingartner](https://twitter.com/wes1278)_
 
 ## Getting Started
 Project was scaffolded using [Yeoman](http://yeoman.io/) using [generator-chrome-extension](https://github.com/yeoman/generator-chrome-extension)
