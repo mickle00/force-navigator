@@ -331,16 +331,42 @@ var sfnav = (function() {
     var recordId = document.URL.split('/')[3]
     var keyPrefix = recordId.substring(0,3)
   }
+
+  function getVisible() { return document.getElementById("sfnav_shadow").style.visibility }
+  function isVisible() { return document.getElementById("sfnav_shadow").style.visibility !== 'hidden' }
+  function setVisible(visi){
+    var x = document.getElementById("sfnav_shadow");
+    x.style.position = 'relative';
+    x.style.visibility = visi;
+  }
+  function isVisibleSearch() { return document.getElementById("sfnav_quickSearch").style.visibility !== 'hidden' }
+  function setVisibleSearch(visi) {
+    var t = document.getElementById("sfnav_search_box")
+    t.style.visibility = visi
+    if(visi=='visible') document.getElementById("sfnav_quickSearch").focus()
+  }
+
+  function lookAt() {
+    let newSearchVal = document.getElementById('sfnav_quickSearch').value
+    if(newSearchVal !== '') {
+      addElements(newSearchVal)
+    } else {
+      document.querySelector('#sfnav_output').innerHTML = ''
+      setVisible("hidden")
+      posi = -1
+    }
+  }
   function addElements(ins) {
     if(ins.substring(0,9) == 'login as ' && !serverInstance.includes('.force.com')) {
       clearOutput()
       addWord('Usage: login as <FirstName> <LastName> OR <Username>')
       setVisible('visible')
     } else {
-      words = getWord(ins, cmds)
+      words = fastGetWord(ins, cmds)
       if(words.length > 0) {
         clearOutput()
-        for (var i=0;i<words.length; ++i) addWord (words[i])
+        for (var i=0;i<words.length; ++i)
+          addWord(words[i])
         setVisible("visible")
         input = document.getElementById("sfnav_quickSearch").value
       } else {
@@ -353,48 +379,79 @@ var sfnav = (function() {
     if(posi == -1 && firstEl != null) firstEl.className = "sfnav_child sfnav_selected"
   }
 
-  function httpGet(url, callback) {
-    var req = new XMLHttpRequest();
-    req.open("GET", url, true);
-    req.setRequestHeader("Authorization", sid.trim());
-    req.onload = function(response) {
-      callback(response);
+  var fastGetWord = function(input, dict) {
+    if(typeof input === 'undefined' || input == '') return []
+    var words = []
+    var arrFound = []
+    var terms = input.toLowerCase().split(" ")
+    for (var key in dict) {
+      if(arrFound.length > 20) break // stop at 20 since we can't see longer than that anyways
+      if(key.toLowerCase().indexOf(input) != -1) {
+          arrFound.push({num: 10, key: key})
+      } else {
+        let match = 0
+        for(var i = 0;i<terms.length;i++) {
+          if(key.toLowerCase().indexOf(terms[i]) != -1) {
+            match++
+            sortValue = 1
+          }
+        }
+        if (match == terms.length)
+          arrFound.push({num : sortValue, key : key})
+      }
     }
-    req.send();
-  }
-  function getVisible(){
-    return document.getElementById("sfnav_shadow").style.visibility;
-  }
-  function isVisible() {
-    return document.getElementById("sfnav_shadow").style.visibility !== 'hidden';
-  }
-  function setVisible(visi){
-    var x = document.getElementById("sfnav_shadow");
-    x.style.position = 'relative';
-    x.style.visibility = visi;
-  }
-  function isVisibleSearch() {
-    return document.getElementById("sfnav_quickSearch").style.visibility !== 'hidden';
-  }
-  function setVisibleSearch(visi)
-  {
-    var t = document.getElementById("sfnav_search_box");
-    t.style.visibility = visi;
-    if(visi=='visible') document.getElementById("sfnav_quickSearch").focus();
+    arrFound.sort(function(a,b) { return b.num - a.num })
+    for(var i = 0;i<arrFound.length;i++)
+      words[words.length] = arrFound[i].key
+    return words    
+  } 
+
+  function getWord(beginning, dict) {
+    var words = []
+    if(typeof beginning === 'undefined') return []
+    var tmpSplit = beginning.split(' ')
+    var match = false
+    if(beginning.length == 0) {
+      for (var key in dict)
+        words.push(key)
+      return words
+    }
+    var arrFound = []
+    for (var key in dict) {
+      match = false
+      if(key.toLowerCase().indexOf(beginning) != -1) {
+          arrFound.push({num : 10,key : key})
+      } else {
+        for(var i = 0;i<tmpSplit.length;i++) {
+          if(key.toLowerCase().indexOf(tmpSplit[i].toLowerCase()) != -1) {
+            match = true
+            sortValue = 1
+          } else {
+            match = false
+            if(dict[key]['synonyms'] !== undefined) {
+              for(var j = 0;j<dict[key]['synonyms'].length;j++) {
+                keySynonym = dict[key]['synonyms'][j]
+                if(keySynonym.toLowerCase().indexOf(tmpSplit[i].toLowerCase()) != -1) {
+                    match = true
+                    sortValue = 0.5
+                }
+              }
+            }
+          }
+          if (!match) { break }
+        }
+        if(match) arrFound.push({num : sortValue, key : key})
+      }
+    }
+    arrFound.sort(function(a,b) { return b.num - a.num })
+    for(var i = 0;i<arrFound.length;i++)
+      words[words.length] = arrFound[i].key
+
+    return words;
   }
 
-  function lookAt() {
-    let newSearchVal = document.getElementById('sfnav_quickSearch').value
-    if (newSearchVal !== '') {
-      addElements(newSearchVal);
-    }
-    else{
-      document.querySelector('#sfnav_output').innerHTML = '';
-      setVisible("hidden");
-      posi = -1;
-    }
-  }
-  function addWord(word){
+
+  function addWord(word) {
     var d = document.createElement("div");
     var sp;
     if(cmds[word] != null && cmds[word].url != null && cmds[word].url != "") {
@@ -470,67 +527,6 @@ var sfnav = (function() {
         }
       }
   }
-  function getWord(beginning, dict) {
-    var words = [];
-    if(typeof beginning === 'undefined') return [];
-
-    var tmpSplit = beginning.split(' ');
-    var match = false;
-    if(beginning.length == 0)
-      {
-        for (var key in dict)
-          words.push(key);
-        return words;
-      }
-    var arrFound = [];
-    for (var key in dict)
-      {
-        match = false;
-        if(key.toLowerCase().indexOf(beginning) != -1)
-          {
-            arrFound.push({num : 10,key : key});
-          }
-        else
-          {
-            for(var i = 0;i<tmpSplit.length;i++)
-              {
-
-                if(key.toLowerCase().indexOf(tmpSplit[i].toLowerCase()) != -1)
-                  {
-                    match = true;
-                    sortValue = 1;
-                  }
-                else
-                  {
-                    match = false;
-                    if(dict[key]['synonyms'] !== undefined){
-                      for(var j = 0;j<dict[key]['synonyms'].length;j++){
-                        keySynonym = dict[key]['synonyms'][j];
-                        if(keySynonym.toLowerCase().indexOf(tmpSplit[i].toLowerCase()) != -1)
-                          {
-                            match = true;
-                            sortValue = 0.5;
-                          }
-                      }
-                    }
-                  }
-
-                if (!match)
-                  {
-                    break;
-                  }
-              }
-            if(match) arrFound.push({num : sortValue, key : key});
-          }
-      }
-    arrFound.sort(function(a,b) {
-      return b.num - a.num;
-    });
-    for(var i = 0;i<arrFound.length;i++)
-      words[words.length] = arrFound[i].key;
-
-    return words;
-  }
   function setColor (_posi, _color, _forg){
     outp.childNodes[_posi].style.background = _color;
     outp.childNodes[_posi].style.color = _forg;
@@ -562,13 +558,22 @@ var sfnav = (function() {
       window.location.href = serverInstance + "/"
       return true
     }
+    else if(cmd.toLowerCase() == 'toggle lightning') {
+      var mode
+      if(window.location.href.includes("lightning.force"))
+        mode = "classic"
+      else
+        mode = "lex-campaign"
+      window.location.href = serverInstance + "/ltng/switcher?destination=" + mode
+      return true
+    }
     else if(cmd.toLowerCase() == 'refresh metadata') {
       showLoadingIndicator()
       var req = {}
       req.action = 'Clear Commands'
       req.key = getCmdHash()
       chrome.runtime.sendMessage(req, function(response) {})
-      getAllObjectMetadata()
+      getAllObjectMetadata(true)
       document.getElementById("sfnav_quickSearch").value = ""
       return true
     }
@@ -658,27 +663,32 @@ var sfnav = (function() {
           keyPrefix: obj.keyPrefix,
           url: serverInstance + '/' + obj.keyPrefix
         }
-        cmds['List ' + mRecord.labelPlural]['synonyms'] = [obj.name]
+        // cmds['List ' + mRecord.labelPlural]['synonyms'] = [obj.name]
         cmds['New ' + mRecord.label] = {
           key: obj.name,
           keyPrefix: obj.keyPrefix,
           url: serverInstance + '/' + obj.keyPrefix + '/e',
         }
-        cmds['New ' + mRecord.label]['synonyms'] = [obj.name]
+        // cmds['New ' + mRecord.label]['synonyms'] = [obj.name]
       }
     })
     store('Store Commands', cmds)
     hideLoadingIndicator()
   }
 
-  function getAllObjectMetadata() {
+  function getAllObjectMetadata(force) {
     serverInstance = getServerInstance()
     cmds['Refresh Metadata'] = {}
     cmds['Toggle Detailed Mode'] = {}
+    cmds['Toggle Lightning'] = {}
     cmds['Setup'] = {}
     cmds['Home'] = {}
     getSetupTree()
-    sid = "Bearer " + getApiSessionId()
+    var token = getApiSessionId(force)
+    while(token == '' || typeof token == "undefined") {
+      token = getApiSessionId()
+    }
+    sid = "Bearer " + token
     var theurl = getServerInstance() + '/services/data/' + SFAPI_VERSION + '/sobjects/'
     var req = new XMLHttpRequest()
     req.open("GET", theurl, true)
@@ -793,12 +803,12 @@ var sfnav = (function() {
     req.responseType = 'document'
     req.send()
   }
-  getApiSessionId = function(orgId) {
+  getApiSessionId = function(force, orgId) {
     if(orgId == undefined)
       orgId = getCurrentOrgId()
-    if(sessionId[orgId] != undefined) return sessionId[orgId]
+    if(sessionId[orgId] != undefined && force != true) return sessionId[orgId]
     var orgSessionId = ""
-    if(serverInstance.includes('.force.com')) {
+    if(serverInstance.includes('.force.com') || true /*forcing all to run this now */) {
       var req = { action: 'Get API Session ID', key: orgId }
       chrome.runtime.sendMessage(req, function(response) {
         sessionId[orgId] = unescape(response)
@@ -806,12 +816,17 @@ var sfnav = (function() {
           init()
         return unescape(sessionId[orgId])
       })
-    } else {
-      sessionId[orgId] = unescape(document.cookie.match(regMatchSid)[1])
+    }
+/* just using the background method right now, this isn't working in classic
+    else {
+      if(sessionId[orgId] == null)
+        sessionId[orgId] = unescape(document.cookie.match(regMatchSid)[1])
       ftClient.setSessionToken( sessionId[orgId], SFAPI_VERSION, serverInstance + '')
-      init()
+      if(!loaded)
+        init()
       return unescape(sessionId[orgId])
     }
+*/
   }
   function getServerInstance() {
     var url = location.origin + "";
@@ -904,47 +919,33 @@ var sfnav = (function() {
   }
 
   function bindShortcut(shortcut) {
-    let searchBar = document.getElementById('sfnav_quickSearch');
-
+    let searchBar = document.getElementById('sfnav_quickSearch')
     Mousetrap.bindGlobal(shortcut, function(e) {
       setVisibleSearch("visible");
       return false;
-    });
-
+    })
     Mousetrap.bindGlobal('esc', function(e) {
-
       if (isVisible() || isVisibleSearch()) {
-
-        searchBar.blur();
-        clearOutput();
-        searchBar.value = '';
-
-        setVisible("hidden");
-        setVisibleSearch("hidden");
-
+        searchBar.blur()
+        clearOutput()
+        searchBar.value = ''
+        setVisible("hidden")
+        setVisibleSearch("hidden")
       }
-
-    });
-
-    Mousetrap.wrap(searchBar).bind('enter', kbdCommand);
-
+    })
+    Mousetrap.wrap(searchBar).bind('enter', kbdCommand)
     for (var i = 0; i < newTabKeys.length; i++) {
-      Mousetrap.wrap(searchBar).bind(newTabKeys[i], kbdCommand);
-    };
-
-    Mousetrap.wrap(searchBar).bind('down', selectMove.bind(this, 'down'));
-
-    Mousetrap.wrap(searchBar).bind('up', selectMove.bind(this, 'up'));
-
-
+      Mousetrap.wrap(searchBar).bind(newTabKeys[i], kbdCommand)
+    }
+    Mousetrap.wrap(searchBar).bind('down', selectMove.bind(this, 'down'))
+    Mousetrap.wrap(searchBar).bind('up', selectMove.bind(this, 'up'))
     Mousetrap.wrap(document.getElementById('sfnav_quickSearch')).bind('backspace', function(e) {
-      posi = -1;
-      oldins=-1;
-    });
-
+      posi = -1
+      oldins=-1
+    })
     document.getElementById('sfnav_quickSearch').oninput = function(e) {
-      lookAt();
-      return true;
+      lookAt()
+      return true
     }
   }
 
@@ -965,7 +966,7 @@ var sfnav = (function() {
   function init() {
     if(document.body != null) {
       var orgId = getCurrentOrgId()
-      if(sessionId[orgId] == undefined) { getApiSessionId(orgId) }
+      if(sessionId[orgId] == undefined) { getApiSessionId(true, orgId) }
       else { ftClient.setSessionToken( sessionId[orgId], SFAPI_VERSION, serverInstance + '') }
 
       var div = document.createElement('div');
