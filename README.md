@@ -1,4 +1,5 @@
 # Salesforce Navigator for Lightning
+**[Available on Chrome Web Store now](https://chrome.google.com/webstore/detail/salesforce-navigator-for/pbjjdhghffpemcglcadejmkcpnpmlklh)**
 
 ## Now supports Lightning
 
@@ -12,8 +13,6 @@ This extension helps you get to any Salesforce page quickly. Just type in what y
 
 - (beta) Thanks to the SF tooling API, you can now create fields from Classic. "cf Account newField TEXT 100."
 - (beta) Thanks to the SF tooling API, you can now login as other users from Classic. "login as USERNAME"
-
-**Applying for Chrome Web Store now**
 
 Maintainer(s):
 [Danny Summerlin](http://summerlin.co)
