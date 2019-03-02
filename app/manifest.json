@@ -13,6 +13,8 @@
         "persistent": true
     },
     "icons": {
+        "16": "images/sfnav-16.png",
+        "48": "images/sfnav-48.png",
         "128": "images/sfnav-128.png"
     },
     "web_accessible_resources": [
