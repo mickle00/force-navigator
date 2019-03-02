@@ -1125,7 +1125,7 @@ var sfnav = (function() {
     var div = document.createElement('div');
     div.setAttribute('id', 'sfnav_search_box');
     var loaderURL = chrome.extension.getURL("images/ajax-loader.gif");
-    var logoURL = chrome.extension.getURL("images/128.png");
+    var logoURL = chrome.extension.getURL("images/sfnav-128.png");
     div.innerHTML = `
     <div class="sfnav_wrapper">
       <input type="text" id="sfnav_quickSearch" autocomplete="off"/>
