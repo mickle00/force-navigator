@@ -13,16 +13,18 @@ var sfnav = (function() {
   var input;
   var key;
   var metaData = {};
-  var serverInstance = getServerInstance();
-  var cmds = {};
+  var serverInstance = getServerInstance()
+  var classicURL
+  var cmds = {}
   var isCtrl = false;
   var clientId, omnomnom, hash;
-  var loaded=false;
+  var loaded = false
   var shortcut;
   var detailedMode
+  var sessionId = {}
   var sid;
-  var SFAPI_VERSION = 'v33.0';
-  var ftClient;
+  var SFAPI_VERSION = 'v40.0';
+  var ftClient = new forceTooling.Client()
   var customObjects = {};
   var META_DATATYPES = {
     "AUTONUMBER": {name:"AutoNumber",code:"auto", params:0},
@@ -1039,29 +1041,23 @@ var sfnav = (function() {
   }
 
   function getAllObjectMetadata() {
-    // session ID is different and useless in VF and in Lightning
-    if(location.origin.indexOf("visual.force") !== -1) return;
     serverInstance = getServerInstance()
 
     cmds['Refresh Metadata'] = {};
     cmds['Toggle Detailed Mode'] = {};
     cmds['Setup'] = {};
     getSetupTree()
-    if(serverInstance.includes("lightning.force"))
-      getCustomObjects()
-    else {
-      sid = "Bearer " + getCookie('sid');
-      var theurl = getServerInstance() + '/services/data/' + SFAPI_VERSION + '/sobjects/';
-      var req = new XMLHttpRequest();
-      req.open("GET", theurl, true);
-      req.setRequestHeader("Authorization", sid.trim());
-      req.setRequestHeader("Accept", "application/json");
-      req.onload = function(response) {
-        getMetadata(response.target.responseText);
-      }
-      req.send()
-      getCustomObjectsDef()
+    sid = "Bearer " + getApiSessionId()
+    var theurl = getServerInstance() + '/services/data/' + SFAPI_VERSION + '/sobjects/';
+    var req = new XMLHttpRequest();
+    req.open("GET", theurl, true);
+    req.setRequestHeader("Authorization", sid);
+    req.setRequestHeader("Accept", "application/json");
+    req.onload = function(response) {
+      getMetadata(response.target.responseText);
     }
+    req.send()
+    getCustomObjectsDef()
   }
 
   function parseSetupTree(html) {
@@ -1113,9 +1109,6 @@ var sfnav = (function() {
     let mapKeys = Object.keys(classicToLightingMap)
     $(html).find('th a').each(function(el) {
       if(serverInstance.includes("lightning.force")) {
-// HERE
-// objectId is the customObject record, need to find how to get the keyPrefix to make it work
-//        cmds['List ' + this.text ] = {url: serverInstance + "/" + objectId.substr(0,3), key: "List " + this.text};
         let objectId = this.href.match(/\/(\w+)\?/)[1]
         let theurl = serverInstance + "/lightning/setup/ObjectManager/" + objectId
         if(detailedMode) {
@@ -1136,7 +1129,6 @@ var sfnav = (function() {
   }
 
   function getSetupTree() {
-
     var theurl = serverInstance + '/ui/setup/Setup'
     var req = new XMLHttpRequest();
     req.onload = function() {
@@ -1149,29 +1141,42 @@ var sfnav = (function() {
     req.send();
   }
 
-  function getCustomObjects()
-  {
-    var theurl = serverInstance + '/p/setup/custent/CustomObjectsPage';
-    var req = new XMLHttpRequest();
+  function getCustomObjects() {
+    var theurl = serverInstance + '/p/setup/custent/CustomObjectsPage'
+    var req = new XMLHttpRequest()
     req.onload = function() {
-      parseCustomObjectTree(this.response);
+      parseCustomObjectTree(this.response)
     }
-    req.open("GET", theurl);
-    req.responseType = 'document';
-
-    req.send();
+    req.open("GET", theurl)
+    req.responseType = 'document'
+    req.send()
   }
-
-
+  getApiSessionId = function(orgId) {
+    if(orgId == undefined)
+      orgId = getCurrentOrgId()
+    if(sessionId[orgId] != undefined) return sessionId[orgId]
+    var orgSessionId = ""
+    if(serverInstance.includes('.force.com')) {
+      var req = { action: 'Get API Session ID', key: orgId }
+      chrome.runtime.sendMessage(req, function(response) {
+        sessionId[orgId] = unescape(response)
+        if(!loaded)
+          init()
+        return unescape(sessionId[orgId])
+      })
+    } else {
+      sessionId[orgId] = unescape(document.cookie.match(/sid=(.*)[;$]/)[1])
+      ftClient.setSessionToken( sessionId[orgId], SFAPI_VERSION, serverInstance + '')
+      return unescape(sessionId[orgId])
+    }
+  }
   function getCookie(c_name) {
-    var i,x,y,ARRcookies=document.cookie.split(";");
+    var i,x,y,ARRcookies=document.cookie.split(";")
     for (i=0;i<ARRcookies.length;i++) {
-      x=ARRcookies[i].substr(0,ARRcookies[i].indexOf("="));
-      y=ARRcookies[i].substr(ARRcookies[i].indexOf("=")+1);
-      x=x.replace(/^\s+|\s+$/g,"");
-      if (x==c_name) {
-          return unescape(y);
-        }
+      x=ARRcookies[i].substr(0,ARRcookies[i].indexOf("="))
+      y=ARRcookies[i].substr(ARRcookies[i].indexOf("=")+1)
+      x=x.replace(/^\s+|\s+$/g,"")
+      if (x==c_name) { return unescape(y) }
     }
   }
   function getServerInstance() {
@@ -1180,25 +1185,19 @@ var sfnav = (function() {
     var i;
     var returnUrl;
 
-/* why even? */
     if(url.indexOf("lightning.force") != -1) {
       returnUrl = url.substring(0, url.indexOf("lightning.force")) + "lightning.force.com";
-      return returnUrl;
     }
     else if(url.indexOf("salesforce") != -1) {
       returnUrl = url.substring(0, url.indexOf("salesforce")) + "salesforce.com";
-      return returnUrl;
     }
     else if(url.indexOf("cloudforce") != -1) {
       returnUrl = url.substring(0, url.indexOf("cloudforce")) + "cloudforce.com";
-      return returnUrl;
     }
-// */
     else if(url.indexOf("visual.force") != -1) {
       returnUrl = 'https://' + urlParseArray[1] + '';
-      return returnUrl;
     }
-    // return url
+    return returnUrl;
   }
 
   function initSettings() {
@@ -1322,12 +1321,8 @@ var sfnav = (function() {
 
   }
 
-  function showLoadingIndicator() {
-    document.getElementById('sfnav_loader').style.visibility = 'visible';
-  }
-  function hideLoadingIndicator() {
-    document.getElementById('sfnav_loader').style.visibility = 'hidden';
-  }
+  function showLoadingIndicator() { document.getElementById('sfnav_loader').style.visibility = 'visible' }
+  function hideLoadingIndicator() { document.getElementById('sfnav_loader').style.visibility = 'hidden' }
   function getCustomObjectsDef() {
     ftClient.query('Select+Id,+DeveloperName,+NamespacePrefix+FROM+CustomObject',
       function(success) {
@@ -1342,7 +1337,8 @@ var sfnav = (function() {
       })
   }
 
-  function getCmdHash() {
+  var getCurrentOrgId = function() { return document.cookie.match(/sid=([a-zA-Z0-9]*)/)[1] }
+  var getCmdHash = function() {
     omnomnom = getCookie('sid')
     clientId = omnomnom.split('!')[0]
     hash = clientId + '!' + omnomnom.substring(omnomnom.length - 10, omnomnom.length)
@@ -1350,8 +1346,9 @@ var sfnav = (function() {
   }
 
   function init() {
-    ftClient = new forceTooling.Client();
-    ftClient.setSessionToken(getCookie('sid'), SFAPI_VERSION, serverInstance + '');
+    var orgId = getCurrentOrgId()
+    if(sessionId[orgId] == undefined) { getApiSessionId(orgId) }
+    else { ftClient.setSessionToken( sessionId[orgId], SFAPI_VERSION, serverInstance + '') }
 
     var div = document.createElement('div');
     div.setAttribute('id', 'sfnav_search_box');
@@ -1371,6 +1368,7 @@ var sfnav = (function() {
     hideLoadingIndicator();
     initSettings();
     hash = getCmdHash()
+    loaded = true
 
     chrome.runtime.sendMessage({
       action:'Get Commands', 'key': hash},
@@ -1384,11 +1382,9 @@ var sfnav = (function() {
     })
   }
 
-
-  if(serverInstance == null || getCookie('sid') == null || getCookie('sid').split('!').length != 2) {
-    console.log('error', serverInstance, getCookie('sid'))
+  if(serverInstance == null) {
+    console.log('error', serverInstance, getApiSessionId())
     return
   }
-  else init();
-
-})();
+  else getApiSessionId()
+})()

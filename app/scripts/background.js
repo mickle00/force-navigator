@@ -17,7 +17,6 @@ chrome.browserAction.onClicked.addListener(function() {
 chrome.runtime.onMessage.addListener(
   function(request, sender, sendResponse) {
     var orgKey = request.key != null ? request.key.split('!')[0] : null;
-
     if(request.action == 'Store Commands') {
       Object.keys(lastUpdated).forEach(function(key) {
         if(key != request.key && key.split('!')[0] == orgKey)
@@ -38,6 +37,17 @@ chrome.runtime.onMessage.addListener(
         sendResponse(commands[request.key])
       else
         sendResponse(null);
+    }
+    if(request.action == 'Get API Session ID') {
+      if(request.key != null) {
+        chrome.cookies.getAll({name:"sid"}, function(all) {
+          all.forEach(function (c) {
+            if(c.domain.includes("salesforce.com") && c.value.includes(request.key))
+              sendResponse(c.value)
+          })
+        })
+      }
+      else { sendResponse(null) }
     }
     if(request.action == 'Toggle Detailed Mode') {
       var settings = localStorage.getItem('sfnav_settings')
@@ -94,4 +104,5 @@ chrome.runtime.onMessage.addListener(
       else
         sendResponse(null);
     }
+    return true
   });

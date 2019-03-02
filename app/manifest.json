@@ -47,6 +47,8 @@
         "https://*.force.com/*",
         "https://*.salesforce.com/*",
         "https://*.cloudforce.com/*",
-        "storage"
-    ]
+        "storage",
+        "cookies"
+    ],
+    "content_security_policy": "connect-src 'self' https://*.salesforce.com https://*.force.com;frame-src 'self' https://*.salesforce.com https://*.force.com;img-src 'self' https://*.salesforce.com https://*.force.com;style-src 'self' https://*.salesforce.com https://*.force.com;object-src 'self' https://*.salesforce.com https://*.force.com;script-src 'self' https://*.salesforce.com https://*.force.com;font-src 'self' https://*.salesforce.com https://*.force.com;media-src 'self' https://*.salesforce.com https://*.force.com"
 }
