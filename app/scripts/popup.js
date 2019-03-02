@@ -7,7 +7,6 @@ function main() {
     chrome.browserAction.setBadgeText({ text: "" });
     chrome.extension.sendMessage({ 'action': 'Get Settings' },
         function(response) {
-            // console.log(response);
             document.getElementById('shortcut').value = response['shortcut'];
             document.getElementById('detailedMode').checked = response['detailedMode'];
         }

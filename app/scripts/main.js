@@ -62,6 +62,225 @@ var sfnav = (function() {
     'Triggers': '/Triggers/view',
     'Validation Rules': '/ValidationRules/view'
   }
+  let setupLabelsToLightningMap = {
+    "Setup Home": "https://jstart.lightning.force.com/lightning/setup/SetupOneHome/home",
+    "Lightning Experience Transition Assistant": "https://jstart.lightning.force.com/lightning/setup/EnableLightningExperience/home",
+    "Lightning Usage": "https://jstart.lightning.force.com/lightning/setup/LightningUsageSetup/home",
+    "Permission Sets": "https://jstart.lightning.force.com/lightning/setup/PermSets/home",
+    "Profiles": "https://jstart.lightning.force.com/lightning/setup/Profiles/home",
+    "Public Groups": "https://jstart.lightning.force.com/lightning/setup/PublicGroups/home",
+    "Queues": "https://jstart.lightning.force.com/lightning/setup/Queues/home",
+    "Roles": "https://jstart.lightning.force.com/lightning/setup/Roles/home",
+    "User Management Settings": "https://jstart.lightning.force.com/lightning/setup/UserManagementSettings/home",
+    "Users": "https://jstart.lightning.force.com/lightning/setup/ManageUsers/home",
+    "Big Objects": "https://jstart.lightning.force.com/lightning/setup/BigObjects/home",
+    "Data Export": "https://jstart.lightning.force.com/lightning/setup/DataManagementExport/home",
+    "Data Integration Metrics": "https://jstart.lightning.force.com/lightning/setup/XCleanVitalsUi/home",
+    "Data Integration Rules": "https://jstart.lightning.force.com/lightning/setup/CleanRules/home",
+    "Duplicate Error Logs": "https://jstart.lightning.force.com/lightning/setup/DuplicateErrorLog/home",
+    "Duplicate Rules": "https://jstart.lightning.force.com/lightning/setup/DuplicateRules/home",
+    "Matching Rules": "https://jstart.lightning.force.com/lightning/setup/MatchingRules/home",
+    "Mass Delete Records": "https://jstart.lightning.force.com/lightning/setup/DataManagementDelete/home",
+    "Mass Transfer Approval Requests": "https://jstart.lightning.force.com/lightning/setup/DataManagementManageApprovals/home",
+    "Mass Transfer Records": "https://jstart.lightning.force.com/lightning/setup/DataManagementTransfer/home",
+    "Mass Update Addresses": "https://jstart.lightning.force.com/lightning/setup/DataManagementMassUpdateAddresses/home",
+    "Picklist Settings": "https://jstart.lightning.force.com/lightning/setup/PicklistSettings/home",
+    "Schema Settings": "https://jstart.lightning.force.com/lightning/setup/SchemaSettings/home",
+    "State and Country/Territory Picklists": "https://jstart.lightning.force.com/lightning/setup/AddressCleanerOverview/home",
+    "Storage Usage": "https://jstart.lightning.force.com/lightning/setup/CompanyResourceDisk/home",
+    "Apex Exception Email": "https://jstart.lightning.force.com/lightning/setup/ApexExceptionEmail/home",
+    "Classic Email Templates": "https://jstart.lightning.force.com/lightning/setup/CommunicationTemplatesEmail/home",
+    "Compliance BCC Email": "https://jstart.lightning.force.com/lightning/setup/SecurityComplianceBcc/home",
+    "DKIM Keys": "https://jstart.lightning.force.com/lightning/setup/EmailDKIMList/home",
+    "Deliverability": "https://jstart.lightning.force.com/lightning/setup/OrgEmailSettings/home",
+    "Email Attachments": "https://jstart.lightning.force.com/lightning/setup/EmailAttachmentSettings/home",
+    "Email Footers": "https://jstart.lightning.force.com/lightning/setup/EmailDisclaimers/home",
+    "Email to Salesforce": "https://jstart.lightning.force.com/lightning/setup/EmailToSalesforce/home",
+    "Enhanced Email": "https://jstart.lightning.force.com/lightning/setup/EnhancedEmail/home",
+    "Gmail Integration and Sync": "https://jstart.lightning.force.com/lightning/setup/LightningForGmailAndSyncSettings/home",
+    "Letterheads": "https://jstart.lightning.force.com/lightning/setup/CommunicationTemplatesLetterheads/home",
+    "Lightning Email Templates": "https://jstart.lightning.force.com/lightning/setup/LightningEmailTemplateSetup/home",
+    "Mail Merge Templates": "https://jstart.lightning.force.com/lightning/setup/CommunicationTemplatesWord/home",
+    "Organization-Wide Addresses": "https://jstart.lightning.force.com/lightning/setup/OrgWideEmailAddresses/home",
+    "Outlook Configurations": "https://jstart.lightning.force.com/lightning/setup/EmailConfigurations/home",
+    "Outlook Integration and Sync": "https://jstart.lightning.force.com/lightning/setup/LightningForOutlookAndSyncSettings/home",
+    "Send through External Email Services": "https://jstart.lightning.force.com/lightning/setup/EmailTransportServiceSetupPage/home",
+    "Test Deliverability": "https://jstart.lightning.force.com/lightning/setup/TestEmailDeliverability/home",
+    "App Manager": "https://jstart.lightning.force.com/lightning/setup/NavigationMenus/home",
+    "AppExchange Marketplace": "https://jstart.lightning.force.com/lightning/setup/AppExchangeMarketplace/home",
+    "Connected Apps OAuth Usage": "https://jstart.lightning.force.com/lightning/setup/ConnectedAppsUsage/home",
+    "Manage Connected Apps": "https://jstart.lightning.force.com/lightning/setup/ConnectedApplication/home",
+    "Installed Packages": "https://jstart.lightning.force.com/lightning/setup/ImportedPackage/home",
+    "Flow Category": "https://jstart.lightning.force.com/lightning/setup/FlowCategory/home",
+    "Lightning Bolt Solutions": "https://jstart.lightning.force.com/lightning/setup/LightningBolt/home",
+    "Salesforce Branding": "https://jstart.lightning.force.com/lightning/setup/Salesforce1Branding/home",
+    "Salesforce Mobile Quick Start": "https://jstart.lightning.force.com/lightning/setup/Salesforce1SetupSection/home",
+    "Salesforce Navigation": "https://jstart.lightning.force.com/lightning/setup/ProjectOneAppMenu/home",
+    "Salesforce Notifications": "https://jstart.lightning.force.com/lightning/setup/NotificationsSettings/home",
+    "Salesforce Offline": "https://jstart.lightning.force.com/lightning/setup/MobileOfflineStorageAdmin/home",
+    "Salesforce Settings": "https://jstart.lightning.force.com/lightning/setup/Salesforce1Settings/home",
+    "Package Manager": "https://jstart.lightning.force.com/lightning/setup/Package/home",
+    "Communities Settings": "https://jstart.lightning.force.com/lightning/setup/SparkSetupPage/home",
+    "Home": "https://jstart.lightning.force.com/lightning/setup/Home/home",
+    "Office 365": "https://jstart.lightning.force.com/lightning/setup/NetworkSettings/home",
+    "Skype for Salesforce": "https://jstart.lightning.force.com/lightning/setup/SkypeSetupPage/home",
+    "Quip": "https://jstart.lightning.force.com/lightning/setup/QuipSetupAssistant/home",
+    "Asset Files": "https://jstart.lightning.force.com/lightning/setup/ContentAssets/home",
+    "Content Deliveries and Public Links": "https://jstart.lightning.force.com/lightning/setup/ContentDistribution/home",
+    "Files Connect": "https://jstart.lightning.force.com/lightning/setup/ContentHub/home",
+    "General Settings": "https://jstart.lightning.force.com/lightning/setup/FilesGeneralSettings/home",
+    "Regenerate Previews": "https://jstart.lightning.force.com/lightning/setup/RegeneratePreviews/home",
+    "Salesforce CRM Content": "https://jstart.lightning.force.com/lightning/setup/SalesforceCRMContent/home",
+    "Synonyms": "https://jstart.lightning.force.com/lightning/setup/ManageSynonyms/home",
+    "Case Assignment Rules": "https://jstart.lightning.force.com/lightning/setup/CaseRules/home",
+    "Case Auto-Response Rules": "https://jstart.lightning.force.com/lightning/setup/CaseResponses/home",
+    "Case Comment Triggers": "https://jstart.lightning.force.com/lightning/setup/CaseCommentTriggers/home",
+    "Case Team Roles": "https://jstart.lightning.force.com/lightning/setup/CaseTeamRoles/home",
+    "Predefined Case Teams": "https://jstart.lightning.force.com/lightning/setup/CaseTeamTemplates/home",
+    "Contact Roles on Cases": "https://jstart.lightning.force.com/lightning/setup/CaseContactRoles/home",
+    "Customer Contact Requests": "https://jstart.lightning.force.com/lightning/setup/ContactRequestFlows/home",
+    "Email-to-Case": "https://jstart.lightning.force.com/lightning/setup/EmailToCase/home",
+    "Escalation Rules": "https://jstart.lightning.force.com/lightning/setup/CaseEscRules/home",
+    "Feed Filters": "https://jstart.lightning.force.com/lightning/setup/FeedFilterDefinitions/home",
+    "Field Service Settings": "https://jstart.lightning.force.com/lightning/setup/FieldServiceSettings/home",
+    "Macro Settings": "https://jstart.lightning.force.com/lightning/setup/MacroSettings/home",
+    "Omni-Channel Settings": "https://jstart.lightning.force.com/lightning/setup/OmniChannelSettings/home",
+    "Snap-ins": "https://jstart.lightning.force.com/lightning/setup/Snap-ins/home",
+    "Social Business Rules": "https://jstart.lightning.force.com/lightning/setup/SocialCustomerServiceBusinessRules/home",
+    "Social Customer Service": "https://jstart.lightning.force.com/lightning/setup/SocialCustomerManagementAccountSettings/home",
+    "Support Processes": "https://jstart.lightning.force.com/lightning/setup/CaseProcess/home",
+    "Support Settings": "https://jstart.lightning.force.com/lightning/setup/CaseSettings/home",
+    "Web-to-Case": "https://jstart.lightning.force.com/lightning/setup/CaseWebtocase/home",
+    "Web-to-Case HTML Generator": "https://jstart.lightning.force.com/lightning/setup/CaseWebToCaseHtmlGenerator/home",
+    "Survey Settings": "https://jstart.lightning.force.com/lightning/setup/SurveySettings/home",
+    "Object Manager": "https://jstart.lightning.force.com/lightning/setup/ObjectManager/home",
+    "Picklist Value Sets": "https://jstart.lightning.force.com/lightning/setup/Picklists/home",
+    "Schema Builder": "https://jstart.lightning.force.com/lightning/setup/SchemaBuilder/home",
+    "Approval Processes": "https://jstart.lightning.force.com/lightning/setup/ApprovalProcesses/home",
+    "Flows": "https://jstart.lightning.force.com/lightning/setup/InteractionProcesses/home",
+    "Next Best Action": "https://jstart.lightning.force.com/lightning/setup/NextBestAction/home",
+    "Post Templates": "https://jstart.lightning.force.com/lightning/setup/FeedTemplates/home",
+    "Process Automation Settings": "https://jstart.lightning.force.com/lightning/setup/WorkflowSettings/home",
+    "Process Builder": "https://jstart.lightning.force.com/lightning/setup/ProcessAutomation/home",
+    "Email Alerts": "https://jstart.lightning.force.com/lightning/setup/WorkflowEmails/home",
+    "Field Updates": "https://jstart.lightning.force.com/lightning/setup/WorkflowFieldUpdates/home",
+    "Outbound Messages": "https://jstart.lightning.force.com/lightning/setup/WorkflowOutboundMessaging/home",
+    "Send Actions": "https://jstart.lightning.force.com/lightning/setup/SendAction/home",
+    "Tasks": "https://jstart.lightning.force.com/lightning/setup/WorkflowTasks/home",
+    "Workflow Rules": "https://jstart.lightning.force.com/lightning/setup/WorkflowRules/home",
+    "Action Link Templates": "https://jstart.lightning.force.com/lightning/setup/ActionLinkGroupTemplates/home",
+    "App Menu": "https://jstart.lightning.force.com/lightning/setup/AppMenu/home",
+    "Custom Labels": "https://jstart.lightning.force.com/lightning/setup/ExternalStrings/home",
+    "Density Settings": "https://jstart.lightning.force.com/lightning/setup/DensitySetup/home",
+    "Global Actions": "https://jstart.lightning.force.com/lightning/setup/GlobalActions/home",
+    "Publisher Layouts": "https://jstart.lightning.force.com/lightning/setup/GlobalPublisherLayouts/home",
+    "Guided Actions": "https://jstart.lightning.force.com/lightning/setup/GuidedActions/home",
+    "Lightning App Builder": "https://jstart.lightning.force.com/lightning/setup/FlexiPageList/home",
+    "Path Settings": "https://jstart.lightning.force.com/lightning/setup/PathAssistantSetupHome/home",
+    "Quick Text Settings": "https://jstart.lightning.force.com/lightning/setup/LightningQuickTextSettings/home",
+    "Rename Tabs and Labels": "https://jstart.lightning.force.com/lightning/setup/RenameTab/home",
+    "Custom URLs": "https://jstart.lightning.force.com/lightning/setup/DomainSites/home",
+    "Domains": "https://jstart.lightning.force.com/lightning/setup/DomainNames/home",
+    "Sites": "https://jstart.lightning.force.com/lightning/setup/CustomDomain/home",
+    "Tabs": "https://jstart.lightning.force.com/lightning/setup/CustomTabs/home",
+    "Themes and Branding": "https://jstart.lightning.force.com/lightning/setup/ThemingAndBranding/home",
+    "Export": "https://jstart.lightning.force.com/lightning/setup/LabelWorkbenchExport/home",
+    "Import": "https://jstart.lightning.force.com/lightning/setup/LabelWorkbenchImport/home",
+    "Override": "https://jstart.lightning.force.com/lightning/setup/LabelWorkbenchOverride/home",
+    "Translate": "https://jstart.lightning.force.com/lightning/setup/LabelWorkbenchTranslate/home",
+    "Translation Settings": "https://jstart.lightning.force.com/lightning/setup/LabelWorkbenchSetup/home",
+    "User Interface": "https://jstart.lightning.force.com/lightning/setup/UserInterfaceUI/home",
+    "Apex Classes": "https://jstart.lightning.force.com/lightning/setup/ApexClasses/home",
+    "Apex Hammer Test Results": "https://jstart.lightning.force.com/lightning/setup/ApexHammerResultStatus/home",
+    "Apex Settings": "https://jstart.lightning.force.com/lightning/setup/ApexSettings/home",
+    "Apex Test Execution": "https://jstart.lightning.force.com/lightning/setup/ApexTestQueue/home",
+    "Apex Test History": "https://jstart.lightning.force.com/lightning/setup/ApexTestHistory/home",
+    "Apex Triggers": "https://jstart.lightning.force.com/lightning/setup/ApexTriggers/home",
+    "Canvas App Previewer": "https://jstart.lightning.force.com/lightning/setup/CanvasPreviewerUi/home",
+    "Custom Metadata Types": "https://jstart.lightning.force.com/lightning/setup/CustomMetadata/home",
+    "Custom Permissions": "https://jstart.lightning.force.com/lightning/setup/CustomPermissions/home",
+    "Custom Settings": "https://jstart.lightning.force.com/lightning/setup/CustomSettings/home",
+    "Email Services": "https://jstart.lightning.force.com/lightning/setup/EmailToApexFunction/home",
+    "Debug Mode": "https://jstart.lightning.force.com/lightning/setup/UserDebugModeSetup/home",
+    "Lightning Components": "https://jstart.lightning.force.com/lightning/setup/LightningComponentBundles/home",
+    "Platform Cache": "https://jstart.lightning.force.com/lightning/setup/PlatformCache/home",
+    "Remote Access": "https://jstart.lightning.force.com/lightning/setup/RemoteAccess/home",
+    "Static Resources": "https://jstart.lightning.force.com/lightning/setup/StaticResources/home",
+    "Tools": "https://jstart.lightning.force.com/lightning/setup/ClientDevTools/home",
+    "Visualforce Components": "https://jstart.lightning.force.com/lightning/setup/ApexComponents/home",
+    "Visualforce Pages": "https://jstart.lightning.force.com/lightning/setup/ApexPages/home",
+    "Dev Hub": "https://jstart.lightning.force.com/lightning/setup/DevHub/home",
+    "Inbound Change Sets": "https://jstart.lightning.force.com/lightning/setup/InboundChangeSet/home",
+    "Outbound Change Sets": "https://jstart.lightning.force.com/lightning/setup/OutboundChangeSet/home",
+    "Deployment Settings": "https://jstart.lightning.force.com/lightning/setup/DeploymentSettings/home",
+    "Deployment Status": "https://jstart.lightning.force.com/lightning/setup/DeployStatus/home",
+    "Apex Flex Queue": "https://jstart.lightning.force.com/lightning/setup/ApexFlexQueue/home",
+    "Apex Jobs": "https://jstart.lightning.force.com/lightning/setup/AsyncApexJobs/home",
+    "Background Jobs": "https://jstart.lightning.force.com/lightning/setup/ParallelJobsStatus/home",
+    "Bulk Data Load Jobs": "https://jstart.lightning.force.com/lightning/setup/AsyncApiJobStatus/home",
+    "Scheduled Jobs": "https://jstart.lightning.force.com/lightning/setup/ScheduledJobs/home",
+    "Debug Logs": "https://jstart.lightning.force.com/lightning/setup/ApexDebugLogs/home",
+    "Email Log Files": "https://jstart.lightning.force.com/lightning/setup/EmailLogFiles/home",
+    "API Usage Notifications": "https://jstart.lightning.force.com/lightning/setup/MonitoringRateLimitingNotification/home",
+    "Case Escalations": "https://jstart.lightning.force.com/lightning/setup/DataManagementManageCaseEscalation/home",
+    "Email Snapshots": "https://jstart.lightning.force.com/lightning/setup/EmailCapture/home",
+    "Outbound Messages": "https://jstart.lightning.force.com/lightning/setup/WorkflowOmStatus/home",
+    "Time-Based Workflow": "https://jstart.lightning.force.com/lightning/setup/DataManagementManageWorkflowQueue/home",
+    "Sandboxes": "https://jstart.lightning.force.com/lightning/setup/DataManagementCreateTestInstance/home",
+    "System Overview": "https://jstart.lightning.force.com/lightning/setup/SystemOverview/home",
+    "Adoption Assistance": "https://jstart.lightning.force.com/lightning/setup/AdoptionAssistance/home",
+    "Help Menu": "https://jstart.lightning.force.com/lightning/setup/HelpMenu/home",
+    "API": "https://jstart.lightning.force.com/lightning/setup/WebServices/home",
+    "Change Data Capture": "https://jstart.lightning.force.com/lightning/setup/CdcObjectEnablement/home",
+    "Data Import Wizard": "https://jstart.lightning.force.com/lightning/setup/DataManagementDataImporter/home",
+    "Data Loader": "https://jstart.lightning.force.com/lightning/setup/DataLoader/home",
+    "Dataloader.io": "https://jstart.lightning.force.com/lightning/setup/DataLoaderIo/home",
+    "External Data Sources": "https://jstart.lightning.force.com/lightning/setup/ExternalDataSource/home",
+    "External Objects": "https://jstart.lightning.force.com/lightning/setup/ExternalObjects/home",
+    "External Services": "https://jstart.lightning.force.com/lightning/setup/ExternalServices/home",
+    "Platform Events": "https://jstart.lightning.force.com/lightning/setup/EventObjects/home",
+    "Business Hours": "https://jstart.lightning.force.com/lightning/setup/BusinessHours/home",
+    "Public Calendars and Resources": "https://jstart.lightning.force.com/lightning/setup/Calendars/home",
+    "Company Information": "https://jstart.lightning.force.com/lightning/setup/CompanyProfileInfo/home",
+    "Critical Updates": "https://jstart.lightning.force.com/lightning/setup/CriticalUpdates/home",
+    "Data Protection and Privacy": "https://jstart.lightning.force.com/lightning/setup/ConsentManagement/home",
+    "Fiscal Year": "https://jstart.lightning.force.com/lightning/setup/ForecastFiscalYear/home",
+    "Holidays": "https://jstart.lightning.force.com/lightning/setup/Holiday/home",
+    "Language Settings": "https://jstart.lightning.force.com/lightning/setup/LanguageSettings/home",
+    "Maps and Location Settings": "https://jstart.lightning.force.com/lightning/setup/MapsAndLocationServicesSettings/home",
+    "My Domain": "https://jstart.lightning.force.com/lightning/setup/OrgDomain/home",
+    "Data Classification (Beta)": "https://jstart.lightning.force.com/lightning/setup/DataClassificationSettings/home",
+    "Data Classification Download": "https://jstart.lightning.force.com/lightning/setup/DataClassificationDownload/home",
+    "Data Classification Upload": "https://jstart.lightning.force.com/lightning/setup/DataClassificationUpload/home",
+    "Auth. Providers": "https://jstart.lightning.force.com/lightning/setup/AuthProviders/home",
+    "Identity Provider": "https://jstart.lightning.force.com/lightning/setup/IdpPage/home",
+    "Identity Provider Event Log": "https://jstart.lightning.force.com/lightning/setup/IdpErrorLog/home",
+    "Identity Verification": "https://jstart.lightning.force.com/lightning/setup/IdentityVerification/home",
+    "Identity Verification History": "https://jstart.lightning.force.com/lightning/setup/VerificationHistory/home",
+    "Login Flows": "https://jstart.lightning.force.com/lightning/setup/LoginFlow/home",
+    "Login History": "https://jstart.lightning.force.com/lightning/setup/OrgLoginHistory/home",
+    "Single Sign-On Settings": "https://jstart.lightning.force.com/lightning/setup/SingleSignOn/home",
+    "Activations": "https://jstart.lightning.force.com/lightning/setup/ActivatedIpAddressAndClientBrowsersPage/home",
+    "CORS": "https://jstart.lightning.force.com/lightning/setup/CorsWhitelistEntries/home",
+    "CSP Trusted Sites": "https://jstart.lightning.force.com/lightning/setup/SecurityCspTrustedSite/home",
+    "Certificate and Key Management": "https://jstart.lightning.force.com/lightning/setup/CertificatesAndKeysManagement/home",
+    "Delegated Administration": "https://jstart.lightning.force.com/lightning/setup/DelegateGroups/home",
+    "Event Monitoring Settings": "https://jstart.lightning.force.com/lightning/setup/EventMonitoringSetup/home",
+    "Expire All Passwords": "https://jstart.lightning.force.com/lightning/setup/SecurityExpirePasswords/home",
+    "Field Accessibility": "https://jstart.lightning.force.com/lightning/setup/FieldAccessibility/home",
+    "File Upload and Download Security": "https://jstart.lightning.force.com/lightning/setup/FileTypeSetting/home",
+    "Health Check": "https://jstart.lightning.force.com/lightning/setup/HealthCheck/home",
+    "Login Access Policies": "https://jstart.lightning.force.com/lightning/setup/LoginAccessPolicies/home",
+    "Named Credentials": "https://jstart.lightning.force.com/lightning/setup/NamedCredential/home",
+    "Network Access": "https://jstart.lightning.force.com/lightning/setup/NetworkAccess/home",
+    "Password Policies": "https://jstart.lightning.force.com/lightning/setup/SecurityPolicies/home",
+    "Remote Site Settings": "https://jstart.lightning.force.com/lightning/setup/SecurityRemoteProxy/home",
+    "Session Management": "https://jstart.lightning.force.com/lightning/setup/SessionManagementPage/home",
+    "Session Settings": "https://jstart.lightning.force.com/lightning/setup/SecuritySession/home",
+    "Sharing Settings": "https://jstart.lightning.force.com/lightning/setup/SecuritySharing/home",
+    "View Setup Audit Trail": "https://jstart.lightning.force.com/lightning/setup/SecurityEvents/home",
+    "Optimizer": "https://jstart.lightning.force.com/lightning/setup/SalesforceOptimizer/home"
+  }
 
   /**
    * adds a bindGlobal method to Mousetrap that allows you to
@@ -454,6 +673,7 @@ var sfnav = (function() {
   }
 
   function invokeCommand(cmd, newtab, event) {
+    if(cmds[cmd] == undefined) {console.log(cmd + " not found in command list"); return}
     let theurl = cmds[cmd].url
     // if(serverInstance.includes("lightning.force")) {
     //   //https://jstart.my.salesforce.com/p/setup/layout/LayoutFieldList?type=Contact&setupid=ContactFields&retURL=%2Fui%2Fsetup%2FSetup%3Fsetupid%3DContact
@@ -474,6 +694,16 @@ var sfnav = (function() {
         window.location.href = theurl
      }
      return true;
+   }
+   if(cmd.toLowerCase() == 'toggle detailed mode') {
+    var req = {}
+    req.action = 'Toggle Detailed Mode'
+    req.key = getCmdHash()
+    chrome.runtime.sendMessage(req, function(response) {
+      getAllObjectMetadata()
+      window.location.reload()
+    })
+    return true
    }
    if(cmd.toLowerCase() == 'refresh metadata') {
     showLoadingIndicator()
@@ -814,8 +1044,12 @@ var sfnav = (function() {
     serverInstance = getServerInstance()
 
     cmds['Refresh Metadata'] = {};
+    cmds['Toggle Detailed Mode'] = {};
     cmds['Setup'] = {};
-    if(!serverInstance.includes('lightning.force')) {
+    getSetupTree()
+    if(serverInstance.includes("lightning.force"))
+      getCustomObjects()
+    else {
       sid = "Bearer " + getCookie('sid');
       var theurl = getServerInstance() + '/services/data/' + SFAPI_VERSION + '/sobjects/';
       var req = new XMLHttpRequest();
@@ -825,10 +1059,9 @@ var sfnav = (function() {
       req.onload = function(response) {
         getMetadata(response.target.responseText);
       }
-      req.send();
+      req.send()
+      getCustomObjectsDef()
     }
-    getSetupTree();
-    getCustomObjectsDef();
   }
 
   function parseSetupTree(html) {
@@ -861,6 +1094,9 @@ var sfnav = (function() {
 
       strName = strNameMain + item.innerText;
       let theurl = item.href
+      if(serverInstance.includes("lightning.force") && Object.keys(setupLabelsToLightningMap).includes(item.innerText)) {
+        theurl = setupLabelsToLightningMap[item.innerText]
+      }
       if(serverInstance.includes("lightning.force") && strNameMain.includes("Customize") && Object.keys(classicToLightingMap).includes(item.innerText)) {
         if(cmds['List ' + parent ] == null) { cmds['List ' + parent ] = {url: serverInstance + "/lightning/o/" + pluralize(parent, 1).replace(/\s/g,"") + "/list", key: "List " + parent} }
         if(cmds['New ' + pluralize(parent, 1) ] == null) { cmds['New ' + pluralize(parent, 1) ] = {url: serverInstance + "/lightning/o/" + pluralize(parent, 1).replace(/\s/g,"") + "/new", key: "New " + pluralize(parent, 1)} }
@@ -1092,23 +1328,18 @@ var sfnav = (function() {
   function hideLoadingIndicator() {
     document.getElementById('sfnav_loader').style.visibility = 'hidden';
   }
-  function getCustomObjectsDef()
-  {
+  function getCustomObjectsDef() {
     ftClient.query('Select+Id,+DeveloperName,+NamespacePrefix+FROM+CustomObject',
-      function(success)
-      {
-        for(var i=0;i<success.records.length;i++)
-          {
-            customObjects[success.records[i].DeveloperName.toLowerCase()] = {Id: success.records[i].Id};
-            var apiName = (success.records[i].NamespacePrefix == null ? '' : success.records[i].NamespacePrefix + '__') + success.records[i].DeveloperName + '__c';
-            cmds['Setup > Custom Object > ' + apiName] = {url: '/' + success.records[i].Id, key: apiName};
-          }
+      function(success) {
+        for(var i=0;i<success.records.length;i++) {
+          customObjects[success.records[i].DeveloperName.toLowerCase()] = {Id: success.records[i].Id};
+          var apiName = (success.records[i].NamespacePrefix == null ? '' : success.records[i].NamespacePrefix + '__') + success.records[i].DeveloperName + '__c';
+          cmds['Setup > Custom Object > ' + apiName] = {url: '/' + success.records[i].Id, key: apiName};
+        }
       },
-      function(error)
-      {
-        getCustomObjects();
-      });
-
+      function(error) {
+        getCustomObjects()
+      })
   }
 
   function getCmdHash() {

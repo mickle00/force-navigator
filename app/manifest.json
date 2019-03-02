@@ -1,6 +1,6 @@
 {
     "name": "Salesforce Navigator for Lightning",
-    "version": "1.0.1",
+    "version": "1.2.0",
     "manifest_version": 2,
     "default_locale": "en",
     "browser_action": {
@@ -21,7 +21,7 @@
         "images/ajax-loader.gif",
         "images/sfnav-128.png"
     ],
-    "description": "",
+    "description": "This extension helps you get to any Salesforce page quickly. Just type in what you need to do. NOTE: You must create a CSP Trusted…\nThis extension helps you get to any Salesforce page quickly. Just type in what you need to do.\n\nNOTE: You must create a CSP Trusted Site Definition for your Classic instance in order for this extension to work - more info here https://developer.salesforce.com/docs/atlas.en-us.lightning.meta/lightning/csp_trusted_sites.htm\n\n\n- All standard objects (custom objects coming soon) list views and create new pages are available (even for objects that don't have tabs). Type in \"List <Object Name>\" or \"New <Object Name>\"\n- Custom objects supported, used the Detailed Mode setting to toggle between direct Lightning setup page links and general links\n- All setup links are available -- Type in \"Setup\" to see all. For example, if you want to get to the Account fields setup, type in \"Account Fields\".",
     "content_scripts": [
         {
             "css": [

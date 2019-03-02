@@ -31,34 +31,31 @@ chrome.runtime.onMessage.addListener(
     if(request.action == 'Clear Commands') {
       delete commands[request.key]
       delete lastUpdated[request.key]
-      // Object.keys(commands).forEach(function(key) {
-      //   if(key == orgKey || key.split('!')[0] == orgKey) {
-      //     delete commands[key]
-      //     delete lastUpdated[key]
-      //   }
-      // })
       sendResponse({})
     }
     if(request.action == 'Get Commands') {
       if(commands[request.key] != null)
         sendResponse(commands[request.key])
-      // else if(commands[orgKey] != null &&
-      //   lastUpdated[orgKey] != null &&
-      //   new Date().getTime() - lastUpdated[orgKey].getTime() < 1000*60*60)
-
-      //     sendResponse(commands[orgKey]);
       else
         sendResponse(null);
     }
-    if(request.action == 'Get Settings')
-    {
+    if(request.action == 'Toggle Detailed Mode') {
+      var settings = localStorage.getItem('sfnav_settings')
+      if(settings != null) {
+        delete commands[request.key]
+        delete lastUpdated[request.key]
+        var sett = JSON.parse(settings)
+        sett['detailedMode'] = !sett['detailedMode']
+        localStorage.setItem('sfnav_settings', JSON.stringify(sett))
+      }
+      sendResponse({})
+    }
+    if(request.action == 'Get Settings') {
       var settings = localStorage.getItem('sfnav_settings');
-      if(settings != null)
-      {
+      if(settings != null) {
         sendResponse(JSON.parse(settings));
       }
-      else
-      {
+      else {
         var sett = {};
         sett['shortcut'] = 'ctrl+shift+space';
         localStorage.setItem('sfnav_settings', JSON.stringify(sett));
