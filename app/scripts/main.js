@@ -16,41 +16,18 @@ var sfnav = (function() {
   var serverInstance = getServerInstance()
   var classicURL
   var cmds = {}
-  var isCtrl = false;
+  var isCtrl = false
+  var regMatchSid = /sid=([a-zA-Z0-9\.\!]+)/
   var clientId, omnomnom, hash;
   var loaded = false
-  var shortcut;
+  var shortcut
+  var mouseClickLoginAsUserId
   var detailedMode
   var sessionId = {}
   var sid;
-  var SFAPI_VERSION = 'v40.0';
+  var SFAPI_VERSION = 'v40.0'
   var ftClient = new forceTooling.Client()
-  var customObjects = {};
-  var META_DATATYPES = {
-    "AUTONUMBER": {name:"AutoNumber",code:"auto", params:0},
-    "CHECKBOX": {name:"Checkbox",code:"cb", params:0},
-    "CURRENCY": {name:"Currency",code:"curr", params:2},
-    "DATE": {name:"Date",code:"d", params:0},
-    "DATETIME": {name:"DateTime",code:"dt", params:0},
-    "EMAIL": {name:"Email",code:"e", params:0},
-    "FORMULA": {name:"FORMULA",code:"form"},
-    "GEOLOCATION": {name:"Location",code:"geo"},
-    "HIERARCHICALRELATIONSHIP": {name:"Hierarchy",code:"hr" },
-    "LOOKUP": {name:"Lookup",code:"look"},
-    "MASTERDETAIL": {name:"MasterDetail",code:"md"},
-    "NUMBER": {name:"Number",code:"n"},
-    "PERCENT": {name:"Percent",code:"per"},
-    "PHONE": {name:"Phone",code:"ph"},
-    "PICKLIST": {name:"Picklist",code:"pl"},
-    "PICKLISTMS": {name:"MultiselectPicklist",code:"plms"},
-    "ROLLUPSUMMARY": {name:"Summary",code:"rup"},
-    "TEXT": {name:"Text",code:"t"},
-    "TEXTENCRYPTED": {name:"EcryptedText",code:"te"},
-    "TEXTAREA": {name:"TextArea",code:"ta"},
-    "TEXTAREALONG": {name:"LongTextArea",code:"tal"},
-    "TEXTAREARICH": {name:"Html",code:"tar"},
-    "URL": {name:"Url",code:"url"}
-  };
+  var customObjects = {}
   let classicToLightingMap = {
     'Fields': "/FieldsAndRelationships/view",
     'Page Layouts': '/PageLayouts/view',
@@ -345,149 +322,34 @@ var sfnav = (function() {
       return true;
     }
 
-  var mouseClickLoginAsUserId;
-  var mouseClickLoginAs=
-    function(){
-      loginAsPerform(mouseClickLoginAsUserId);
-      return true;
-    }
+  var mouseClickLoginAs = function() {
+    loginAsPerform(mouseClickLoginAsUserId)
+    return true
+  }
 
-  function getSingleObjectMetadata()
-  {
-    var recordId = document.URL.split('/')[3];
-    var keyPrefix = recordId.substring(0,3);
-
+  function getSingleObjectMetadata() {
+    var recordId = document.URL.split('/')[3]
+    var keyPrefix = recordId.substring(0,3)
   }
   function addElements(ins) {
-    if(ins.substring(0,9) == 'login as ') {
-      if(serverInstance.includes('lightning.force')) return;
-      clearOutput();
-      addWord('Usage: login as <FirstName> <LastName> OR <Username>');
-      setVisible('visible');
-    }
-    else if(ins.substring(0,3) == 'cf ' && ins.split(' ').length < 4) {
-      if(serverInstance.includes('lightning.force')) return;
-      clearOutput();
-      addWord('Usage: cf <Object API Name> <Field Name> <Data Type>');
-      setVisible('visible');
-    }
-    else if(ins.substring(0,3) == 'cf ' && ins.split(' ').length == 4) {
-      if(serverInstance.includes('lightning.force')) return;
-      clearOutput();
-      var wordArray = ins.split(' ');
-      words = getWord(wordArray[3], META_DATATYPES);
-      var words2 = [];
-      for(var i = 0; i<words.length; i++) {
-        switch(words[i].toUpperCase()) {
-          case 'AUTONUMBER':
-          words2.push(wordArray[0] + ' ' + wordArray[1] + ' ' + wordArray[2] + ' ' + words[i]);
-          break;
-          case 'CHECKBOX':
-          words2.push(wordArray[0] + ' ' + wordArray[1] + ' ' + wordArray[2] + ' ' + words[i]);
-          break;
-          case 'CURRENCY':
-          words2.push(wordArray[0] + ' ' + wordArray[1] + ' ' + wordArray[2] + ' ' + words[i] + ' <scale> <precision>') ;
-          break;
-          case 'DATE':
-          words2.push(wordArray[0] + ' ' + wordArray[1] + ' ' + wordArray[2] + ' ' + words[i]);
-          break;
-          case 'DATETIME':
-          words2.push(wordArray[0] + ' ' + wordArray[1] + ' ' + wordArray[2] + ' ' + words[i]);
-          break;
-          case 'EMAIL':
-          words2.push(wordArray[0] + ' ' + wordArray[1] + ' ' + wordArray[2] + ' ' + words[i]);
-          break;
-          case 'FORMULA':
-
-          break;
-          case 'GEOLOCATION':
-          words2.push(wordArray[0] + ' ' + wordArray[1] + ' ' + wordArray[2] + ' ' + words[i] + ' <scale>');
-          break;
-          case 'HIERARCHICALRELATIONSHIP':
-
-          break;
-          case 'LOOKUP':
-          words2.push(wordArray[0] + ' ' + wordArray[1] + ' ' + wordArray[2] + ' ' + words[i] + ' <lookup sObjectName>');
-          break;
-          case 'MASTERDETAIL':
-
-          break;
-          case 'NUMBER':
-          words2.push(wordArray[0] + ' ' + wordArray[1] + ' ' + wordArray[2] + ' ' + words[i] + ' <scale> <precision>');
-          break;
-          case 'PERCENT':
-          words2.push(wordArray[0] + ' ' + wordArray[1] + ' ' + wordArray[2] + ' ' + words[i] + ' <scale> <precision>');
-          break;
-          case 'PHONE':
-          words2.push(wordArray[0] + ' ' + wordArray[1] + ' ' + wordArray[2] + ' ' + words[i]);
-          break;
-          case 'PICKLIST':
-          words2.push(wordArray[0] + ' ' + wordArray[1] + ' ' + wordArray[2] + ' ' + words[i]);
-          break;
-          case 'PICKLISTMS':
-          words2.push(wordArray[0] + ' ' + wordArray[1] + ' ' + wordArray[2] + ' ' + words[i]);
-          break;
-          case 'ROLLUPSUMMARY':
-
-          break;
-          case 'TEXT':
-          words2.push(wordArray[0] + ' ' + wordArray[1] + ' ' + wordArray[2] + ' ' + words[i] + ' <length>');
-          break;
-          case 'TEXTENCRYPTED':
-
-          break;
-          case 'TEXTAREA':
-          words2.push(wordArray[0] + ' ' + wordArray[1] + ' ' + wordArray[2] + ' ' + words[i] + ' <length>');
-          break;
-          case 'TEXTAREALONG':
-          words2.push(wordArray[0] + ' ' + wordArray[1] + ' ' + wordArray[2] + ' ' + words[i] + ' <length> <visible lines>');
-          break;
-          case 'TEXTAREARICH':
-          words2.push(wordArray[0] + ' ' + wordArray[1] + ' ' + wordArray[2] + ' ' + words[i] + ' <length> <visible lines>');
-          break;
-          case 'URL':
-          words2.push(wordArray[0] + ' ' + wordArray[1] + ' ' + wordArray[2] + ' ' + words[i]);
-          break;
-        }
-      }
-      if (words2.length > 0){
-        clearOutput();
-        for (var i=0;i<words2.length; ++i) addWord (words2[i]);
-        setVisible("visible");
-        input = document.getElementById("sfnav_quickSearch").value;
-      }
-      else{
-        setVisible("hidden");
-        posi = -1;
-      }
-        /*
-           for(var i=0;i<Object.keys(META_DATATYPES).length;i++)
-           {
-           addWord(Object.keys(META_DATATYPES)[i]);
-           }
-         */
-        setVisible('visible');
-    }
-    else if(ins.substring(0,3) == 'cf ' && ins.split(' ').length > 4) {
-      clearOutput();
-    }
-    else {
-      words = getWord(ins, cmds);
-
-      if (words.length > 0){
-        clearOutput();
-        for (var i=0;i<words.length; ++i) addWord (words[i]);
-        setVisible("visible");
-        input = document.getElementById("sfnav_quickSearch").value;
-      }
-      else{
-        clearOutput();
-        setVisible("hidden");
-        posi = -1;
+    if(ins.substring(0,9) == 'login as ' && !serverInstance.includes('.force.com')) {
+      clearOutput()
+      addWord('Usage: login as <FirstName> <LastName> OR <Username>')
+      setVisible('visible')
+    } else {
+      words = getWord(ins, cmds)
+      if(words.length > 0) {
+        clearOutput()
+        for (var i=0;i<words.length; ++i) addWord (words[i])
+        setVisible("visible")
+        input = document.getElementById("sfnav_quickSearch").value
+      } else {
+        clearOutput()
+        setVisible("hidden")
+        posi = -1
       }
     }
-    var firstEl = document.querySelector('#sfnav_output :first-child');
-
+    var firstEl = document.querySelector('#sfnav_output :first-child')
     if(posi == -1 && firstEl != null) firstEl.className = "sfnav_child sfnav_selected"
   }
 
@@ -521,7 +383,7 @@ var sfnav = (function() {
     if(visi=='visible') document.getElementById("sfnav_quickSearch").focus();
   }
 
-  function lookAt(){
+  function lookAt() {
     let newSearchVal = document.getElementById('sfnav_quickSearch').value
     if (newSearchVal !== '') {
       addElements(newSearchVal);
@@ -675,361 +537,52 @@ var sfnav = (function() {
   }
 
   function invokeCommand(cmd, newtab, event) {
-    if(cmds[cmd] == undefined) {console.log(cmd + " not found in command list"); return}
-    let theurl = cmds[cmd].url
-    // if(serverInstance.includes("lightning.force")) {
-    //   //https://CLASSIC.salesforce.com/p/setup/layout/LayoutFieldList?type=Contact&setupid=ContactFields&retURL=%2Fui%2Fsetup%2FSetup%3Fsetupid%3DContact
-    //   // /lightning/setup/ObjectManager/Case/FieldsAndRelationships/view
-    //   let link = cmd.split(">").map(function (L) {return L.trim()})
-    //   let ltngObject = link[ link.length - 2 ].replace(/\s/g, "")
-    //   let ltngTarget = link[ link.length - 1 ]
-    //   if(Object.keys(classicToLightingMap).includes(link[ link.length - 1 ]))
-    //     ltngTarget = classicToLightingMap[ link[ link.length - 1 ]]
-    //   theurl = serverInstance + '/lightning/setup/ObjectManager/' + ltngObject + '/' + ltngTarget.replace(/\s/g, "") + '/view'
-    // }
     if(event != 'click' && typeof cmds[cmd] != 'undefined' && (cmds[cmd].url != null || cmds[cmd].url == '')) {
+      let theurl = cmds[cmd].url
       if(newtab) {
         var w = window.open(theurl, '_newtab')
         w.blur()
         window.focus()
       } else {
         window.location.href = theurl
-     }
-     return true;
-   }
-   if(cmd.toLowerCase() == 'toggle detailed mode') {
-    var req = {}
-    req.action = 'Toggle Detailed Mode'
-    req.key = getCmdHash()
-    chrome.runtime.sendMessage(req, function(response) {
+      }
+      return true;
+    }
+    else if(cmd.toLowerCase() == 'toggle detailed mode') {
+      var req = {}
+      req.action = 'Toggle Detailed Mode'
+      req.key = getCmdHash()
+      chrome.runtime.sendMessage(req, function(response) {
+        getAllObjectMetadata()
+        window.location.reload()
+      })
+      return true
+    }
+    else if(cmd.toLowerCase() == 'home') {
+      window.location.href = serverInstance + "/"
+      return true
+    }
+    else if(cmd.toLowerCase() == 'refresh metadata') {
+      showLoadingIndicator()
+      var req = {}
+      req.action = 'Clear Commands'
+      req.key = getCmdHash()
+      chrome.runtime.sendMessage(req, function(response) {})
       getAllObjectMetadata()
-      window.location.reload()
-    })
-    return true
-   }
-   if(cmd.toLowerCase() == 'refresh metadata') {
-    showLoadingIndicator()
-    var req = {}
-    req.action = 'Clear Commands'
-    req.key = getCmdHash()
-    chrome.runtime.sendMessage(req, function(response) {})
-
-    getAllObjectMetadata()
-    setTimeout(function() {
-      hideLoadingIndicator()
-    }, 30000)
-    return true
-  }
-  if(cmd.toLowerCase() == 'setup') {
-    window.location.href = serverInstance + '/ui/setup/Setup';
-    return true;
-  }
-  if(cmd.toLowerCase().substring(0,3) == 'cf ') {
-    createField(cmd);
-    return true;
-  }
-  if(cmd.toLowerCase().substring(0,9) == 'login as ')
-  {
-    loginAs(cmd);
-    return true;
-  }
-
-  return false;
+      document.getElementById("sfnav_quickSearch").value = ""
+      return true
+    }
+    else if(cmd.toLowerCase() == 'setup') {
+      window.location.href = serverInstance + '/ui/setup/Setup'
+      return true
+    }
+    else if(cmd.toLowerCase().substring(0,9) == 'login as ' && !serverInstance.includes('.force.com')) {
+      loginAs(cmd)
+      return true
+    }
+    else if(cmds[cmd] == undefined) {console.log(cmd + " not found in command list or incompatible"); return}
+    return false
 }
-
-  function updateField(cmd)
-  {
-    var arrSplit = cmd.split(' ');
-    var dataType = '';
-    var fieldMetadata;
-
-    if(arrSplit.length >= 3)
-      {
-        for(var key in META_DATATYPES)
-          {
-            if(META_DATATYPES[key].name.toLowerCase() === arrSplit[3].toLowerCase())
-              {
-                dataType = META_DATATYPES[key].name;
-                break;
-              }
-          }
-
-        var sObjectName = arrSplit[1];
-        var fieldName = arrSplit[2];
-        var helpText = null;
-        var typeLength = arrSplit[4];
-        var rightDecimals, leftDecimals;
-        if(parseInt(arrSplit[5]) != NaN )
-          {
-            rightDecimals = parseInt(arrSplit[5]);
-            leftDecimals = typeLength;
-          }
-        else
-          {
-            leftDecimals = 0;
-            rightDecimals = 0;
-          }
-
-
-
-
-        ftClient.queryByName('CustomField', fieldName, sObjectName, function(success) {
-          addSuccess(success);
-          fieldMeta = new  forceTooling.CustomFields.CustomField(arrSplit[1], arrSplit[2], dataType, null, arrSplit[4], parseInt(leftDecimals),parseInt(rightDecimals),null);
-
-          ftClient.update('CustomField', fieldMeta,
-            function(success) {
-              console.log(success);
-              addSuccess(success);
-            },
-            function(error) {
-              console.log(error);
-              addError(error.responseJSON);
-            });
-        },
-          function(error)
-          {
-            addError(error.responseJSON);
-          });
-
-
-      }
-  }
-
-  function createField(cmd)
-  {
-    var arrSplit = cmd.split(' ');
-    var dataType = '';
-    var fieldMetadata;
-
-    if(arrSplit.length >= 3)
-      {
-        //  forceTooling.Client.create(whatever)
-        /*
-           for(var key in META_DATATYPES)
-           {
-           if(META_DATATYPES[key].name.toLowerCase() === arrSplit[3].toLowerCase())
-           {
-           dataType = META_DATATYPES[key].name;
-           break;
-           }
-           }
-         */
-        dataType = META_DATATYPES[arrSplit[3].toUpperCase()].name;
-        var sObjectName = arrSplit[1];
-        var sObjectId = null;
-        if(typeof customObjects[sObjectName.toLowerCase()] !== 'undefined')
-          {
-            sObjectId = customObjects[sObjectName.toLowerCase()].Id;
-            sObjectName += '__c';
-          }
-        var fieldName = arrSplit[2];
-        var helpText = null;
-        var typeLength = arrSplit[4];
-        var rightDecimals, leftDecimals;
-        if(parseInt(arrSplit[5]) != NaN )
-          {
-            rightDecimals = parseInt(arrSplit[5]);
-            leftDecimals = parseInt(typeLength);
-          }
-        else
-          {
-            leftDecimals = 0;
-            rightDecimals = 0;
-          }
-
-        var fieldMeta;
-
-        switch(arrSplit[3].toUpperCase())
-        {
-          case 'AUTONUMBER':
-          fieldMeta = new  forceTooling.CustomFields.CustomField(sObjectName, sObjectId, fieldName, dataType, null, null, null,null,null,null,null);
-          break;
-          case 'CHECKBOX':
-          fieldMeta = new  forceTooling.CustomFields.CustomField(sObjectName, sObjectId, fieldName, dataType, null, null, null,null,null,null,null);
-          break;
-          case 'CURRENCY':
-          fieldMeta = new  forceTooling.CustomFields.CustomField(sObjectName, sObjectId, fieldName, dataType, null, null, leftDecimals, rightDecimals,null,null,null);
-          break;
-          case 'DATE':
-          fieldMeta = new  forceTooling.CustomFields.CustomField(sObjectName, sObjectId, fieldName, dataType, null, null, null,null,null,null,null);
-          break;
-          case 'DATETIME':
-          fieldMeta = new  forceTooling.CustomFields.CustomField(sObjectName, sObjectId, fieldName, dataType, null, null, null,null,null,null,null);
-          break;
-          case 'EMAIL':
-          fieldMeta = new  forceTooling.CustomFields.CustomField(sObjectName, sObjectId, fieldName, dataType, null, null, null,null,null,null,null);
-          break;
-          case 'FORMULA':
-
-          break;
-          case 'GEOLOCATION':
-          fieldMeta = new  forceTooling.CustomFields.CustomField(sObjectName, sObjectId, fieldName, dataType, null, null, null, arrSplit[4],null,null,null);
-          break;
-          case 'HIERARCHICALRELATIONSHIP':
-          fieldMeta = new  forceTooling.CustomFields.CustomField(sObjectName, sObjectId, fieldName, dataType, null, null, null,null,null,arrSplit[4],null);
-          break;
-          case 'LOOKUP':
-          fieldMeta = new  forceTooling.CustomFields.CustomField(sObjectName, sObjectId, fieldName, dataType, null, null, null,null,null,arrSplit[4],null);
-          break;
-          case 'MASTERDETAIL':
-          fieldMeta = new  forceTooling.CustomFields.CustomField(sObjectName, sObjectId, fieldName, dataType, null, null, null,null,null,arrSplit[4],null);
-          break;
-          case 'NUMBER':
-          fieldMeta = new  forceTooling.CustomFields.CustomField(sObjectName, sObjectId, fieldName, dataType, null, null, leftDecimals, rightDecimals,null,null,null);
-          break;
-          case 'PERCENT':
-          fieldMeta = new  forceTooling.CustomFields.CustomField(sObjectName, sObjectId, fieldName, dataType, null, null, leftDecimals, rightDecimals,null,null,null);
-          break;
-          case 'PHONE':
-          fieldMeta = new  forceTooling.CustomFields.CustomField(sObjectName, sObjectId, fieldName, dataType, null, null, null,null,null,null,null);
-          break;
-          case 'PICKLIST':
-          var plVal = [];
-          plVal.push(new forceTooling.CustomFields.PicklistValue('CHANGEME'));
-          fieldMeta = new  forceTooling.CustomFields.CustomField(sObjectName, sObjectId, fieldName, dataType, null, null, null,null,plVal,null,null);
-          break;
-          case 'PICKLISTMS':
-          var plVal = [];
-          plVal.push(new forceTooling.CustomFields.PicklistValue('CHANGEME'));
-          fieldMeta = new  forceTooling.CustomFields.CustomField(sObjectName, sObjectId, fieldName, dataType, null, null, null,null,plVal,null,null);
-          break;
-          case 'ROLLUPSUMMARY':
-
-          break;
-          case 'TEXT':
-          fieldMeta = new  forceTooling.CustomFields.CustomField(sObjectName, sObjectId, fieldName, dataType, null, typeLength, null,null,null,null,null);
-          break;
-          case 'TEXTENCRYPTED':
-          fieldMeta = new  forceTooling.CustomFields.CustomField(sObjectName, sObjectId, fieldName, dataType, null, null, null,null,null,null,null);
-          break;
-          case 'TEXTAREA':
-          fieldMeta = new  forceTooling.CustomFields.CustomField(sObjectName, sObjectId, fieldName, dataType, null, typeLength, null,null,null,null,null);
-          break;
-          case 'TEXTAREALONG':
-          fieldMeta = new  forceTooling.CustomFields.CustomField(sObjectName, sObjectId, fieldName, dataType, null, typeLength, null,null,null,null,arrSplit[4]);
-          break;
-          case 'TEXTAREARICH':
-          fieldMeta = new  forceTooling.CustomFields.CustomField(sObjectName, sObjectId, fieldName, dataType, null, typeLength, null,null,null,null,arrSplit[4]);
-          break;
-          case 'URL':
-          fieldMeta = new  forceTooling.CustomFields.CustomField(sObjectName, sObjectId, fieldName, dataType, null, null, null,null,null,null,null);
-          break;
-
-        }
-
-        ftClient.setSessionToken(getCookie('sid'), SFAPI_VERSION, serverInstance + '');
-        showLoadingIndicator();
-        ftClient.create('CustomField', fieldMeta,
-          function(success) {
-            console.log(success);
-            hideLoadingIndicator();
-            addSuccess(success);
-          },
-          function(error) {
-            console.log(error);
-            hideLoadingIndicator();
-            addError(error.responseJSON);
-          });
-      }
-
-  }
-
-  function loginAs(cmd) {
-    var arrSplit = cmd.split(' ');
-    var searchValue = arrSplit[2];
-    if(arrSplit[3] !== undefined)
-      searchValue += '+' + arrSplit[3];
-
-    var query = 'SELECT+Id,+Name,+Username+FROM+User+WHERE+Name+LIKE+\'%25' + searchValue + '%25\'+OR+Username+LIKE+\'%25' + searchValue + '%25\'';
-    console.log(query);
-
-    ftClient.query(query,
-      function(success) {
-        console.log(success);
-        var numberOfUserRecords = success.records.length;
-        if(numberOfUserRecords < 1){
-          addError([{"message":"No user for your search exists."}]);
-        } else if(numberOfUserRecords > 1){
-          loginAsShowOptions(success.records);
-        } else {
-          var userId = success.records[0].Id;
-          loginAsPerform(userId);
-        }
-      },
-      function(error)
-      {
-        console.log(error);
-        addError(error.responseJSON);
-      }
-    );
-  }
-
-  function loginAsShowOptions(records) {
-    if(!serverInstance.includes("lightning.force")) {
-      for(var i = 0; i < records.length; ++i) {
-        var cmd = 'Login As ' + records[i].Name
-        cmds[cmd] = {key: cmd, id: records[i].Id}
-        addWord(cmd)
-      }
-      setVisible('visible')
-    }
-  }
-
-  function loginAsPerform(userId) {
-    xmlhttp = new XMLHttpRequest();
-    xmlhttp.onreadystatechange = function() {
-      if (xmlhttp.readyState == XMLHttpRequest.DONE ) {
-        document.write(xmlhttp.responseText );
-        document.close();
-        setTimeout(function() {
-          document.getElementsByName("login")[0].click();
-        }, 1000);
-      }
-    }
-    xmlhttp.open("GET", userDetailPage(userId), true);
-    xmlhttp.send();
-  }
-
-  function userDetailPage(userId) {
-    var loginLocation = window.location.protocol + '//' + window.location.host + '/' + userId + '?noredirect=1';
-    console.log(loginLocation);
-    return loginLocation;
-  }
-
-  function getMetadata(_data) {
-    if(_data.length == 0) return;
-    var metadata = JSON.parse(_data);
-    var mRecord = {};
-    var act = {};
-    metaData = {};
-    metadata.sobjects.map( obj => {
-
-      if(obj.keyPrefix != null) {
-        mRecord = {label, labelPlural, keyPrefix, urls} = obj;
-        metaData[obj.keyPrefix] = mRecord;
-
-        act = {
-          key: obj.name,
-          keyPrefix: obj.keyPrefix,
-          url: serverInstance + '/' + obj.keyPrefix
-        }
-        cmds['List ' + mRecord.labelPlural] = act;
-        cmds['List ' + mRecord.labelPlural]['synonyms'] = [obj.name];
-
-        act = {
-          key: obj.name,
-          keyPrefix: obj.keyPrefix,
-          url: serverInstance + '/' + obj.keyPrefix + '/e',
-        }
-        cmds['New ' + mRecord.label] = act;
-        cmds['New ' + mRecord.label]['synonyms'] = [obj.name];
-
-      }
-    })
-
-    store('Store Commands', cmds);
-  }
 
   function store(action, payload) {
     var req = {}
@@ -1040,24 +593,115 @@ var sfnav = (function() {
     chrome.runtime.sendMessage(req, function(response) {});
   }
 
+  function loginAs(cmd) {
+    var arrSplit = cmd.split(' ')
+    var searchValue = arrSplit[2]
+    if(arrSplit[3] !== undefined)
+      searchValue += '+' + arrSplit[3]
+    var query = 'SELECT+Id,+Name,+Username+FROM+User+WHERE+Name+LIKE+\'%25' + searchValue + '%25\'+OR+Username+LIKE+\'%25' + searchValue + '%25\''
+    showLoadingIndicator()
+    ftClient.query(query,
+      function(success) {
+        hideLoadingIndicator()
+        var numberOfUserRecords = success.records.length
+        if(numberOfUserRecords < 1) { addError([{"message":"No user for your search exists."}]) }
+        else if(numberOfUserRecords > 1) { loginAsShowOptions(success.records) }
+        else {
+          var userId = success.records[0].Id
+          loginAsPerform(userId)
+        }
+      },
+      function(error) {
+        console.log(error);
+        hideLoadingIndicator()
+        addError(error.responseJSON)
+      }
+    )
+  }
+
+  function loginAsShowOptions(records) {
+    for(var i = 0; i < records.length; ++i) {
+      var cmd = 'Login As ' + records[i].Name
+      cmds[cmd] = {key: cmd, id: records[i].Id}
+      addWord(cmd)
+    }
+    setVisible('visible')
+  }
+
+  function loginAsPerform(userId) {
+    xmlhttp = new XMLHttpRequest()
+    xmlhttp.onreadystatechange = function() {
+      if (xmlhttp.readyState == XMLHttpRequest.DONE ) {
+        document.write(xmlhttp.responseText)
+        document.close()
+        setTimeout(function() {
+          document.getElementsByName("login")[0].click();
+        }, 1000)
+      }
+    }
+    xmlhttp.open("GET", 'https://' + classicURL + '/' + userId + '?noredirect=1', true)
+    xmlhttp.send()
+  }
+
+  function getMetadata(_data) {
+    if(_data.length == 0) return;
+    var metadata = JSON.parse(_data)
+    var mRecord = {}
+    var act = {}
+    metaData = {}
+    metadata.sobjects.map( obj => {
+      if(obj.keyPrefix != null) {
+        mRecord = {label, labelPlural, keyPrefix, urls} = obj
+        metaData[obj.keyPrefix] = mRecord
+        cmds['List ' + mRecord.labelPlural] = {
+          key: obj.name,
+          keyPrefix: obj.keyPrefix,
+          url: serverInstance + '/' + obj.keyPrefix
+        }
+        cmds['List ' + mRecord.labelPlural]['synonyms'] = [obj.name]
+        cmds['New ' + mRecord.label] = {
+          key: obj.name,
+          keyPrefix: obj.keyPrefix,
+          url: serverInstance + '/' + obj.keyPrefix + '/e',
+        }
+        cmds['New ' + mRecord.label]['synonyms'] = [obj.name]
+      }
+    })
+    store('Store Commands', cmds)
+    hideLoadingIndicator()
+  }
+
   function getAllObjectMetadata() {
     serverInstance = getServerInstance()
-
-    cmds['Refresh Metadata'] = {};
-    cmds['Toggle Detailed Mode'] = {};
-    cmds['Setup'] = {};
+    cmds['Refresh Metadata'] = {}
+    cmds['Toggle Detailed Mode'] = {}
+    cmds['Setup'] = {}
+    cmds['Home'] = {}
     getSetupTree()
     sid = "Bearer " + getApiSessionId()
-    var theurl = getServerInstance() + '/services/data/' + SFAPI_VERSION + '/sobjects/';
-    var req = new XMLHttpRequest();
-    req.open("GET", theurl, true);
-    req.setRequestHeader("Authorization", sid);
-    req.setRequestHeader("Accept", "application/json");
-    req.onload = function(response) {
-      getMetadata(response.target.responseText);
-    }
+    var theurl = getServerInstance() + '/services/data/' + SFAPI_VERSION + '/sobjects/'
+    var req = new XMLHttpRequest()
+    req.open("GET", theurl, true)
+    req.setRequestHeader("Authorization", sid)
+    req.setRequestHeader("Accept", "application/json")
+    req.onload = function(response) { getMetadata(response.target.responseText) }
     req.send()
-    getCustomObjectsDef()
+    getCustomObjects() // switching to the old way because it is more performant and simple
+    // getCustomObjectsDef()
+  }
+  function getCustomObjectsDef() {
+// currently unused
+    ftClient.query('Select+Id,+DeveloperName,+NamespacePrefix+FROM+CustomObject',
+      function(success) {
+        for(var i=0;i<success.records.length;i++) {
+          customObjects[success.records[i].DeveloperName.toLowerCase()] = {Id: success.records[i].Id};
+          var apiName = (success.records[i].NamespacePrefix == null ? '' : success.records[i].NamespacePrefix + '__') + success.records[i].DeveloperName + '__c';
+          cmds['Setup > Custom Object > ' + apiName] = {url: '/' + success.records[i].Id, key: apiName};
+        }
+      },
+      function(error) {
+        getCustomObjects()
+      })
   }
 
   function parseSetupTree(html) {
@@ -1107,7 +751,7 @@ var sfnav = (function() {
 
   function parseCustomObjectTree(html) {
     let mapKeys = Object.keys(classicToLightingMap)
-    $(html).find('th a').each(function(el) {
+    jQuery(html).find('th a').each(function(el) {
       if(serverInstance.includes("lightning.force")) {
         let objectId = this.href.match(/\/(\w+)\?/)[1]
         let theurl = serverInstance + "/lightning/setup/ObjectManager/" + objectId
@@ -1130,23 +774,21 @@ var sfnav = (function() {
 
   function getSetupTree() {
     var theurl = serverInstance + '/ui/setup/Setup'
-    var req = new XMLHttpRequest();
+    var req = new XMLHttpRequest()
     req.onload = function() {
-      parseSetupTree(this.response);
-      hideLoadingIndicator();
+      classicURL = this.responseURL.match(/:\/\/(.*)salesforce.com/)[1] + "salesforce.com"
+      parseSetupTree(this.response)
+      hideLoadingIndicator()
     }
-    req.open("GET", theurl);
-    req.responseType = 'document';
-
-    req.send();
+    req.open("GET", theurl)
+    req.responseType = 'document'
+    req.send()
   }
 
   function getCustomObjects() {
     var theurl = serverInstance + '/p/setup/custent/CustomObjectsPage'
     var req = new XMLHttpRequest()
-    req.onload = function() {
-      parseCustomObjectTree(this.response)
-    }
+    req.onload = function() { parseCustomObjectTree(this.response) }
     req.open("GET", theurl)
     req.responseType = 'document'
     req.send()
@@ -1165,18 +807,10 @@ var sfnav = (function() {
         return unescape(sessionId[orgId])
       })
     } else {
-      sessionId[orgId] = unescape(document.cookie.match(/sid=(.*)[;$]/)[1])
+      sessionId[orgId] = unescape(document.cookie.match(regMatchSid)[1])
       ftClient.setSessionToken( sessionId[orgId], SFAPI_VERSION, serverInstance + '')
+      init()
       return unescape(sessionId[orgId])
-    }
-  }
-  function getCookie(c_name) {
-    var i,x,y,ARRcookies=document.cookie.split(";")
-    for (i=0;i<ARRcookies.length;i++) {
-      x=ARRcookies[i].substr(0,ARRcookies[i].indexOf("="))
-      y=ARRcookies[i].substr(ARRcookies[i].indexOf("=")+1)
-      x=x.replace(/^\s+|\s+$/g,"")
-      if (x==c_name) { return unescape(y) }
     }
   }
   function getServerInstance() {
@@ -1218,29 +852,23 @@ var sfnav = (function() {
   }
 
   function kbdCommand(e, key) {
-    var position = posi;
-    var origText = '', newText = '';
-    if(position <0) position = 0;
-
-    origText = document.getElementById("sfnav_quickSearch").value;
-    if(typeof outp.childNodes[position] != 'undefined')
-      {
-        newText = outp.childNodes[position].firstChild.nodeValue;
-
-      }
-
-    var newtab = newTabKeys.indexOf(key) >= 0 ? true : false;
-    if(!newtab){
-      clearOutput();
-      setVisible("hidden");
+    var position = posi
+    var origText = '', newText = ''
+    if(position <0) position = 0
+    origText = document.getElementById("sfnav_quickSearch").value
+    if(typeof outp.childNodes[position] != 'undefined') {
+      newText = outp.childNodes[position].firstChild.nodeValue
     }
-
+    var newtab = newTabKeys.indexOf(key) >= 0 ? true : false
+    if(!newtab) {
+      clearOutput()
+      setVisible("hidden")
+    }
     if(!invokeCommand(newText, newtab))
-      invokeCommand(origText, newtab);
+      invokeCommand(origText, newtab)
   }
 
   function selectMove(direction) {
-
     let searchBar = document.getElementById('sfnav_quickSearch');
 
     var firstChild;
@@ -1318,72 +946,63 @@ var sfnav = (function() {
       lookAt();
       return true;
     }
-
   }
 
   function showLoadingIndicator() { document.getElementById('sfnav_loader').style.visibility = 'visible' }
   function hideLoadingIndicator() { document.getElementById('sfnav_loader').style.visibility = 'hidden' }
-  function getCustomObjectsDef() {
-    ftClient.query('Select+Id,+DeveloperName,+NamespacePrefix+FROM+CustomObject',
-      function(success) {
-        for(var i=0;i<success.records.length;i++) {
-          customObjects[success.records[i].DeveloperName.toLowerCase()] = {Id: success.records[i].Id};
-          var apiName = (success.records[i].NamespacePrefix == null ? '' : success.records[i].NamespacePrefix + '__') + success.records[i].DeveloperName + '__c';
-          cmds['Setup > Custom Object > ' + apiName] = {url: '/' + success.records[i].Id, key: apiName};
-        }
-      },
-      function(error) {
-        getCustomObjects()
-      })
-  }
 
-  var getCurrentOrgId = function() { return document.cookie.match(/sid=([a-zA-Z0-9]*)/)[1] }
+  var getCurrentOrgId = function() {
+    try { return document.cookie.match(/sid=([a-zA-Z0-9]*)/)[1] }
+    catch(e) { console.log(e) }
+  }
   var getCmdHash = function() {
-    omnomnom = getCookie('sid')
+    omnomnom = document.cookie.match(regMatchSid)[1]
     clientId = omnomnom.split('!')[0]
     hash = clientId + '!' + omnomnom.substring(omnomnom.length - 10, omnomnom.length)
     return hash
   }
 
   function init() {
-    var orgId = getCurrentOrgId()
-    if(sessionId[orgId] == undefined) { getApiSessionId(orgId) }
-    else { ftClient.setSessionToken( sessionId[orgId], SFAPI_VERSION, serverInstance + '') }
+    if(document.body != null) {
+      var orgId = getCurrentOrgId()
+      if(sessionId[orgId] == undefined) { getApiSessionId(orgId) }
+      else { ftClient.setSessionToken( sessionId[orgId], SFAPI_VERSION, serverInstance + '') }
 
-    var div = document.createElement('div');
-    div.setAttribute('id', 'sfnav_search_box');
-    var loaderURL = chrome.extension.getURL("images/ajax-loader.gif");
-    var logoURL = chrome.extension.getURL("images/sfnav-128.png");
-    div.innerHTML = `
-    <div class="sfnav_wrapper">
-      <input type="text" id="sfnav_quickSearch" autocomplete="off"/>
-      <img id="sfnav_loader" src= "${loaderURL}"/>
-      <img id="sfnav_logo" src= "${logoURL}"/>
-    </div>
-    <div class="sfnav_shadow" id="sfnav_shadow"/>
-    <div class="sfnav_output" id="sfnav_output"/>`;
+      var div = document.createElement('div');
+      div.setAttribute('id', 'sfnav_search_box');
+      var loaderURL = chrome.extension.getURL("images/ajax-loader.gif");
+      var logoURL = chrome.extension.getURL("images/sfnav-128.png");
+      div.innerHTML = `
+      <div class="sfnav_wrapper">
+        <input type="text" id="sfnav_quickSearch" autocomplete="off"/>
+        <img id="sfnav_loader" src= "${loaderURL}"/>
+        <img id="sfnav_logo" src= "${logoURL}"/>
+      </div>
+      <div class="sfnav_shadow" id="sfnav_shadow"/>
+      <div class="sfnav_output" id="sfnav_output"/>`;
 
-    document.body.appendChild(div);
-    outp = document.getElementById("sfnav_output");
-    hideLoadingIndicator();
-    initSettings();
-    hash = getCmdHash()
-    loaded = true
+      document.body.appendChild(div);
+      outp = document.getElementById("sfnav_output")
+      hideLoadingIndicator()
+      initSettings()
+      hash = getCmdHash()
+      loaded = true
 
-    chrome.runtime.sendMessage({
-      action:'Get Commands', 'key': hash},
-      function(response) {
-        cmds = response;
-        if(cmds == null || cmds.length == 0) {
-          cmds = {}
-          metaData = {}
-          getAllObjectMetadata()
-        }
-    })
+      chrome.runtime.sendMessage({
+        action:'Get Commands', 'key': hash},
+        function(response) {
+          cmds = response
+          if(cmds == null || cmds.length == 0) {
+            cmds = {}
+            metaData = {}
+            getAllObjectMetadata()
+          }
+      })
+    }
   }
 
   if(serverInstance == null) {
-    console.log('error', serverInstance, getApiSessionId())
+    console.log('error', getServerInstance(), getApiSessionId())
     return
   }
   else getApiSessionId()
