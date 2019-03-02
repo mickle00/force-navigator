@@ -1,6 +1,6 @@
 {
     "name": "Salesforce Navigator for Lightning",
-    "version": "1.0.1",
+    "version": "1.2.0",
     "manifest_version": 2,
     "default_locale": "en",
     "browser_action": {
@@ -21,7 +21,7 @@
         "images/ajax-loader.gif",
         "images/sfnav-128.png"
     ],
-    "description": "",
+    "description": "This extension helps you get to any Salesforce page quickly. Just type in what you need to do. NOTE: You must create a CSP Trusted…",
     "content_scripts": [
         {
             "css": [
