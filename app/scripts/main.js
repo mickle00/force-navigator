@@ -357,11 +357,17 @@ var sfnav = (function() {
     }
   }
   function addElements(ins) {
-    if(ins.substring(0,9) == 'login as ' && !serverInstance.includes('.force.com')) {
+    if(ins[0] == "?") {
+      clearOutput()
+      addWord('Global Search Usage: ? <Search term(s)>')
+      setVisible('visible')
+    }
+    else if(ins.substring(0,9) == 'login as ' && !serverInstance.includes('.force.com')) {
       clearOutput()
       addWord('Usage: login as <FirstName> <LastName> OR <Username>')
       setVisible('visible')
-    } else {
+    }
+    else {
       words = fastGetWord(ins, cmds)
       if(words.length > 0) {
         clearOutput()
@@ -533,29 +539,22 @@ var sfnav = (function() {
   }
 
   function invokeCommand(cmd, newtab, event) {
-    if(event != 'click' && typeof cmds[cmd] != 'undefined' && (cmds[cmd].url != null || cmds[cmd].url == '')) {
-      let theurl = cmds[cmd].url
-      if(newtab) {
-        var w = window.open(theurl, '_newtab')
-        w.blur()
-        window.focus()
-      } else {
-        window.location.href = theurl
-      }
-      return true;
+    var targetURL = ""
+    if(cmd.toLowerCase() == 'refresh metadata') {
+      showLoadingIndicator()
+      var req = {}
+      req.action = 'Clear Commands'
+      req.key = getCmdHash()
+      chrome.runtime.sendMessage(req, function(response) {})
+      getAllObjectMetadata(true)
+      document.getElementById("sfnav_quickSearch").value = ""
+      return true
     }
     else if(cmd.toLowerCase() == 'toggle detailed mode') {
-      var req = {}
-      req.action = 'Toggle Detailed Mode'
-      req.key = getCmdHash()
-      chrome.runtime.sendMessage(req, function(response) {
+      chrome.runtime.sendMessage({ action: 'Toggle Detailed Mode', key: getCmdHash() }, function(response) {
         getAllObjectMetadata()
         window.location.reload()
       })
-      return true
-    }
-    else if(cmd.toLowerCase() == 'home') {
-      window.location.href = serverInstance + "/"
       return true
     }
     else if(cmd.toLowerCase() == 'toggle lightning') {
@@ -567,26 +566,30 @@ var sfnav = (function() {
       window.location.href = serverInstance + "/ltng/switcher?destination=" + mode
       return true
     }
-    else if(cmd.toLowerCase() == 'refresh metadata') {
-      showLoadingIndicator()
-      var req = {}
-      req.action = 'Clear Commands'
-      req.key = getCmdHash()
-      chrome.runtime.sendMessage(req, function(response) {})
-      getAllObjectMetadata(true)
-      document.getElementById("sfnav_quickSearch").value = ""
-      return true
+    else if(cmd.toLowerCase().substring(0,9) == 'login as ' && !serverInstance.includes('.force.com')) { loginAs(cmd); return true }
+
+    else if(event != 'click' && typeof cmds[cmd] != 'undefined' && cmds[cmd].url) { targetURL = cmds[cmd].url }
+    else if(cmd.toLowerCase() == 'setup') { targetURL = serverInstance + '/ui/setup/Setup' }
+    else if(cmd.toLowerCase() == 'home') { targetURL = serverInstance + "/" }
+    else if(cmd[0] == "?") {
+      targetURL = serverInstance
+      var TERM = cmd.substring(1).trim()
+      if(serverInstance.includes('.force.com')) {
+          targetURL += "/one/one.app#" + btoa(JSON.stringify({"componentDef":"forceSearch:search","attributes":{"term": TERM,"scopeMap":{"type":"TOP_RESULTS"},"context":{"disableSpellCorrection":false,"SEARCH_ACTIVITY":{"term": TERM}}}}))
+      } else { targetURL += "/_ui/search/ui/UnifiedSearchResults?sen=ka&sen=500&str=" + encodeURI(TERM) + "#!/str=" + encodeURI(TERM) + "&searchAll=true&initialViewMode=summary" }
     }
-    else if(cmd.toLowerCase() == 'setup') {
-      window.location.href = serverInstance + '/ui/setup/Setup'
+
+    else if(cmds[cmd] == undefined && cmd[0] != "?") {console.log(cmd + " not found in command list or incompatible"); return false}
+
+    if(targetURL != "") {
+      if(newtab) {
+        var w = window.open(targetURL, "").focus()
+        // w.blur()
+        // window.focus()
+        hideSearchBox()
+      } else { window.location.href = targetURL }
       return true
-    }
-    else if(cmd.toLowerCase().substring(0,9) == 'login as ' && !serverInstance.includes('.force.com')) {
-      loginAs(cmd)
-      return true
-    }
-    else if(cmds[cmd] == undefined) {console.log(cmd + " not found in command list or incompatible"); return}
-    return false
+    } else { return false }
 }
 
   function store(action, payload) {
@@ -650,28 +653,30 @@ var sfnav = (function() {
 
   function getMetadata(_data) {
     if(_data.length == 0) return;
-    var metadata = JSON.parse(_data)
+    var data = JSON.parse(_data)
     var mRecord = {}
     var act = {}
     metaData = {}
-    metadata.sobjects.map( obj => {
-      if(obj.keyPrefix != null) {
-        mRecord = {label, labelPlural, keyPrefix, urls} = obj
-        metaData[obj.keyPrefix] = mRecord
-        cmds['List ' + mRecord.labelPlural] = {
-          key: obj.name,
-          keyPrefix: obj.keyPrefix,
-          url: serverInstance + '/' + obj.keyPrefix
-        }
-        // cmds['List ' + mRecord.labelPlural]['synonyms'] = [obj.name]
-        cmds['New ' + mRecord.label] = {
-          key: obj.name,
-          keyPrefix: obj.keyPrefix,
-          url: serverInstance + '/' + obj.keyPrefix + '/e',
-        }
-        // cmds['New ' + mRecord.label]['synonyms'] = [obj.name]
-      }
-    })
+    if(typeof data.sobjects != "undefined") {
+        data.sobjects.map( obj => {
+          if(obj.keyPrefix != null) {
+            mRecord = {label, labelPlural, keyPrefix, urls} = obj
+            metaData[obj.keyPrefix] = mRecord
+            cmds['List ' + mRecord.labelPlural] = {
+              key: obj.name,
+              keyPrefix: obj.keyPrefix,
+              url: serverInstance + '/' + obj.keyPrefix
+            }
+            // cmds['List ' + mRecord.labelPlural]['synonyms'] = [obj.name]
+            cmds['New ' + mRecord.label] = {
+              key: obj.name,
+              keyPrefix: obj.keyPrefix,
+              url: serverInstance + '/' + obj.keyPrefix + '/e',
+            }
+            // cmds['New ' + mRecord.label]['synonyms'] = [obj.name]
+          }
+        })
+    }
     store('Store Commands', cmds)
     hideLoadingIndicator()
   }
@@ -682,6 +687,7 @@ var sfnav = (function() {
     cmds['Toggle Detailed Mode'] = {}
     cmds['Toggle Lightning'] = {}
     cmds['Setup'] = {}
+    cmds['?'] = {}
     cmds['Home'] = {}
     getSetupTree()
     var token = getApiSessionId(force)
@@ -926,11 +932,7 @@ var sfnav = (function() {
     })
     Mousetrap.bindGlobal('esc', function(e) {
       if (isVisible() || isVisibleSearch()) {
-        searchBar.blur()
-        clearOutput()
-        searchBar.value = ''
-        setVisible("hidden")
-        setVisibleSearch("hidden")
+        hideSearchBox()
       }
     })
     Mousetrap.wrap(searchBar).bind('enter', kbdCommand)
@@ -951,6 +953,14 @@ var sfnav = (function() {
 
   function showLoadingIndicator() { document.getElementById('sfnav_loader').style.visibility = 'visible' }
   function hideLoadingIndicator() { document.getElementById('sfnav_loader').style.visibility = 'hidden' }
+  var hideSearchBox = function() {
+    let searchBar = document.getElementById('sfnav_quickSearch')
+    searchBar.blur()
+    clearOutput()
+    searchBar.value = ''
+    setVisible("hidden")
+    setVisibleSearch("hidden")
+  }
 
   var getCurrentOrgId = function() {
     try { return document.cookie.match(/sid=([a-zA-Z0-9]*)/)[1] }
