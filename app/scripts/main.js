@@ -555,6 +555,7 @@ var sfnav = (function() {
     }
     else if(cmd.toLowerCase() == 'toggle detailed mode') {
       chrome.runtime.sendMessage({ action: 'Toggle Detailed Mode', key: getCmdHash() }, function(response) {
+        // it isn't actually clearing the other mode, this is dumb
         getAllObjectMetadata()
         window.location.reload()
       })
