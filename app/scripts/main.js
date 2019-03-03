@@ -15,6 +15,7 @@ var sfnav = (function() {
   var metaData = {};
   var serverInstance = getServerInstance()
   var classicURL
+  var orgId = false
   var cmds = {}
   var isCtrl = false
   var regMatchSid = /sid=([a-zA-Z0-9\.\!]+)/
@@ -24,6 +25,7 @@ var sfnav = (function() {
   var mouseClickLoginAsUserId
   var detailedMode
   var sessionId = {}
+  var userId = {}
   var sid;
   var SFAPI_VERSION = 'v40.0'
   var ftClient = new forceTooling.Client()
@@ -391,7 +393,7 @@ var sfnav = (function() {
     var arrFound = []
     var terms = input.toLowerCase().split(" ")
     for (var key in dict) {
-      if(arrFound.length > 20) break // stop at 20 since we can't see longer than that anyways
+      if(arrFound.length > 10) break // stop at 10 since we can't see longer than that anyways - should make this a setting
       if(key.toLowerCase().indexOf(input) != -1) {
           arrFound.push({num: 10, key: key})
       } else {
@@ -539,6 +541,7 @@ var sfnav = (function() {
   }
 
   function invokeCommand(cmd, newtab, event) {
+    if(cmd == "") { return false }
     var targetURL = ""
     if(cmd.toLowerCase() == 'refresh metadata') {
       showLoadingIndicator()
@@ -571,6 +574,7 @@ var sfnav = (function() {
     else if(event != 'click' && typeof cmds[cmd] != 'undefined' && cmds[cmd].url) { targetURL = cmds[cmd].url }
     else if(cmd.toLowerCase() == 'setup') { targetURL = serverInstance + '/ui/setup/Setup' }
     else if(cmd.toLowerCase() == 'home') { targetURL = serverInstance + "/" }
+    // else if(cmd[0] == "!") { createTask(cmd.substring(1).trim()) }
     else if(cmd[0] == "?") {
       targetURL = serverInstance
       var TERM = cmd.substring(1).trim()
@@ -578,14 +582,11 @@ var sfnav = (function() {
           targetURL += "/one/one.app#" + btoa(JSON.stringify({"componentDef":"forceSearch:search","attributes":{"term": TERM,"scopeMap":{"type":"TOP_RESULTS"},"context":{"disableSpellCorrection":false,"SEARCH_ACTIVITY":{"term": TERM}}}}))
       } else { targetURL += "/_ui/search/ui/UnifiedSearchResults?sen=ka&sen=500&str=" + encodeURI(TERM) + "#!/str=" + encodeURI(TERM) + "&searchAll=true&initialViewMode=summary" }
     }
-
-    else if(cmds[cmd] == undefined && cmd[0] != "?") {console.log(cmd + " not found in command list or incompatible"); return false}
+    else { console.log(cmd + " not found in command list or incompatible"); return false }
 
     if(targetURL != "") {
       if(newtab) {
         var w = window.open(targetURL, "").focus()
-        // w.blur()
-        // window.focus()
         hideSearchBox()
       } else { window.location.href = targetURL }
       return true
@@ -599,6 +600,25 @@ var sfnav = (function() {
     req.payload = payload;
 
     chrome.runtime.sendMessage(req, function(response) {});
+  }
+
+  var getUserId = function() {
+    return userId[orgId]
+  }
+  var createTask = function(subject) {
+    showLoadingIndicator()
+    if(subject != "" && getUserId()) {
+      // function(path, callback, error, method, payload, retry) {
+      ftClient.ajax(
+        SFAPI_VERSION + '/sobjects/Task',
+        function (success) {
+          console.log(success)
+        },
+        function(error) { console.log(error) },
+        "POST",
+        {"Subject": subject, "OwnerId": getUserId()}
+      )
+    }
   }
 
   function loginAs(cmd) {
@@ -688,6 +708,15 @@ var sfnav = (function() {
     cmds['Toggle Lightning'] = {}
     cmds['Setup'] = {}
     cmds['?'] = {}
+    // cmds['/'] = {}  //prepping for listview searching
+    // Lightning link: serverInstance + "/lightning/o/"+ sObject +"/list?filterName=" + List ID
+    // no apparent way to SOQL for specific name view, seems to be on a per object basis only
+    // classicURL + "/vXX.X/sobjects/{sobjectType}/listviews"
+    // probably offer list search on several specific objects - ooh, or as a configuarion setting you can change
+    // ------
+    // cmds['!'] = {}  //prepping for adding tasks to self - very simple task creation
+    // REST Api for creation
+    // json object: { "Subject": taskSubject, "OwnerId": getUserId() }
     cmds['Home'] = {}
     getSetupTree()
     var token = getApiSessionId(force)
@@ -809,31 +838,7 @@ var sfnav = (function() {
     req.responseType = 'document'
     req.send()
   }
-  getApiSessionId = function(force, orgId) {
-    if(orgId == undefined)
-      orgId = getCurrentOrgId()
-    if(sessionId[orgId] != undefined && force != true) return sessionId[orgId]
-    var orgSessionId = ""
-    if(serverInstance.includes('.force.com') || true /*forcing all to run this now */) {
-      var req = { action: 'Get API Session ID', key: orgId }
-      chrome.runtime.sendMessage(req, function(response) {
-        sessionId[orgId] = unescape(response)
-        if(!loaded)
-          init()
-        return unescape(sessionId[orgId])
-      })
-    }
-/* just using the background method right now, this isn't working in classic
-    else {
-      if(sessionId[orgId] == null)
-        sessionId[orgId] = unescape(document.cookie.match(regMatchSid)[1])
-      ftClient.setSessionToken( sessionId[orgId], SFAPI_VERSION, serverInstance + '')
-      if(!loaded)
-        init()
-      return unescape(sessionId[orgId])
-    }
-*/
-  }
+
   function getServerInstance() {
     var url = location.origin + "";
     var urlParseArray = url.split(".");
@@ -854,6 +859,43 @@ var sfnav = (function() {
     }
     return returnUrl;
   }
+  var setCurrentOrgId = function(force) {
+    if(orgId && !force) { return orgId }
+
+    try { orgId = document.cookie.match(/sid=([\w\d]+)/)[1]; return orgId }
+    catch(e) { console.log(e) }
+  }
+  var getApiSessionId = function(force, orgId) {
+    orgId = setCurrentOrgId()
+
+    if(sessionId[orgId] != null && force != true) return sessionId[orgId]
+    if(serverInstance.includes('.force.com') || true /*forcing all to run this now */) {
+      chrome.runtime.sendMessage({ action: 'Get API Session ID', key: orgId }, function(response) {
+        if(response.error) {
+          console.log("response", orgId, response)
+          console.log(chrome.runtime.lastError)
+        }
+        else {
+          sessionId[orgId] = unescape(response.sessionId)
+          userId[orgId] = unescape(response.userId)
+          if(!loaded)
+            init()
+          return unescape(sessionId[orgId])
+        }
+      })
+    }
+/* just using the background method right now, this isn't working in classic
+    else {
+      if(sessionId[orgId] == null)
+        sessionId[orgId] = unescape(document.cookie.match(regMatchSid)[1])
+      ftClient.setSessionToken( sessionId[orgId], SFAPI_VERSION, serverInstance + '')
+      if(!loaded)
+        init()
+      return unescape(sessionId[orgId])
+    }
+*/
+  }
+
 
   function initSettings() {
     chrome.runtime.sendMessage({'action':'Get Settings'},
@@ -962,10 +1004,6 @@ var sfnav = (function() {
     setVisibleSearch("hidden")
   }
 
-  var getCurrentOrgId = function() {
-    try { return document.cookie.match(/sid=([a-zA-Z0-9]*)/)[1] }
-    catch(e) { console.log(e) }
-  }
   var getCmdHash = function() {
     omnomnom = document.cookie.match(regMatchSid)[1]
     clientId = omnomnom.split('!')[0]
@@ -975,7 +1013,7 @@ var sfnav = (function() {
 
   function init() {
     if(document.body != null) {
-      var orgId = getCurrentOrgId()
+      setCurrentOrgId()
       if(sessionId[orgId] == undefined) { getApiSessionId(true, orgId) }
       else { ftClient.setSessionToken( sessionId[orgId], SFAPI_VERSION, serverInstance + '') }
 

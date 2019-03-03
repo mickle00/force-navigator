@@ -1,6 +1,6 @@
 {
     "name": "Salesforce Navigator for Lightning",
-    "version": "1.5.9",
+    "version": "1.6.3",
     "manifest_version": 2,
     "default_locale": "en",
     "browser_action": {
@@ -32,6 +32,7 @@
                 "https://*.salesforce.com/*",
                 "https://*.cloudforce.com/*"
             ],
+            "all_frames": true,
             "js": [
                 "scripts/jquery.js",
                 "scripts/mousetrap.min.js",
