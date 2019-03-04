@@ -16,39 +16,24 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
 
   if (request.action == 'Get API Session ID') {
     if (request.key != null) {
-    request.sid = request.uid = ""
+    request.sid = request.uid = request.domain = ""
     chrome.cookies.getAll({}, function(all) {
         all.forEach(function(c) {
           if(c.domain.includes("salesforce.com") && c.value.includes(request.key)) {
-            if(c.name == 'sid')
+            if(c.name == 'sid') {
               request.sid = c.value
+              request.domain = c.domain
+            }
             else if(c.name == 'disco')
               request.uid = c.value.match(/005[\w\d]+/)[0]
           }
         })
         if(request.sid != "" || request.uid != "")
-          sendResponse({sessionId: request.sid, userId: request.uid})
+          sendResponse({sessionId: request.sid, userId: request.uid, classicURL: request.domain})
         else
           sendResponse({error: "No session data found for " + request.key})
         return request
       })
-      // sendResponse({sessionId: sid, userId: uid})
-      // chrome.cookies.getAll({ name: "sid" }, function(all) {
-      //   all.forEach(function(c) {
-      //     if (c.domain.includes("salesforce.com") && c.value.includes(request.key))
-      //       if(sid == "")
-      //         console.log(c)
-      //         // sid = c.value
-      //   })
-      // })
-      // chrome.cookies.getAll({ name: "disco" }, function(all) {
-      //   all.forEach(function(c) {
-      //     if (c.domain.includes("salesforce.com") && c.value.includes(request.key))
-      //       if(uid == "")
-      //         console.log(c)
-      //         uid = unescape(c.value)
-      //   })
-      // })
     } else { sendResponse({error: "Must include orgId"}) }
   }
 

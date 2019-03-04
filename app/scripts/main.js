@@ -364,13 +364,18 @@ var sfnav = (function() {
       addWord('Global Search Usage: ? <Search term(s)>')
       setVisible('visible')
     }
+    if(ins[0] == "!") {
+      clearOutput()
+      addWord('Create a Task: ! <Subject line>')
+      setVisible('visible')
+    }
     else if(ins.substring(0,9) == 'login as ' && !serverInstance.includes('.force.com')) {
       clearOutput()
       addWord('Usage: login as <FirstName> <LastName> OR <Username>')
       setVisible('visible')
     }
     else {
-      words = fastGetWord(ins, cmds)
+      words = getWord(ins, cmds)
       if(words.length > 0) {
         clearOutput()
         for (var i=0;i<words.length; ++i)
@@ -387,7 +392,7 @@ var sfnav = (function() {
     if(posi == -1 && firstEl != null) firstEl.className = "sfnav_child sfnav_selected"
   }
 
-  var fastGetWord = function(input, dict) {
+  var getWord = function(input, dict) {
     if(typeof input === 'undefined' || input == '') return []
     var words = []
     var arrFound = []
@@ -413,51 +418,6 @@ var sfnav = (function() {
       words[words.length] = arrFound[i].key
     return words    
   } 
-
-  function getWord(beginning, dict) {
-    var words = []
-    if(typeof beginning === 'undefined') return []
-    var tmpSplit = beginning.split(' ')
-    var match = false
-    if(beginning.length == 0) {
-      for (var key in dict)
-        words.push(key)
-      return words
-    }
-    var arrFound = []
-    for (var key in dict) {
-      match = false
-      if(key.toLowerCase().indexOf(beginning) != -1) {
-          arrFound.push({num : 10,key : key})
-      } else {
-        for(var i = 0;i<tmpSplit.length;i++) {
-          if(key.toLowerCase().indexOf(tmpSplit[i].toLowerCase()) != -1) {
-            match = true
-            sortValue = 1
-          } else {
-            match = false
-            if(dict[key]['synonyms'] !== undefined) {
-              for(var j = 0;j<dict[key]['synonyms'].length;j++) {
-                keySynonym = dict[key]['synonyms'][j]
-                if(keySynonym.toLowerCase().indexOf(tmpSplit[i].toLowerCase()) != -1) {
-                    match = true
-                    sortValue = 0.5
-                }
-              }
-            }
-          }
-          if (!match) { break }
-        }
-        if(match) arrFound.push({num : sortValue, key : key})
-      }
-    }
-    arrFound.sort(function(a,b) { return b.num - a.num })
-    for(var i = 0;i<arrFound.length;i++)
-      words[words.length] = arrFound[i].key
-
-    return words;
-  }
-
 
   function addWord(word) {
     var d = document.createElement("div");
@@ -527,13 +487,12 @@ var sfnav = (function() {
   }
 
   function clearOutput() {
-    if(typeof outp != 'undefined')
-      {
-        while (outp.hasChildNodes()){
-          noten=outp.firstChild;
-          outp.removeChild(noten);
-        }
+    if(typeof outp != 'undefined') {
+      while (outp.hasChildNodes()) {
+        noten=outp.firstChild
+        outp.removeChild(noten)
       }
+    }
   }
   function setColor (_posi, _color, _forg){
     outp.childNodes[_posi].style.background = _color;
@@ -545,10 +504,7 @@ var sfnav = (function() {
     var targetURL = ""
     if(cmd.toLowerCase() == 'refresh metadata') {
       showLoadingIndicator()
-      var req = {}
-      req.action = 'Clear Commands'
-      req.key = getCmdHash()
-      chrome.runtime.sendMessage(req, function(response) {})
+      chrome.runtime.sendMessage({ action: 'Clear Commands', key: getCmdHash() } , function(response) {})
       getAllObjectMetadata(true)
       document.getElementById("sfnav_quickSearch").value = ""
       return true
@@ -563,10 +519,8 @@ var sfnav = (function() {
     }
     else if(cmd.toLowerCase() == 'toggle lightning') {
       var mode
-      if(window.location.href.includes("lightning.force"))
-        mode = "classic"
-      else
-        mode = "lex-campaign"
+      if(window.location.href.includes("lightning.force")) mode = "classic"
+      else mode = "lex-campaign"
       window.location.href = serverInstance + "/ltng/switcher?destination=" + mode
       return true
     }
@@ -575,15 +529,11 @@ var sfnav = (function() {
     else if(event != 'click' && typeof cmds[cmd] != 'undefined' && cmds[cmd].url) { targetURL = cmds[cmd].url }
     else if(cmd.toLowerCase() == 'setup') { targetURL = serverInstance + '/ui/setup/Setup' }
     else if(cmd.toLowerCase() == 'home') { targetURL = serverInstance + "/" }
-    // else if(cmd[0] == "!") { createTask(cmd.substring(1).trim()) }
-    else if(cmd[0] == "?") {
-      targetURL = serverInstance
-      var TERM = cmd.substring(1).trim()
-      if(serverInstance.includes('.force.com')) {
-          targetURL += "/one/one.app#" + btoa(JSON.stringify({"componentDef":"forceSearch:search","attributes":{"term": TERM,"scopeMap":{"type":"TOP_RESULTS"},"context":{"disableSpellCorrection":false,"SEARCH_ACTIVITY":{"term": TERM}}}}))
-      } else { targetURL += "/_ui/search/ui/UnifiedSearchResults?sen=ka&sen=500&str=" + encodeURI(TERM) + "#!/str=" + encodeURI(TERM) + "&searchAll=true&initialViewMode=summary" }
+    else if(cmd[0] == "!") { createTask(cmd.substring(1).trim()) }
+    else if(cmd[0] == "?") { searchTerms(cmd.substring(1).trim()) }
+    else if(!cmd.includes("Create a Task: !")){
+      console.log(cmd + " not found in command list or incompatible"); return false
     }
-    else { console.log(cmd + " not found in command list or incompatible"); return false }
 
     if(targetURL != "") {
       if(newtab) {
@@ -592,7 +542,7 @@ var sfnav = (function() {
       } else { window.location.href = targetURL }
       return true
     } else { return false }
-}
+  }
 
   function store(action, payload) {
     var req = {}
@@ -602,23 +552,34 @@ var sfnav = (function() {
 
     chrome.runtime.sendMessage(req, function(response) {});
   }
-
-  var getUserId = function() {
-    return userId[orgId]
+  var searchTerms =function (terms) {
+      targetURL = serverInstance
+      if(serverInstance.includes('.force.com')) {
+          targetURL += "/one/one.app#" + btoa(JSON.stringify({"componentDef":"forceSearch:search","attributes":{"term": terms,"scopeMap":{"type":"TOP_RESULTS"},"context":{"disableSpellCorrection":false,"SEARCH_ACTIVITY":{"term": terms}}}}))
+      } else { targetURL += "/_ui/search/ui/UnifiedSearchResults?sen=ka&sen=500&str=" + encodeURI(terms) + "#!/str=" + encodeURI(terms) + "&searchAll=true&initialViewMode=summary" }
   }
   var createTask = function(subject) {
     showLoadingIndicator()
     if(subject != "" && getUserId()) {
-      // function(path, callback, error, method, payload, retry) {
-      ftClient.ajax(
-        SFAPI_VERSION + '/sobjects/Task',
-        function (success) {
-          console.log(success)
-        },
-        function(error) { console.log(error) },
-        "POST",
-        {"Subject": subject, "OwnerId": getUserId()}
-      )
+      var xhr = new XMLHttpRequest()
+      xhr.open("POST", "https://" + classicURL + "/services/data/" + SFAPI_VERSION + "/sobjects/Task", true)
+      xhr.setRequestHeader("Authorization", "Bearer " + sessionId[orgId])
+      xhr.setRequestHeader("Content-Type", "application/json")
+      xhr.onload = function(response) {
+        reply = JSON.parse(response.target.response)
+        if(reply.errors.length == 0) {
+          clearOutput()
+          cmds["Go To Created Task"] = {url: "/"+ reply.id }
+          document.getElementById("sfnav_quickSearch").value = ""
+          addWord('Go To Created Task')
+          addWord('(press escape to exit or enter a new command)')
+          setVisible('visible')
+        } else {
+          console.log(response)
+        }
+        hideLoadingIndicator()
+      }
+      xhr.send( JSON.stringify({"Subject": subject, "OwnerId": getUserId()}) )
     }
   }
 
@@ -866,6 +827,7 @@ var sfnav = (function() {
     try { orgId = document.cookie.match(/sid=([\w\d]+)/)[1]; return orgId }
     catch(e) { console.log(e) }
   }
+  var getUserId = function() { return userId[orgId] }
   var getApiSessionId = function(force, orgId) {
     orgId = setCurrentOrgId()
 
@@ -879,6 +841,7 @@ var sfnav = (function() {
         else {
           sessionId[orgId] = unescape(response.sessionId)
           userId[orgId] = unescape(response.userId)
+          classicURL = unescape(response.classicURL)
           if(!loaded)
             init()
           return unescape(sessionId[orgId])
