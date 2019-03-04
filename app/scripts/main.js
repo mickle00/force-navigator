@@ -359,12 +359,12 @@ var sfnav = (function() {
     }
   }
   function addElements(ins) {
-    if(ins[0] == "?") {
+    if(ins.substring(0,1) == "?") {
       clearOutput()
       addWord('Global Search Usage: ? <Search term(s)>')
       setVisible('visible')
     }
-    if(ins[0] == "!") {
+    else if(ins.substring(0,1) == "!") {
       clearOutput()
       addWord('Create a Task: ! <Subject line>')
       setVisible('visible')
@@ -526,12 +526,12 @@ var sfnav = (function() {
     }
     else if(cmd.toLowerCase().substring(0,9) == 'login as ' && !serverInstance.includes('.force.com')) { loginAs(cmd); return true }
 
-    else if(event != 'click' && typeof cmds[cmd] != 'undefined' && cmds[cmd].url) { targetURL = cmds[cmd].url }
     else if(cmd.toLowerCase() == 'setup') { targetURL = serverInstance + '/ui/setup/Setup' }
     else if(cmd.toLowerCase() == 'home') { targetURL = serverInstance + "/" }
-    else if(cmd[0] == "!") { createTask(cmd.substring(1).trim()) }
-    else if(cmd[0] == "?") { searchTerms(cmd.substring(1).trim()) }
-    else if(!cmd.includes("Create a Task: !")){
+    else if(cmd.substring(0,1) == "!") { createTask(cmd.substring(1).trim()) }
+    else if(cmd.substring(0,1) == "?") { targetURL = searchTerms(cmd.substring(1).trim()) }
+    else if(event != 'click' && typeof cmds[cmd] != 'undefined' && cmds[cmd].url) { targetURL = cmds[cmd].url }
+    else if(!cmd.includes("Create a Task: !") && !cmd.includes("Global Search Usage")){
       console.log(cmd + " not found in command list or incompatible"); return false
     }
 
@@ -553,10 +553,12 @@ var sfnav = (function() {
     chrome.runtime.sendMessage(req, function(response) {});
   }
   var searchTerms =function (terms) {
-      targetURL = serverInstance
+      var targetURL = serverInstance
       if(serverInstance.includes('.force.com')) {
           targetURL += "/one/one.app#" + btoa(JSON.stringify({"componentDef":"forceSearch:search","attributes":{"term": terms,"scopeMap":{"type":"TOP_RESULTS"},"context":{"disableSpellCorrection":false,"SEARCH_ACTIVITY":{"term": terms}}}}))
       } else { targetURL += "/_ui/search/ui/UnifiedSearchResults?sen=ka&sen=500&str=" + encodeURI(terms) + "#!/str=" + encodeURI(terms) + "&searchAll=true&initialViewMode=summary" }
+      hideSearchBox()
+      return targetURL
   }
   var createTask = function(subject) {
     showLoadingIndicator()
