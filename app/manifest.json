@@ -1,10 +1,10 @@
 {
     "name": "Salesforce Navigator for Lightning",
-    "version": "1.7.9",
+    "version": "1.8.3",
     "manifest_version": 2,
     "default_locale": "en",
     "browser_action": {
-        "default_icon": "images/sfnav-48.png"
+        "default_icon": "images/sf-navigator32.png"
     },
     "background": {
         "scripts": [
@@ -13,15 +13,16 @@
         "persistent": true
     },
     "icons": {
-        "16": "images/sfnav-16.png",
-        "48": "images/sfnav-48.png",
-        "128": "images/sfnav-128.png"
+        "16": "images/sf-navigator16.png",
+        "32": "images/sf-navigator32.png",
+        "48": "images/sf-navigator48.png",
+        "128": "images/sf-navigator128.png"
     },
     "web_accessible_resources": [
         "images/ajax-loader.gif",
-        "images/sfnav-128.png"
+        "images/sf-navigator128.png"
     ],
-    "description": "This extension helps you get to any Salesforce page quickly. Just type in what you need to do!",
+    "description": "Get more done in Salesforce - list and search records, make new ones, create a task or login as on the fly!",
     "content_scripts": [
         {
             "css": [
