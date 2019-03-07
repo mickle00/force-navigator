@@ -1,23 +1,10 @@
 var commands = {}
 var metadata = {}
 var lastUpdated = {}
-
 chrome.browserAction.setPopup({ popup: "popup.html" })
 chrome.runtime.onInstalled.addListener(function(info) {})
 chrome.browserAction.onClicked.addListener(function() { chrome.browserAction.setPopup({ popup: "popup.html" }) })
 
-chrome.commands.onCommand.addListener(function(command) {
-	switch(command) {
-		case 'showSearchBox': showElement("searchBox"); break
-		case 'showAppMenu': showElement("appMenu"); break
-		case 'goToTasks': goToUrl(".com/00T"); break
-		case 'goToReports': goToUrl(".com/00O"); break
-		// case 'goToCases': goToUrl(".com/500"); break
-		// case 'goToAccounts': goToUrl(".com/001"); break
-		// case 'goToContacts': goToUrl(".com/003"); break
-		// case 'goToOpportunities': goToUrl(".com/006"); break
-	}
-})
 var showElement = function(element) {
 	chrome.tabs.query({currentWindow: true, active: true}, function(tabs) {
 		switch(element) {
@@ -42,6 +29,14 @@ var goToUrl = function(targetUrl, newTab) {
 			chrome.tabs.update(tabs[0].id, {url: targetUrl})
 	})
 }
+chrome.commands.onCommand.addListener(function(command) {
+	switch(command) {
+		case 'showSearchBox': showElement("searchBox"); break
+		case 'showAppMenu': showElement("appMenu"); break
+		case 'goToTasks': goToUrl(".com/00T"); break
+		case 'goToReports': goToUrl(".com/00O"); break
+	}
+})
 
 chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
 	var orgKey = request.key != null ? request.key.split('!')[0] : request.key

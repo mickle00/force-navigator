@@ -38,12 +38,6 @@
 		"run_at": "document_end"
 	}],
 	"commands": {
-		// "goToCases": {
-		// 	"description": "Go directly to Cases",
-		// 	"suggested_key": {
-		// 		"default": "Ctrl+Shift+1"
-		// 	}
-		// },
 		"goToTasks": {
 			"description": "Go directly to Tasks",
 			"suggested_key": {
@@ -56,24 +50,6 @@
 				"default": "Ctrl+Shift+2"
 			}
 		},
-		// "goToAccounts": {
-		// 	"description": "Go directly to Accounts",
-		// 	"suggested_key": {
-		// 		"default": "Ctrl+Shift+4"
-		// 	}
-		// },
-		// "goToContacts": {
-		// 	"description": "Go directly to Contacts",
-		// 	"suggested_key": {
-		// 		"default": "Ctrl+Shift+5"
-		// 	}
-		// },
-		// "goToOpportunities": {
-		// 	"description": "Go directly to Opportunities",
-		// 	"suggested_key": {
-		// 		"default": "Ctrl+Shift+6"
-		// 	}
-		// },
 		"showSearchBox": {
 			"description": "Open Search Box",
 			"suggested_key": {
