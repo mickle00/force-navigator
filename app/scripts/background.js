@@ -13,6 +13,7 @@ var showElement = function(element) {
 				break
 			case "searchBox":
 				chrome.tabs.executeScript(tabs[0].id, {code: `
+					document.getElementById("sfnav_searchBox").style.zIndex = 9999
 					document.getElementById("sfnav_searchBox").style.opacity = 0.98
 					document.getElementById("sfnav_quickSearch").focus()
 				`})

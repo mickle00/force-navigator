@@ -2,7 +2,7 @@
 	opacity: 0;
 	transition: .2s;
 	overflow:hidden;
-	z-index: 9999;
+	z-index: -1;
 	background-color:#1797c0;
 	top:20%;
 	left:20%;

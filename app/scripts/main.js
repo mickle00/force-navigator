@@ -352,11 +352,15 @@ var sfnav = (function() {
 
 	function setVisibleSearch(visibility) {
 		var searchBox = document.getElementById("sfnav_searchBox")
-		if(visibility == "hidden")
-			searchBox.style.opacity = 0
-		else
-			searchBox.style.opacity = 0.98
-		if(visibility == 'visible') document.getElementById("sfnav_quickSearch").focus()
+		if(visibility == "hidden") {
+            searchBox.style.opacity = 0
+            searchBox.style.zIndex = -1
+        }
+        else {
+            searchBox.style.opacity = 0.98
+    		searchBox.style.zIndex = 9999
+    		document.getElementById("sfnav_quickSearch").focus()
+        }
 	}
 
   function lookAt() {
