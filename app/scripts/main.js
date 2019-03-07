@@ -346,8 +346,8 @@ var sfnav = (function() {
     return true
   }
 
-	var goToUrl = function(url, newtab) {
-		chrome.runtime.sendMessage({ action: 'goToUrl', url: url, newtab: newtab } , function(response) {})
+	var goToUrl = function(url, newTab) {
+		chrome.runtime.sendMessage({ action: 'goToUrl', url: url, newTab: newTab } , function(response) {})
 	}
 
 	function setVisibleSearch(visibility) {
@@ -496,7 +496,7 @@ var sfnav = (function() {
     }
   }
 
-  function invokeCommand(cmd, newtab, event) {
+  function invokeCommand(cmd, newTab, event) {
     if(cmd == "") { return false }
     var targetURL = ""
     if(cmd.toLowerCase() == 'refresh metadata') {
@@ -513,7 +513,7 @@ var sfnav = (function() {
       goToUrl(serverInstance + "/ltng/switcher?destination=" + mode)
       return true
     }
-    else if(cmd.toLowerCase().substring(0,9) == 'login as ' /* && !serverInstance.includes('.force.com') */) { loginAs(cmd, newtab); return true }
+    else if(cmd.toLowerCase().substring(0,9) == 'login as ' /* && !serverInstance.includes('.force.com') */) { loginAs(cmd, newTab); return true }
 
     else if(cmd.toLowerCase() == 'setup') {
       if(serverInstance.includes("lightning.force")) {
@@ -531,8 +531,8 @@ var sfnav = (function() {
     }
 
     if(targetURL != "") {
-      if(newtab) {
-        goToUrl(targetURL, true)
+      if(newTab) {
+        goToUrl(targetURL, newTab)
         hideSearchBox()
       } else { goToUrl(targetURL) }
       return true
@@ -579,7 +579,7 @@ var sfnav = (function() {
     }
   }
 
-  function loginAs(cmd, newtab) {
+  function loginAs(cmd, newTab) {
     var arrSplit = cmd.split(' ')
     var searchValue = arrSplit[2]
     if(arrSplit[3] !== undefined)
@@ -594,7 +594,7 @@ var sfnav = (function() {
         else if(numberOfUserRecords > 1) { loginAsShowOptions(success.records) }
         else {
           var userId = success.records[0].Id
-          loginAsPerform(userId, newtab)
+          loginAsPerform(userId, newTab)
         }
       },
       function(error) {
@@ -613,9 +613,9 @@ var sfnav = (function() {
     }
   }
 
-  function loginAsPerform(userId, newtab) {
+  function loginAsPerform(userId, newTab) {
     var targetURL = "https://"+classicURL+"/servlet/servlet.su?oid="+orgId+"&suorgadminid="+userId+"&targetURL=/home/home.jsp"
-    if(newtab) {
+    if(newTab) {
       goToUrl(targetURL, true)
       hideSearchBox()
     } else {
@@ -822,18 +822,6 @@ var sfnav = (function() {
     }
   }
 
-
-  function initSettings() {
-    chrome.runtime.sendMessage({'action':'Get Settings'},
-      function(response) {
-        if (response !== undefined) {
-          shortcut = response['shortcut']
-          bindShortcut(shortcut)
-        }
-      }
-    )
-  }
-
   function kbdCommand(e, key) {
     var position = listPosition
     var origText = '', newText = ''
@@ -842,12 +830,12 @@ var sfnav = (function() {
     if(typeof searchBox.childNodes[position] != 'undefined') {
       newText = searchBox.childNodes[position].firstChild.nodeValue
     }
-    var newtab = newTabKeys.indexOf(key) >= 0 ? true : false
-    if(!newtab) {
+    var newTab = newTabKeys.indexOf(key) >= 0 ? true : false
+    if(!newTab) {
       clearOutput()
     }
-    if(!invokeCommand(newText, newtab))
-      invokeCommand(origText, newtab)
+    if(!invokeCommand(newText, newTab))
+      invokeCommand(origText, newTab)
   }
 
   function selectMove(direction) {
@@ -885,12 +873,8 @@ var sfnav = (function() {
     }
   }
 
-	function bindShortcut(shortcut) {
+	function bindShortcuts() {
 		let searchBar = document.getElementById('sfnav_quickSearch')
-		Mousetrap.bindGlobal(shortcut, function(e) {
-			setVisibleSearch("visible");
-			return false;
-		})
 		Mousetrap.bindGlobal('esc', function(e) { hideSearchBox() })
 		Mousetrap.wrap(searchBar).bind('enter', kbdCommand)
 		for (var i = 0; i < newTabKeys.length; i++) {
@@ -898,9 +882,7 @@ var sfnav = (function() {
 		}
 		Mousetrap.wrap(searchBar).bind('down', selectMove.bind(this, 'down'))
 		Mousetrap.wrap(searchBar).bind('up', selectMove.bind(this, 'up'))
-		Mousetrap.wrap(document.getElementById('sfnav_quickSearch')).bind('backspace', function(e) {
-			listPosition = -1
-		})
+		Mousetrap.wrap(document.getElementById('sfnav_quickSearch')).bind('backspace', function(e) { listPosition = -1 })
 		document.getElementById('sfnav_quickSearch').oninput = function(e) {
 			lookAt()
 			return true
@@ -928,48 +910,45 @@ var sfnav = (function() {
 		}
 	}
 
-  function init() {
-    if(document.body != null) {
-      setCurrentOrgId()
-      if(sessionId[orgId] == undefined) { getApiSessionId(true, orgId) }
-      else { ftClient.setSessionToken( sessionId[orgId], SFAPI_VERSION, serverInstance + '') }
+	function init() {
+		if(document.body != null) {
+			setCurrentOrgId()
+			if(sessionId[orgId] == undefined) { getApiSessionId(true, orgId) }
+			else { ftClient.setSessionToken( sessionId[orgId], SFAPI_VERSION, serverInstance + '') }
+			var div = document.createElement('div')
+			div.setAttribute('id', 'sfnav_searchBox')
+			var loaderURL = chrome.extension.getURL("images/ajax-loader.gif")
+			var logoURL = chrome.extension.getURL("images/sf-navigator128.png")
+			div.innerHTML = `
+				<div class="sfnav_wrapper">
+				<input type="text" id="sfnav_quickSearch" autocomplete="off"/>
+				<img id="sfnav_loader" src= "${loaderURL}"/>
+				<img id="sfnav_logo" src= "${logoURL}"/>
+				</div>
+				<div class="sfnav_shadow" id="sfnav_shadow"/>
+				<div class="sfnav_output" id="sfnav_output"/>
+			`
+			document.body.appendChild(div);
+			searchBox = document.getElementById("sfnav_output")
+			hideLoadingIndicator()
+			bindShortcuts()
+			hash = getCmdHash()
+			loaded = true
 
-      var div = document.createElement('div')
-      div.setAttribute('id', 'sfnav_searchBox')
-      var loaderURL = chrome.extension.getURL("images/ajax-loader.gif")
-      var logoURL = chrome.extension.getURL("images/sf-navigator128.png")
-      div.innerHTML = `
-      <div class="sfnav_wrapper">
-        <input type="text" id="sfnav_quickSearch" autocomplete="off"/>
-        <img id="sfnav_loader" src= "${loaderURL}"/>
-        <img id="sfnav_logo" src= "${logoURL}"/>
-      </div>
-      <div class="sfnav_shadow" id="sfnav_shadow"/>
-      <div class="sfnav_output" id="sfnav_output"/>`;
+			chrome.runtime.sendMessage({ action:'Get Commands', 'key': hash}, function(response) {
+				cmds = response
+				if(cmds == null || cmds.length == 0) {
+					cmds = {}
+					metaData = {}
+					getAllObjectMetadata()
+				}
+			})
+		}
+	}
 
-      document.body.appendChild(div);
-      searchBox = document.getElementById("sfnav_output")
-      hideLoadingIndicator()
-      initSettings()
-      hash = getCmdHash()
-      loaded = true
-
-      chrome.runtime.sendMessage({
-        action:'Get Commands', 'key': hash},
-        function(response) {
-          cmds = response
-          if(cmds == null || cmds.length == 0) {
-            cmds = {}
-            metaData = {}
-            getAllObjectMetadata()
-          }
-      })
-    }
-  }
-
-  if(serverInstance == null) {
-    console.log('error', getServerInstance(), getApiSessionId())
-    return
-  }
-  else getApiSessionId()
+	if(serverInstance == null) {
+		console.log('error', getServerInstance(), getApiSessionId())
+		return false
+	}
+	else getApiSessionId()
 })()

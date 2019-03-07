@@ -2,24 +2,49 @@ var commands = {}
 var metadata = {}
 var lastUpdated = {}
 
-chrome.browserAction.setPopup({ popup: "popup.html" });
+chrome.browserAction.setPopup({ popup: "popup.html" })
 chrome.runtime.onInstalled.addListener(function(info) {})
 chrome.browserAction.onClicked.addListener(function() { chrome.browserAction.setPopup({ popup: "popup.html" }) })
 
+chrome.commands.onCommand.addListener(function(command) {
+	switch(command) {
+		case 'showSearchBox': showElement("searchBox"); break
+		case 'showAppMenu': showElement("appMenu"); break
+		case 'goToTasks': goToUrl(".com/00T"); break
+		case 'goToReports': goToUrl(".com/00O"); break
+		// case 'goToCases': goToUrl(".com/500"); break
+		// case 'goToAccounts': goToUrl(".com/001"); break
+		// case 'goToContacts': goToUrl(".com/003"); break
+		// case 'goToOpportunities': goToUrl(".com/006"); break
+	}
+})
+var showElement = function(element) {
+	chrome.tabs.query({currentWindow: true, active: true}, function(tabs) {
+		switch(element) {
+			case "appMenu":
+				chrome.tabs.executeScript(tabs[0].id, {code: 'document.getElementsByClassName("appLauncher")[0].getElementsByTagName("button")[0].click()'})
+				break
+			case "searchBox":
+				chrome.tabs.executeScript(tabs[0].id, {code: `
+					document.getElementById("sfnav_searchBox").style.opacity = 0.98
+					document.getElementById("sfnav_quickSearch").focus()
+				`})
+				break
+		}
+	})
+}
+var goToUrl = function(targetUrl, newTab) {
+	chrome.tabs.query({currentWindow: true, active: true}, function(tabs) {
+		targetUrl = tabs[0].url.match(/.*\.com/)[0] + targetUrl.match(/.*\.com(.*)/)[1]
+		if(newTab)
+			chrome.tabs.create({active: false, url: targetUrl})
+		else
+			chrome.tabs.update(tabs[0].id, {url: targetUrl})
+	})
+}
+
 chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
 	var orgKey = request.key != null ? request.key.split('!')[0] : request.key
-	switch(request.action) {
-		case 'goToUrl':
-			chrome.tabs.query({currentWindow: true, active: true}, function(tabs) {
-				var targetUrl = tabs[0].url.match(/.*\.com/)[0] + request.url.match(/.*\.com(.*)/)[1]
-				if(request.newtab)
-					chrome.tabs.create({active: false, url: targetUrl})
-				else
-					chrome.tabs.update(tabs[0].id, {url: targetUrl})
-			})
-			break
-	}
-
 	if (request.action == 'Get API Session ID') {
 		if (request.key != null) {
 		request.sid = request.uid = request.domain = ""
@@ -43,68 +68,63 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
 		} else { sendResponse({error: "Must include orgId"}) }
 	}
 
-	else if (request.action == 'Store Commands') {
-		Object.keys(lastUpdated).forEach(function(key) {
-			if(key != request.key && key.split('!')[0] == orgKey) {
-			delete commands[key]
-			delete lastUpdated[key]
-			}
-		})
-		commands[request.key] = request.payload
-		lastUpdated[request.key] = new Date()
-		sendResponse({lastUpdated: lastUpdated[request.key]})
-	}
-	else if (request.action == 'Get Commands') {
-		if (commands[request.key] != null)
-			sendResponse(commands[request.key])
-		else
-			sendResponse(null)
-	}
-	else if (request.action == 'Clear Commands') {
-		delete commands[request.key]
-		delete lastUpdated[request.key]
-		sendResponse({})
-	}
-
-	else if (request.action == 'Set Settings') {
-		var settings = localStorage.getItem('sfnav_settings');
-		if (settings != null) {
-			var sett = JSON.parse(settings);
-			let payloadKeys = Object.keys(request.payload)
-			for (var i = 0; i < payloadKeys.length; i++) {
-			key = payloadKeys[i]
-			sett[key] = request.payload[key]
-			}
-			localStorage.setItem('sfnav_settings', JSON.stringify(sett))
-		}
-		commands = lastUpdated = {}
-		sendResponse({});
-	}
-	else if (request.action == 'Get Settings') {
-		var settings = localStorage.getItem('sfnav_settings')
-		if (settings != null) { sendResponse(JSON.parse(settings))
-		} else {
-			localStorage.setItem('sfnav_settings', JSON.stringify({'shortcut': 'ctrl+shift+space'}))
-			sendResponse({'shortcut': 'ctrl+shift+space'})
-		}
-	}
-
-	else if (request.action == 'Store Metadata') {
-		Object.keys(metadata).forEach(function(key) {
-			if (key != request.key && key.split('!')[0] == orgKey)
-			delete metadata[key];
-		});
-		metadata[request.key] = metadata[orgKey] = request.payload;
-		sendResponse({});
-	}
-
-	else if (request.action == 'Get Metadata') {
-		if (metadata[request.key] != null)
-			sendResponse(metadata[request.key]);
-		else if (metadata[orgKey] != null)
-			sendResponse(metadata[orgKey]);
-		else
-			sendResponse(null);
+	switch(request.action) {
+		case 'goToUrl': goToUrl(request.url, request.newTab); break
+		case 'Store Commands':
+			Object.keys(lastUpdated).forEach(function(key) {
+				if(key != request.key && key.split('!')[0] == orgKey) {
+					// might want to check this for multi-org setups
+					delete commands[key]
+					delete lastUpdated[key]
+				}
+			})
+			commands[request.key] = request.payload
+			lastUpdated[request.key] = new Date()
+			sendResponse({lastUpdated: lastUpdated[request.key]})
+			break
+		case 'Get Commands': sendResponse(commands[request.key]); break
+		case 'Clear Commands':
+			delete commands[request.key]
+			delete lastUpdated[request.key]
+			sendResponse({})
+			break
+		case 'Store Metadata':
+			Object.keys(metadata).forEach(function(key) {
+				if (key != request.key && key.split('!')[0] == orgKey)
+					delete metadata[key]
+			})
+			metadata[request.key] = metadata[orgKey] = request.payload
+			sendResponse({})
+			break
+		case 'Get Metadata':
+			if (metadata[request.key] != null)
+				sendResponse(metadata[request.key])
+			else
+				sendResponse(metadata[orgKey])
+			break
 	}
 	return true
 })
+
+// else if (request.action == 'Set Settings') {
+// 	var settings = localStorage.getItem('sfnav_settings');
+// 	if (settings != null) {
+// 		var sett = JSON.parse(settings);
+// 		let payloadKeys = Object.keys(request.payload)
+// 		for (var i = 0; i < payloadKeys.length; i++) {
+// 		key = payloadKeys[i]
+// 		sett[key] = request.payload[key]
+// 		}
+// 		localStorage.setItem('sfnav_settings', JSON.stringify(sett))
+// 	}
+// 	commands = lastUpdated = {}
+// 	sendResponse({});
+// }
+// else if (request.action == 'Get Settings') {
+// 	var settings = localStorage.getItem('sfnav_settings')
+// 	if (settings != null) { sendResponse(JSON.parse(settings))
+// 	} else {
+// 		localStorage.setItem('sfnav_settings', JSON.stringify({'shortcut': 'ctrl+shift+space'}))
+// 		sendResponse({'shortcut': 'ctrl+shift+space'})
+// 	}
+// }
