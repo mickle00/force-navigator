@@ -1,14 +1,9 @@
-var commands = {};
-var metadata = {};
-var lastUpdated = {};
+var commands = {}
+var metadata = {}
+var lastUpdated = {}
 
 chrome.browserAction.setPopup({ popup: "popup.html" });
-chrome.runtime.onInstalled.addListener(function(info) {
-    // if(info.details == "update" || info.details == "install") {
-    // chrome.browserAction.setBadgeText({text:"1"});
-    // }
-  })
-
+chrome.runtime.onInstalled.addListener(function(info) {})
 chrome.browserAction.onClicked.addListener(function() { chrome.browserAction.setPopup({ popup: "popup.html" }) })
 
 chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
@@ -48,18 +43,16 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
     lastUpdated[request.key] = new Date()
     sendResponse({lastUpdated: lastUpdated[request.key]})
   }
-
-  else if (request.action == 'Clear Commands') {
-    delete commands[request.key]
-    delete lastUpdated[request.key]
-    sendResponse({})
-  }
-
   else if (request.action == 'Get Commands') {
     if (commands[request.key] != null)
       sendResponse(commands[request.key])
     else
       sendResponse(null)
+  }
+  else if (request.action == 'Clear Commands') {
+    delete commands[request.key]
+    delete lastUpdated[request.key]
+    sendResponse({})
   }
 
   else if (request.action == 'Toggle Detailed Mode') {
@@ -71,15 +64,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
       sett['detailedMode'] = !sett['detailedMode']
       localStorage.setItem('sfnav_settings', JSON.stringify(sett))
     }
-    sendResponse(1)
-  }
-  else if (request.action == 'Get Settings') {
-    var settings = localStorage.getItem('sfnav_settings')
-    if (settings != null) { sendResponse(JSON.parse(settings))
-    } else {
-      localStorage.setItem('sfnav_settings', JSON.stringify({'shortcut': 'ctrl+shift+space'}))
-      sendResponse({'shortcut': 'ctrl+shift+space'})
-    }
+    sendResponse({})
   }
 
   else if (request.action == 'Set Settings') {
@@ -95,6 +80,14 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
     }
     commands = lastUpdated = {}
     sendResponse({});
+  }
+  else if (request.action == 'Get Settings') {
+    var settings = localStorage.getItem('sfnav_settings')
+    if (settings != null) { sendResponse(JSON.parse(settings))
+    } else {
+      localStorage.setItem('sfnav_settings', JSON.stringify({'shortcut': 'ctrl+shift+space'}))
+      sendResponse({'shortcut': 'ctrl+shift+space'})
+    }
   }
 
   else if (request.action == 'Store Metadata') {

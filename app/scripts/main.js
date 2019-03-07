@@ -260,7 +260,30 @@ var sfnav = (function() {
     "Session Settings": "/lightning/setup/SecuritySession/home",
     "Sharing Settings": "/lightning/setup/SecuritySharing/home",
     "View Setup Audit Trail": "/lightning/setup/SecurityEvents/home",
-    "Optimizer": "/lightning/setup/SalesforceOptimizer/home"
+    "Optimizer": "/lightning/setup/SalesforceOptimizer/home",
+    "Task Fields": "/lightning/setup/ObjectManager/Task/FieldsAndRelationships/view",
+    "Activity Custom Fields": "/lightning/setup/ObjectManager/Task/FieldsAndRelationships/view",
+    "Task Page Layouts": "/lightning/setup/ObjectManager/Task/PageLayouts/view",
+    "Task Buttons, Links, and Actions": "/lightning/setup/ObjectManager/Task/ButtonsLinksActions/view",
+    "Task Compact Layouts": "/lightning/setup/ObjectManager/Task/CompactLayouts/view",
+    "Task Field Sets": "/lightning/setup/ObjectManager/Task/FieldSets/view",
+    "Task Limits": "/lightning/setup/ObjectManager/Task/Limits/view",
+    "Task Record Types": "/lightning/setup/ObjectManager/Task/RecordTypes/view",
+    "Task Related Lookup Filters": "/lightning/setup/ObjectManager/Task/RelatedLookupFilters/view",
+    "Task Search Layouts": "/lightning/setup/ObjectManager/Task/SearchLayouts/view",
+    "Task Triggers": "/lightning/setup/ObjectManager/Task/Triggers/view",
+    "Task Validation Rules": "/lightning/setup/ObjectManager/Task/ValidationRules/view",
+    "Event Fields": "/lightning/setup/ObjectManager/Event/FieldsAndRelationships/view",
+    "Event Page Layouts": "/lightning/setup/ObjectManager/Event/PageLayouts/view",
+    "Event Buttons, Links, and Actions": "/lightning/setup/ObjectManager/Event/ButtonsLinksActions/view",
+    "Event Compact Layouts": "/lightning/setup/ObjectManager/Event/CompactLayouts/view",
+    "Event Field Sets": "/lightning/setup/ObjectManager/Event/FieldSets/view",
+    "Event Limits": "/lightning/setup/ObjectManager/Event/Limits/view",
+    "Event Record Types": "/lightning/setup/ObjectManager/Event/RecordTypes/view",
+    "Event Related Lookup Filters": "/lightning/setup/ObjectManager/Event/RelatedLookupFilters/view",
+    "Event Search Layouts": "/lightning/setup/ObjectManager/Event/SearchLayouts/view",
+    "Event Triggers": "/lightning/setup/ObjectManager/Event/Triggers/view",
+    "Event Validation Rules": "/lightning/setup/ObjectManager/Event/ValidationRules/view"
   }
 
   /**
@@ -369,7 +392,7 @@ var sfnav = (function() {
       addWord('Create a Task: ! <Subject line>')
       setVisible('visible')
     }
-    else if(ins.substring(0,9) == 'login as ' && !serverInstance.includes('.force.com')) {
+    else if(ins.substring(0,9) == 'login as ' /* && !serverInstance.includes('.force.com') */) {
       clearOutput()
       addWord('Usage: login as <FirstName> <LastName> OR <Username>')
       setVisible('visible')
@@ -524,9 +547,15 @@ var sfnav = (function() {
       window.location.href = serverInstance + "/ltng/switcher?destination=" + mode
       return true
     }
-    else if(cmd.toLowerCase().substring(0,9) == 'login as ' && !serverInstance.includes('.force.com')) { loginAs(cmd); return true }
+    else if(cmd.toLowerCase().substring(0,9) == 'login as ' /* && !serverInstance.includes('.force.com') */) { loginAs(cmd, newtab); return true }
 
-    else if(cmd.toLowerCase() == 'setup') { targetURL = serverInstance + '/ui/setup/Setup' }
+    else if(cmd.toLowerCase() == 'setup') {
+      if(serverInstance.includes("lightning.force")) {
+        targetURL = serverInstance + "/lightning/setup/SetupOneHome/home"
+      } else {
+        targetURL = serverInstance + '/ui/setup/Setup'
+      }
+    }
     else if(cmd.toLowerCase() == 'home') { targetURL = serverInstance + "/" }
     else if(cmd.substring(0,1) == "!") { createTask(cmd.substring(1).trim()) }
     else if(cmd.substring(0,1) == "?") { targetURL = searchTerms(cmd.substring(1).trim()) }
@@ -585,7 +614,7 @@ var sfnav = (function() {
     }
   }
 
-  function loginAs(cmd) {
+  function loginAs(cmd, newtab) {
     var arrSplit = cmd.split(' ')
     var searchValue = arrSplit[2]
     if(arrSplit[3] !== undefined)
@@ -600,7 +629,7 @@ var sfnav = (function() {
         else if(numberOfUserRecords > 1) { loginAsShowOptions(success.records) }
         else {
           var userId = success.records[0].Id
-          loginAsPerform(userId)
+          loginAsPerform(userId, newtab)
         }
       },
       function(error) {
@@ -620,19 +649,27 @@ var sfnav = (function() {
     setVisible('visible')
   }
 
-  function loginAsPerform(userId) {
-    xmlhttp = new XMLHttpRequest()
-    xmlhttp.onreadystatechange = function() {
-      if (xmlhttp.readyState == XMLHttpRequest.DONE ) {
-        document.write(xmlhttp.responseText)
-        document.close()
-        setTimeout(function() {
-          document.getElementsByName("login")[0].click();
-        }, 1000)
-      }
+  function loginAsPerform(userId, newtab) {
+    var targetURL = "https://"+classicURL+"/servlet/servlet.su?oid="+orgId+"&suorgadminid="+userId+"&targetURL=/home/home.jsp"
+    if(newtab) {
+      var w = window.open(targetURL, "").focus()
+      hideSearchBox()
+    } else {
+      window.location.href = targetURL
     }
-    xmlhttp.open("GET", 'https://' + classicURL + '/' + userId + '?noredirect=1', true)
-    xmlhttp.send()
+    return true
+    // xmlhttp = new XMLHttpRequest()
+    // xmlhttp.onreadystatechange = function() {
+    //   if (xmlhttp.readyState == XMLHttpRequest.DONE ) {
+    //     document.write(xmlhttp.responseText)
+    //     document.close()
+    //     setTimeout(function() {
+    //       document.getElementsByName("login")[0].click();
+    //     }, 1000)
+    //   }
+    // }
+    // xmlhttp.open("GET", 'https://' + classicURL + '/' + userId + '?noredirect=1', true)
+    // xmlhttp.send()
   }
 
   function getMetadata(_data) {
@@ -986,7 +1023,7 @@ var sfnav = (function() {
       var div = document.createElement('div');
       div.setAttribute('id', 'sfnav_search_box');
       var loaderURL = chrome.extension.getURL("images/ajax-loader.gif");
-      var logoURL = chrome.extension.getURL("images/sfnav-128.png");
+      var logoURL = chrome.extension.getURL("images/sf-navigator128.png");
       div.innerHTML = `
       <div class="sfnav_wrapper">
         <input type="text" id="sfnav_quickSearch" autocomplete="off"/>
