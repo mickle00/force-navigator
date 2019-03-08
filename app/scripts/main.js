@@ -2,31 +2,28 @@
 // http://silverlinecrm.com
 
 var sfnav = (function() {
-  var outp;
-  var oldins;
-  var posi = -1;
+  var searchBox
+  var listPosition = -1
   var newTabKeys = [
     "ctrl+enter",
     "command+enter",
     "shift+enter"
   ]
-  var input;
-  var key;
-  var metaData = {};
+  var input
+  var metaData = {}
   var serverInstance = getServerInstance()
   var classicURL
   var orgId = false
   var cmds = {}
   var isCtrl = false
   var regMatchSid = /sid=([a-zA-Z0-9\.\!]+)/
-  var clientId, omnomnom, hash;
+  var clientId, omnomnom, hash
   var loaded = false
   var shortcut
   var mouseClickLoginAsUserId
-  var detailedMode
   var sessionId = {}
   var userId = {}
-  var sid;
+  var debug = false
   var SFAPI_VERSION = 'v40.0'
   var ftClient = new forceTooling.Client()
   var customObjects = {}
@@ -338,11 +335,8 @@ var sfnav = (function() {
   var mouseClick=
     function(){
       document.getElementById("sfnav_quickSearch").value = this.firstChild.nodeValue;
-      setVisible("hidden");
-      posi = -1;
-      oldins = this.firstChild.nodeValue;
+      listPosition = -1;
       setVisibleSearch("hidden");
-      setVisible("hidden");
       invokeCommand(this.firstChild.nodeValue,false,'click');
       return true;
     }
@@ -352,24 +346,22 @@ var sfnav = (function() {
     return true
   }
 
-  function getSingleObjectMetadata() {
-    var recordId = document.URL.split('/')[3]
-    var keyPrefix = recordId.substring(0,3)
-  }
+	var goToUrl = function(url, newTab) {
+		chrome.runtime.sendMessage({ action: 'goToUrl', url: url, newTab: newTab } , function(response) {})
+	}
 
-  function getVisible() { return document.getElementById("sfnav_shadow").style.visibility }
-  function isVisible() { return document.getElementById("sfnav_shadow").style.visibility !== 'hidden' }
-  function setVisible(visi){
-    var x = document.getElementById("sfnav_shadow");
-    x.style.position = 'relative';
-    x.style.visibility = visi;
-  }
-  function isVisibleSearch() { return document.getElementById("sfnav_quickSearch").style.visibility !== 'hidden' }
-  function setVisibleSearch(visi) {
-    var t = document.getElementById("sfnav_search_box")
-    t.style.visibility = visi
-    if(visi=='visible') document.getElementById("sfnav_quickSearch").focus()
-  }
+	function setVisibleSearch(visibility) {
+		var searchBox = document.getElementById("sfnav_searchBox")
+		if(visibility == "hidden") {
+            searchBox.style.opacity = 0
+            searchBox.style.zIndex = -1
+        }
+        else {
+            searchBox.style.opacity = 0.98
+    		searchBox.style.zIndex = 9999
+    		document.getElementById("sfnav_quickSearch").focus()
+        }
+	}
 
   function lookAt() {
     let newSearchVal = document.getElementById('sfnav_quickSearch').value
@@ -377,25 +369,21 @@ var sfnav = (function() {
       addElements(newSearchVal)
     } else {
       document.querySelector('#sfnav_output').innerHTML = ''
-      setVisible("hidden")
-      posi = -1
+      listPosition = -1
     }
   }
   function addElements(ins) {
     if(ins.substring(0,1) == "?") {
       clearOutput()
       addWord('Global Search Usage: ? <Search term(s)>')
-      setVisible('visible')
     }
     else if(ins.substring(0,1) == "!") {
       clearOutput()
       addWord('Create a Task: ! <Subject line>')
-      setVisible('visible')
     }
     else if(ins.substring(0,9) == 'login as ' /* && !serverInstance.includes('.force.com') */) {
       clearOutput()
       addWord('Usage: login as <FirstName> <LastName> OR <Username>')
-      setVisible('visible')
     }
     else {
       words = getWord(ins, cmds)
@@ -403,16 +391,14 @@ var sfnav = (function() {
         clearOutput()
         for (var i=0;i<words.length; ++i)
           addWord(words[i])
-        setVisible("visible")
         input = document.getElementById("sfnav_quickSearch").value
       } else {
         clearOutput()
-        setVisible("hidden")
-        posi = -1
+        listPosition = -1
       }
     }
     var firstEl = document.querySelector('#sfnav_output :first-child')
-    if(posi == -1 && firstEl != null) firstEl.className = "sfnav_child sfnav_selected"
+    if(listPosition == -1 && firstEl != null) firstEl.className = "sfnav_child sfnav_selected"
   }
 
   var getWord = function(input, dict) {
@@ -465,7 +451,7 @@ var sfnav = (function() {
     if(sp.id && sp.length > 0){
       sp.onclick = mouseClickLoginAs;
     }
-    outp.appendChild(sp);
+    searchBox.appendChild(sp);
   }
 
   function addSuccess(text)
@@ -477,9 +463,7 @@ var sfnav = (function() {
     err.appendChild(document.createTextNode('Success! '));
     err.appendChild(document.createElement('br'));
     err.appendChild(document.createTextNode('Field ' + text.id + ' created!'));
-    outp.appendChild(err);
-
-    setVisible("visible");
+    searchBox.appendChild(err);
   }
 
   function addError(text)
@@ -504,25 +488,19 @@ var sfnav = (function() {
 
        err.appendChild(ta);
      */
-    outp.appendChild(err);
-
-    setVisible("visible");
+    searchBox.appendChild(err);
   }
 
   function clearOutput() {
-    if(typeof outp != 'undefined') {
-      while (outp.hasChildNodes()) {
-        noten=outp.firstChild
-        outp.removeChild(noten)
+    if(typeof searchBox != 'undefined') {
+      while (searchBox.hasChildNodes()) {
+        noten=searchBox.firstChild
+        searchBox.removeChild(noten)
       }
     }
   }
-  function setColor (_posi, _color, _forg){
-    outp.childNodes[_posi].style.background = _color;
-    outp.childNodes[_posi].style.color = _forg;
-  }
 
-  function invokeCommand(cmd, newtab, event) {
+  function invokeCommand(cmd, newTab, event) {
     if(cmd == "") { return false }
     var targetURL = ""
     if(cmd.toLowerCase() == 'refresh metadata') {
@@ -532,22 +510,14 @@ var sfnav = (function() {
       document.getElementById("sfnav_quickSearch").value = ""
       return true
     }
-    else if(cmd.toLowerCase() == 'toggle detailed mode') {
-      chrome.runtime.sendMessage({ action: 'Toggle Detailed Mode', key: getCmdHash() }, function(response) {
-        // it isn't actually clearing the other mode, this is dumb
-        getAllObjectMetadata()
-        window.location.reload()
-      })
-      return true
-    }
     else if(cmd.toLowerCase() == 'toggle lightning') {
       var mode
       if(window.location.href.includes("lightning.force")) mode = "classic"
       else mode = "lex-campaign"
-      window.location.href = serverInstance + "/ltng/switcher?destination=" + mode
+      goToUrl(serverInstance + "/ltng/switcher?destination=" + mode)
       return true
     }
-    else if(cmd.toLowerCase().substring(0,9) == 'login as ' /* && !serverInstance.includes('.force.com') */) { loginAs(cmd, newtab); return true }
+    else if(cmd.toLowerCase().substring(0,9) == 'login as ' /* && !serverInstance.includes('.force.com') */) { loginAs(cmd, newTab); return true }
 
     else if(cmd.toLowerCase() == 'setup') {
       if(serverInstance.includes("lightning.force")) {
@@ -565,10 +535,10 @@ var sfnav = (function() {
     }
 
     if(targetURL != "") {
-      if(newtab) {
-        var w = window.open(targetURL, "").focus()
+      if(newTab) {
+        goToUrl(targetURL, newTab)
         hideSearchBox()
-      } else { window.location.href = targetURL }
+      } else { goToUrl(targetURL) }
       return true
     } else { return false }
   }
@@ -604,7 +574,6 @@ var sfnav = (function() {
           document.getElementById("sfnav_quickSearch").value = ""
           addWord('Go To Created Task')
           addWord('(press escape to exit or enter a new command)')
-          setVisible('visible')
         } else {
           console.log(response)
         }
@@ -614,7 +583,7 @@ var sfnav = (function() {
     }
   }
 
-  function loginAs(cmd, newtab) {
+  function loginAs(cmd, newTab) {
     var arrSplit = cmd.split(' ')
     var searchValue = arrSplit[2]
     if(arrSplit[3] !== undefined)
@@ -629,7 +598,7 @@ var sfnav = (function() {
         else if(numberOfUserRecords > 1) { loginAsShowOptions(success.records) }
         else {
           var userId = success.records[0].Id
-          loginAsPerform(userId, newtab)
+          loginAsPerform(userId, newTab)
         }
       },
       function(error) {
@@ -646,16 +615,15 @@ var sfnav = (function() {
       cmds[cmd] = {key: cmd, id: records[i].Id}
       addWord(cmd)
     }
-    setVisible('visible')
   }
 
-  function loginAsPerform(userId, newtab) {
+  function loginAsPerform(userId, newTab) {
     var targetURL = "https://"+classicURL+"/servlet/servlet.su?oid="+orgId+"&suorgadminid="+userId+"&targetURL=/home/home.jsp"
-    if(newtab) {
-      var w = window.open(targetURL, "").focus()
+    if(newTab) {
+      goToUrl(targetURL, true)
       hideSearchBox()
     } else {
-      window.location.href = targetURL
+      goToUrl(targetURL)
     }
     return true
     // xmlhttp = new XMLHttpRequest()
@@ -705,49 +673,23 @@ var sfnav = (function() {
   function getAllObjectMetadata(force) {
     serverInstance = getServerInstance()
     cmds['Refresh Metadata'] = {}
-    cmds['Toggle Detailed Mode'] = {}
     cmds['Toggle Lightning'] = {}
     cmds['Setup'] = {}
     cmds['?'] = {}
-    // cmds['/'] = {}  //prepping for listview searching
-    // Lightning link: serverInstance + "/lightning/o/"+ sObject +"/list?filterName=" + List ID
-    // no apparent way to SOQL for specific name view, seems to be on a per object basis only
-    // classicURL + "/vXX.X/sobjects/{sobjectType}/listviews"
-    // probably offer list search on several specific objects - ooh, or as a configuarion setting you can change
-    // ------
-    // cmds['!'] = {}  //prepping for adding tasks to self - very simple task creation
-    // REST Api for creation
-    // json object: { "Subject": taskSubject, "OwnerId": getUserId() }
     cmds['Home'] = {}
     getSetupTree()
     var token = getApiSessionId(force)
     while(token == '' || typeof token == "undefined") {
       token = getApiSessionId()
     }
-    sid = "Bearer " + token
     var theurl = getServerInstance() + '/services/data/' + SFAPI_VERSION + '/sobjects/'
     var req = new XMLHttpRequest()
     req.open("GET", theurl, true)
-    req.setRequestHeader("Authorization", sid)
+    req.setRequestHeader("Authorization", "Bearer " + token)
     req.setRequestHeader("Accept", "application/json")
     req.onload = function(response) { getMetadata(response.target.responseText) }
     req.send()
     getCustomObjects() // switching to the old way because it is more performant and simple
-    // getCustomObjectsDef()
-  }
-  function getCustomObjectsDef() {
-// currently unused
-    ftClient.query('Select+Id,+DeveloperName,+NamespacePrefix+FROM+CustomObject',
-      function(success) {
-        for(var i=0;i<success.records.length;i++) {
-          customObjects[success.records[i].DeveloperName.toLowerCase()] = {Id: success.records[i].Id};
-          var apiName = (success.records[i].NamespacePrefix == null ? '' : success.records[i].NamespacePrefix + '__') + success.records[i].DeveloperName + '__c';
-          cmds['Setup > Custom Object > ' + apiName] = {url: '/' + success.records[i].Id, key: apiName};
-        }
-      },
-      function(error) {
-        getCustomObjects()
-      })
   }
 
   function parseSetupTree(html) {
@@ -801,15 +743,11 @@ var sfnav = (function() {
       if(serverInstance.includes("lightning.force")) {
         let objectId = this.href.match(/\/(\w+)\?/)[1]
         let theurl = serverInstance + "/lightning/setup/ObjectManager/" + objectId
-        if(detailedMode) {
-          cmds['Setup > Custom Object > ' + this.text + ' > Details'] = {url: theurl + "/Details/view", key: this.text + " > Fields"};
-          for (var i = 0; i < mapKeys.length; i++) {
-            let key = mapKeys[i]
-            let urlElement = classicToLightingMap[ key ]
-            cmds['Setup > Custom Object > ' + this.text + ' > ' + key] = {url: theurl + urlElement, key: this.text + " > " + key}
-          }
-        } else {
-          cmds['Setup > Custom Object > ' + this.text] = {url: theurl + "/Details/view", key: this.text };
+        cmds['Setup > Custom Object > ' + this.text + ' > Details'] = {url: theurl + "/Details/view", key: this.text + " > Fields"};
+        for (var i = 0; i < mapKeys.length; i++) {
+          let key = mapKeys[i]
+          let urlElement = classicToLightingMap[ key ]
+          cmds['Setup > Custom Object > ' + this.text + ' > ' + key] = {url: theurl + urlElement, key: this.text + " > " + key}
         }
       } else {
         cmds['Setup > Custom Object > ' + this.text] = {url: this.href, key: this.text};
@@ -862,9 +800,8 @@ var sfnav = (function() {
   }
   var setCurrentOrgId = function(force) {
     if(orgId && !force) { return orgId }
-
     try { orgId = document.cookie.match(/sid=([\w\d]+)/)[1]; return orgId }
-    catch(e) { console.log(e) }
+    catch(e) { if(debug) console.log(e) }
   }
   var getUserId = function() { return userId[orgId] }
   var getApiSessionId = function(force, orgId) {
@@ -887,51 +824,22 @@ var sfnav = (function() {
         }
       })
     }
-/* just using the background method right now, this isn't working in classic
-    else {
-      if(sessionId[orgId] == null)
-        sessionId[orgId] = unescape(document.cookie.match(regMatchSid)[1])
-      ftClient.setSessionToken( sessionId[orgId], SFAPI_VERSION, serverInstance + '')
-      if(!loaded)
-        init()
-      return unescape(sessionId[orgId])
-    }
-*/
-  }
-
-
-  function initSettings() {
-    chrome.runtime.sendMessage({'action':'Get Settings'},
-      function(response) {
-        if (response !== undefined) {
-          shortcut = response['shortcut']
-          bindShortcut(shortcut)
-          if(detailedMode != response['detailedMode']) {
-            detailedMode = response['detailedMode']
-            cmds = {}
-            metaData = {}
-            getAllObjectMetadata()
-          }
-        }
-      }
-    )
   }
 
   function kbdCommand(e, key) {
-    var position = posi
+    var position = listPosition
     var origText = '', newText = ''
     if(position <0) position = 0
     origText = document.getElementById("sfnav_quickSearch").value
-    if(typeof outp.childNodes[position] != 'undefined') {
-      newText = outp.childNodes[position].firstChild.nodeValue
+    if(typeof searchBox.childNodes[position] != 'undefined') {
+      newText = searchBox.childNodes[position].firstChild.nodeValue
     }
-    var newtab = newTabKeys.indexOf(key) >= 0 ? true : false
-    if(!newtab) {
+    var newTab = newTabKeys.indexOf(key) >= 0 ? true : false
+    if(!newTab) {
       clearOutput()
-      setVisible("hidden")
     }
-    if(!invokeCommand(newText, newtab))
-      invokeCommand(origText, newtab)
+    if(!invokeCommand(newText, newTab))
+      invokeCommand(origText, newTab)
   }
 
   function selectMove(direction) {
@@ -939,25 +847,25 @@ var sfnav = (function() {
 
     var firstChild;
 
-    if(outp.childNodes[posi] != null)
-      firstChild = outp.childNodes[posi].firstChild.nodeValue;
+    if(searchBox.childNodes[listPosition] != null)
+      firstChild = searchBox.childNodes[listPosition].firstChild.nodeValue;
     else
       firstChild = null;
 
     let textfield = searchBar;
-    let isLastPos = direction == 'down' ? posi < words.length-1 : posi >= 0
+    let isLastPos = direction == 'down' ? listPosition < words.length-1 : listPosition >= 0
 
     if (words.length > 0 && isLastPos) {
-      if(posi < 0) posi = 0;
-      posi = posi + (direction == 'down' ? 1 : -1);
-      if(outp.childNodes[posi] != null)
-        firstChild = outp.childNodes[posi].firstChild.nodeValue;
+      if(listPosition < 0) listPosition = 0;
+      listPosition = listPosition + (direction == 'down' ? 1 : -1);
+      if(searchBox.childNodes[listPosition] != null)
+        firstChild = searchBox.childNodes[listPosition].firstChild.nodeValue;
       else
         firstChild = null;
-      if (posi >=0) {
-        outp.childNodes[posi + (direction == 'down' ? -1 : 1) ].classList.remove('sfnav_selected');
-        outp.childNodes[posi].classList.add('sfnav_selected');
-        outp.childNodes[posi].scrollIntoViewIfNeeded();
+      if (listPosition >=0) {
+        searchBox.childNodes[listPosition + (direction == 'down' ? -1 : 1) ].classList.remove('sfnav_selected');
+        searchBox.childNodes[listPosition].classList.add('sfnav_selected');
+        searchBox.childNodes[listPosition].scrollIntoViewIfNeeded();
         textfield.value = firstChild;
         return false
         //if(textfield.value.indexOf('<') != -1 && textfield.value.indexOf('>') != -1) {
@@ -969,32 +877,21 @@ var sfnav = (function() {
     }
   }
 
-  function bindShortcut(shortcut) {
-    let searchBar = document.getElementById('sfnav_quickSearch')
-    Mousetrap.bindGlobal(shortcut, function(e) {
-      setVisibleSearch("visible");
-      return false;
-    })
-    Mousetrap.bindGlobal('esc', function(e) {
-      if (isVisible() || isVisibleSearch()) {
-        hideSearchBox()
-      }
-    })
-    Mousetrap.wrap(searchBar).bind('enter', kbdCommand)
-    for (var i = 0; i < newTabKeys.length; i++) {
-      Mousetrap.wrap(searchBar).bind(newTabKeys[i], kbdCommand)
-    }
-    Mousetrap.wrap(searchBar).bind('down', selectMove.bind(this, 'down'))
-    Mousetrap.wrap(searchBar).bind('up', selectMove.bind(this, 'up'))
-    Mousetrap.wrap(document.getElementById('sfnav_quickSearch')).bind('backspace', function(e) {
-      posi = -1
-      oldins=-1
-    })
-    document.getElementById('sfnav_quickSearch').oninput = function(e) {
-      lookAt()
-      return true
-    }
-  }
+	function bindShortcuts() {
+		let searchBar = document.getElementById('sfnav_quickSearch')
+		Mousetrap.bindGlobal('esc', function(e) { hideSearchBox() })
+		Mousetrap.wrap(searchBar).bind('enter', kbdCommand)
+		for (var i = 0; i < newTabKeys.length; i++) {
+			Mousetrap.wrap(searchBar).bind(newTabKeys[i], kbdCommand)
+		}
+		Mousetrap.wrap(searchBar).bind('down', selectMove.bind(this, 'down'))
+		Mousetrap.wrap(searchBar).bind('up', selectMove.bind(this, 'up'))
+		Mousetrap.wrap(document.getElementById('sfnav_quickSearch')).bind('backspace', function(e) { listPosition = -1 })
+		document.getElementById('sfnav_quickSearch').oninput = function(e) {
+			lookAt()
+			return true
+		}
+	}
 
   function showLoadingIndicator() { document.getElementById('sfnav_loader').style.visibility = 'visible' }
   function hideLoadingIndicator() { document.getElementById('sfnav_loader').style.visibility = 'hidden' }
@@ -1003,59 +900,59 @@ var sfnav = (function() {
     searchBar.blur()
     clearOutput()
     searchBar.value = ''
-    setVisible("hidden")
     setVisibleSearch("hidden")
   }
 
-  var getCmdHash = function() {
-    omnomnom = document.cookie.match(regMatchSid)[1]
-    clientId = omnomnom.split('!')[0]
-    hash = clientId + '!' + omnomnom.substring(omnomnom.length - 10, omnomnom.length)
-    return hash
-  }
+	var getCmdHash = function() {
+		try {
+			omnomnom = document.cookie.match(regMatchSid)[1]
+			clientId = omnomnom.split('!')[0]
+			hash = clientId + '!' + omnomnom.substring(omnomnom.length - 10, omnomnom.length)
+			return hash
+		} catch(e) {
+			if(debug) console.log(e)
+		}
+	}
 
-  function init() {
-    if(document.body != null) {
-      setCurrentOrgId()
-      if(sessionId[orgId] == undefined) { getApiSessionId(true, orgId) }
-      else { ftClient.setSessionToken( sessionId[orgId], SFAPI_VERSION, serverInstance + '') }
+	function init() {
+		if(document.body != null) {
+			setCurrentOrgId()
+			if(sessionId[orgId] == undefined) { getApiSessionId(true, orgId) }
+			else { ftClient.setSessionToken( sessionId[orgId], SFAPI_VERSION, serverInstance + '') }
+			var div = document.createElement('div')
+			div.setAttribute('id', 'sfnav_searchBox')
+			var loaderURL = chrome.extension.getURL("images/ajax-loader.gif")
+			var logoURL = chrome.extension.getURL("images/sf-navigator128.png")
+			div.innerHTML = `
+				<div class="sfnav_wrapper">
+				<input type="text" id="sfnav_quickSearch" autocomplete="off"/>
+				<img id="sfnav_loader" src= "${loaderURL}"/>
+				<img id="sfnav_logo" src= "${logoURL}"/>
+				</div>
+				<div class="sfnav_shadow" id="sfnav_shadow"/>
+				<div class="sfnav_output" id="sfnav_output"/>
+			`
+			document.body.appendChild(div);
+			searchBox = document.getElementById("sfnav_output")
+			hideLoadingIndicator()
+			bindShortcuts()
+			hash = getCmdHash()
+			loaded = true
 
-      var div = document.createElement('div');
-      div.setAttribute('id', 'sfnav_search_box');
-      var loaderURL = chrome.extension.getURL("images/ajax-loader.gif");
-      var logoURL = chrome.extension.getURL("images/sf-navigator128.png");
-      div.innerHTML = `
-      <div class="sfnav_wrapper">
-        <input type="text" id="sfnav_quickSearch" autocomplete="off"/>
-        <img id="sfnav_loader" src= "${loaderURL}"/>
-        <img id="sfnav_logo" src= "${logoURL}"/>
-      </div>
-      <div class="sfnav_shadow" id="sfnav_shadow"/>
-      <div class="sfnav_output" id="sfnav_output"/>`;
+			chrome.runtime.sendMessage({ action:'Get Commands', 'key': hash}, function(response) {
+				cmds = response
+				if(cmds == null || cmds.length == 0) {
+					cmds = {}
+					metaData = {}
+					getAllObjectMetadata()
+				}
+			})
+		}
+	}
 
-      document.body.appendChild(div);
-      outp = document.getElementById("sfnav_output")
-      hideLoadingIndicator()
-      initSettings()
-      hash = getCmdHash()
-      loaded = true
-
-      chrome.runtime.sendMessage({
-        action:'Get Commands', 'key': hash},
-        function(response) {
-          cmds = response
-          if(cmds == null || cmds.length == 0) {
-            cmds = {}
-            metaData = {}
-            getAllObjectMetadata()
-          }
-      })
-    }
-  }
-
-  if(serverInstance == null) {
-    console.log('error', getServerInstance(), getApiSessionId())
-    return
-  }
-  else getApiSessionId()
+	if(serverInstance == null) {
+		console.log('error', getServerInstance(), getApiSessionId())
+		return false
+	}
+	else getApiSessionId()
 })()
