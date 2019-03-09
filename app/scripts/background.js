@@ -1,12 +1,7 @@
 var commands = {}
-var metadata = {}
 var lastUpdated = {}
-chrome.browserAction.setPopup({ popup: "popup.html" })
-chrome.runtime.onInstalled.addListener(function(info) {})
-chrome.browserAction.onClicked.addListener(function() { chrome.browserAction.setPopup({ popup: "popup.html" }) })
-
-var showElement = function(element) {
-	chrome.tabs.query({currentWindow: true, active: true}, function(tabs) {
+var showElement = (element)=>{
+	chrome.tabs.query({currentWindow: true, active: true}, (tabs)=>{
 		switch(element) {
 			case "appMenu":
 				chrome.tabs.executeScript(tabs[0].id, {code: 'document.getElementsByClassName("appLauncher")[0].getElementsByTagName("button")[0].click()'})
@@ -21,8 +16,8 @@ var showElement = function(element) {
 		}
 	})
 }
-var goToUrl = function(targetUrl, newTab) {
-	chrome.tabs.query({currentWindow: true, active: true}, function(tabs) {
+var goToUrl = (targetUrl, newTab)=>{
+	chrome.tabs.query({currentWindow: true, active: true}, (tabs)=>{
 		targetUrl = tabs[0].url.match(/.*\.com/)[0] + targetUrl.match(/.*\.com(.*)/)[1]
 		if(newTab)
 			chrome.tabs.create({active: false, url: targetUrl})
@@ -30,7 +25,10 @@ var goToUrl = function(targetUrl, newTab) {
 			chrome.tabs.update(tabs[0].id, {url: targetUrl})
 	})
 }
-chrome.commands.onCommand.addListener(function(command) {
+
+chrome.browserAction.setPopup({ popup: "popup.html" })
+chrome.browserAction.onClicked.addListener(()=>{ chrome.browserAction.setPopup({ popup: "popup.html" }) })
+chrome.commands.onCommand.addListener((command)=>{
 	switch(command) {
 		case 'showSearchBox': showElement("searchBox"); break
 		case 'showAppMenu': showElement("appMenu"); break
@@ -38,89 +36,52 @@ chrome.commands.onCommand.addListener(function(command) {
 		case 'goToReports': goToUrl(".com/00O"); break
 	}
 })
-
-chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
+chrome.runtime.onMessage.addListener((request, sender, sendResponse)=>{
 	var orgKey = request.key != null ? request.key.split('!')[0] : request.key
-	if (request.action == 'Get API Session ID') {
+	if (request.action == "getApiSessionId") {
 		if (request.key != null) {
-		request.sid = request.uid = request.domain = ""
-		chrome.cookies.getAll({}, function(all) {
-			all.forEach(function(c) {
-				if(c.domain.includes("salesforce.com") && c.value.includes(request.key)) {
-				if(c.name == 'sid') {
-					request.sid = c.value
-					request.domain = c.domain
-				}
-				else if(c.name == 'disco')
-					request.uid = c.value.match(/005[\w\d]+/)[0]
-				}
+			request.sid = request.uid = request.domain = ""
+			chrome.cookies.getAll({}, (all)=>{
+				all.forEach((c)=>{
+					if(c.domain.includes("salesforce.com") && c.value.includes(request.key)) {
+						if(c.name == 'sid') {
+							request.sid = c.value
+							request.domain = c.domain
+						}
+						else if(c.name == 'disco') request.uid = c.value.match(/005[\w\d]+/)[0]
+					}
+				})
+				if(request.sid != "" || request.uid != "")
+					sendResponse({sessionId: request.sid, userId: request.uid, classicURL: request.domain})
+				else sendResponse({error: "No session data found for " + request.key})
+				return request
 			})
-			if(request.sid != "" || request.uid != "")
-				sendResponse({sessionId: request.sid, userId: request.uid, classicURL: request.domain})
-			else
-				sendResponse({error: "No session data found for " + request.key})
-			return request
-			})
-		} else { sendResponse({error: "Must include orgId"}) }
+		} else sendResponse({error: "Must include orgId"})
 	}
-
 	switch(request.action) {
 		case 'goToUrl': goToUrl(request.url, request.newTab); break
-		case 'Store Commands':
-			Object.keys(lastUpdated).forEach(function(key) {
+		case 'getOrgCommands': sendResponse(commands[request.key]); break
+		case 'storeOrgCommands':
+/* convert to stored settings
+chrome.storage.local.set({key: value}, function() {
+          console.log('Value is set to ' + value);
+})
+*/
+			Object.keys(lastUpdated).forEach((key)=>{
 				if(key != request.key && key.split('!')[0] == orgKey) {
-					// might want to check this for multi-org setups
-					delete commands[key]
-					delete lastUpdated[key]
+					if(commands[key] != null) delete commands[key]
+					if(lastUpdated[key] != null) delete lastUpdated[key]
 				}
 			})
 			commands[request.key] = request.payload
 			lastUpdated[request.key] = new Date()
 			sendResponse({lastUpdated: lastUpdated[request.key]})
 			break
-		case 'Get Commands': sendResponse(commands[request.key]); break
-		case 'Clear Commands':
-			delete commands[request.key]
-			delete lastUpdated[request.key]
+		case 'clearCommands':
+			if(commands[request.key]) delete commands[request.key]
+			if(lastUpdated[request.key]) delete lastUpdated[request.key]
 			sendResponse({})
-			break
-		case 'Store Metadata':
-			Object.keys(metadata).forEach(function(key) {
-				if (key != request.key && key.split('!')[0] == orgKey)
-					delete metadata[key]
-			})
-			metadata[request.key] = metadata[orgKey] = request.payload
-			sendResponse({})
-			break
-		case 'Get Metadata':
-			if (metadata[request.key] != null)
-				sendResponse(metadata[request.key])
-			else
-				sendResponse(metadata[orgKey])
 			break
 	}
 	return true
 })
-
-// else if (request.action == 'Set Settings') {
-// 	var settings = localStorage.getItem('sfnav_settings');
-// 	if (settings != null) {
-// 		var sett = JSON.parse(settings);
-// 		let payloadKeys = Object.keys(request.payload)
-// 		for (var i = 0; i < payloadKeys.length; i++) {
-// 		key = payloadKeys[i]
-// 		sett[key] = request.payload[key]
-// 		}
-// 		localStorage.setItem('sfnav_settings', JSON.stringify(sett))
-// 	}
-// 	commands = lastUpdated = {}
-// 	sendResponse({});
-// }
-// else if (request.action == 'Get Settings') {
-// 	var settings = localStorage.getItem('sfnav_settings')
-// 	if (settings != null) { sendResponse(JSON.parse(settings))
-// 	} else {
-// 		localStorage.setItem('sfnav_settings', JSON.stringify({'shortcut': 'ctrl+shift+space'}))
-// 		sendResponse({'shortcut': 'ctrl+shift+space'})
-// 	}
-// }

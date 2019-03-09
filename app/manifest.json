@@ -28,10 +28,9 @@
 		],
 		"all_frames": true,
 		"js": [
-			"scripts/jquery.js",
 			"scripts/mousetrap.min.js",
-			"scripts/forceTooling.js",
 			"scripts/pluralize.js",
+			"scripts/variables.js",
 			"scripts/main.js",
 			"scripts/popup.js"
 		],
