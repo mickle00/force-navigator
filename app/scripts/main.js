@@ -511,27 +511,25 @@ var sfnav = (function() {
 		}
 	}
 	function loginAs(cmd, newTab) {
-		var arrSplit = cmd.split(' ')
-		var searchValue = arrSplit[2]
-		if(arrSplit[3] !== undefined)
-			searchValue += '+' + arrSplit[3]
-		var query = 'SELECT+Id,+Name,+Username+FROM+User+WHERE+Name+LIKE+\'%25' + searchValue + '%25\'+OR+Username+LIKE+\'%25' + searchValue + '%25\''
+		let cmdSplit = cmd.split(' ')
+		let searchValue = cmdSplit[2]
+		if(cmdSplit[3] !== undefined)
+			searchValue += '+' + cmdSplit[3]
 		showLoadingIndicator()
-		ftClient.query(query,
-			function(success) {
-				hideLoadingIndicator()
-				let numberOfUserRecords = success.records.length
-				if(numberOfUserRecords < 1) { addError([{"message":"No user for your search exists."}]) }
-				else if(numberOfUserRecords > 1) { loginAsShowOptions(success.records) }
-				else {
-					var userId = success.records[0].Id
-					loginAsPerform(userId, newTab)
-				}
-			},
-			function(error) {
-				console.log(error);
-				hideLoadingIndicator()
-				addError(error.responseJSON)
+		getHTTP("https://" + classicURL + "/services/data/" + SFAPI_VERSION + "/tooling/query/?q=SELECT+Id,+Name,+Username+FROM+User+WHERE+Name+LIKE+'%25" + searchValue + "%25'+OR+Username+LIKE+'%25" + searchValue + "%25'", "json", {"Authorization": "Bearer " + sessionId[orgId], "Content-Type": "application/json" })
+		.then(function(success) {
+			hideLoadingIndicator()
+			let numberOfUserRecords = success.records.length
+			if(numberOfUserRecords < 1) { addError([{"message":"No user for your search exists."}]) }
+			else if(numberOfUserRecords > 1) { loginAsShowOptions(success.records) }
+			else {
+				var userId = success.records[0].Id
+				loginAsPerform(userId, newTab)
+			}
+		}).catch(function(error) {
+			hideLoadingIndicator()
+			console.log(error)
+			addError(error.responseJSON)
 		})
 	}
 	function loginAsShowOptions(records) {
@@ -543,12 +541,9 @@ var sfnav = (function() {
 	}
 	function loginAsPerform(userId, newTab) {
 		let targetUrl = "https://"+classicURL+"/servlet/servlet.su?oid="+orgId+"&suorgadminid="+userId+"&targetUrl=/home/home.jsp"
-		if(newTab) {
-			goToUrl(targetUrl, true)
-			hideSearchBox()
-		} else {
-			goToUrl(targetUrl)
-		}
+		hideSearchBox()
+		if(newTab) goToUrl(targetUrl, true)
+		else goToUrl(targetUrl)
 		return true
 	}
 
