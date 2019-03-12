@@ -186,7 +186,7 @@ var sfnav = (()=>{
 	var createTask = function(subject) {
 		showLoadingIndicator()
 		if(subject != "" && getUserId()) {
-			getHTTP("https://" + classicURL + "/services/data/" + SFAPI_VERSION + "/sobjects/Task", "json", {"Authorization": "Bearer " + sessionId[orgId], "Content-Type": "application/json" }, {"Subject": subject, "OwnerId": getUserId()}, "POST")
+			getHTTP("https://" + classicURL[orgId] + "/services/data/" + SFAPI_VERSION + "/sobjects/Task", "json", {"Authorization": "Bearer " + sessionId[orgId], "Content-Type": "application/json" }, {"Subject": subject, "OwnerId": getUserId()}, "POST")
 			.then(function (reply) {
 				if(reply.errors.length == 0) {
 					clearOutput()
@@ -207,7 +207,7 @@ var sfnav = (()=>{
 		if(cmdSplit[3] !== undefined)
 			searchValue += '+' + cmdSplit[3]
 		showLoadingIndicator()
-		getHTTP("https://" + classicURL + "/services/data/" + SFAPI_VERSION + "/tooling/query/?q=SELECT+Id,+Name,+Username+FROM+User+WHERE+Name+LIKE+'%25" + searchValue + "%25'+OR+Username+LIKE+'%25" + searchValue + "%25'", "json", {"Authorization": "Bearer " + sessionId[orgId], "Content-Type": "application/json" })
+		getHTTP("https://" + classicURL[orgId] + "/services/data/" + SFAPI_VERSION + "/tooling/query/?q=SELECT+Id,+Name,+Username+FROM+User+WHERE+Name+LIKE+'%25" + searchValue + "%25'+OR+Username+LIKE+'%25" + searchValue + "%25'", "json", {"Authorization": "Bearer " + sessionId[orgId], "Content-Type": "application/json" })
 		.then(function(success) {
 			hideLoadingIndicator()
 			let numberOfUserRecords = success.records.length
@@ -231,7 +231,7 @@ var sfnav = (()=>{
 		}
 	}
 	function loginAsPerform(userId, newTab) {
-		let targetUrl = "https://"+classicURL+"/servlet/servlet.su?oid="+orgId+"&suorgadminid="+userId+"&targetUrl=/home/home.jsp"
+		let targetUrl = "https://"+classicURL[orgId]+"/servlet/servlet.su?oid="+orgId+"&suorgadminid="+userId+"&targetUrl=/home/home.jsp"
 		hideSearchBox()
 		if(newTab) goToUrl(targetUrl, true)
 		else goToUrl(targetUrl)
@@ -334,22 +334,30 @@ var sfnav = (()=>{
 	}
 	var getWord = function(input, dict) {
 		if(typeof input === 'undefined' || input == '') return []
-		let dictItems = []
-		let foundInDict = []
-		let inputRegex = ""
-		eval("inputRegex = /(?=.*" + input.toLowerCase().replace(/\s+/g, ")[^^](?=.*") + ")/")
-		for (let key in dict) {
-			if(foundInDict.length > 10) break // stop at 10 since we can't see longer than that anyways - should make this a setting
-			if(key.toLowerCase().indexOf(input.toLowerCase()) != -1)
-				foundInDict.push({num: 10, key: key})
-			else if(key.toLowerCase().match(inputRegex) != null)
-				foundInDict.push({num: 5, key: key})
+		let foundCommands = [],
+			dictItems = [],
+			terms = input.toLowerCase().split(" ")
+		for (var key in dict) {
+			if(dictItems.length > 10) break // stop at 10 since we can't see longer than that anyways - should make this a setting
+			if(key.toLowerCase().indexOf(input) != -1) {
+				dictItems.push({num: 10, key: key})
+			} else {
+				let match = 0
+				for(var i = 0;i<terms.length;i++) {
+					if(key.toLowerCase().indexOf(terms[i]) != -1) {
+						match++
+						sortValue = 1
+					}
+				}
+				if (match == terms.length)
+					dictItems.push({num : sortValue, key : key})
+			}
 		}
-		foundInDict.sort(function(a,b) { return b.num - a.num })
-		for(let i = 0;i < foundInDict.length; i++)
-			dictItems.push(foundInDict[i].key)
-		return dictItems
-	}
+		dictItems.sort(function(a,b) { return b.num - a.num })
+		for(var i = 0;i < dictItems.length;i++)
+			foundCommands.push(dictItems[i].key)
+		return foundCommands
+	} 
 	function addWord(word) {
 		var d = document.createElement("div")
 		var sp
