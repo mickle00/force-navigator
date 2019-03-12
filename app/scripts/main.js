@@ -190,10 +190,12 @@ var sfnav = (()=>{
 			.then(function (reply) {
 				if(reply.errors.length == 0) {
 					clearOutput()
-					commands[sessionHash]["Go To Created Task"] = {url: "/"+ reply.id }
+					commands[sessionHash]["Go To Created Task"] = {url: serverInstance[getSessionHash()] + "/"+ reply.id }
 					document.getElementById("sfnav_quickSearch").value = ""
 					addWord('Go To Created Task')
 					addWord('(press escape to exit or enter a new command)')
+					let firstEl = document.querySelector('#sfnav_output :first-child')
+					if(listPosition == -1 && firstEl != null) firstEl.className = "sfnav_child sfnav_selected"
 				} else {
 					console.log(response)
 				}
@@ -229,6 +231,8 @@ var sfnav = (()=>{
 			commands[sessionHash][cmd] = {key: cmd, id: records[i].Id}
 			addWord(cmd)
 		}
+		let firstEl = document.querySelector('#sfnav_output :first-child')
+		if(listPosition == -1 && firstEl != null) firstEl.className = "sfnav_child sfnav_selected"
 	}
 	function loginAsPerform(userId, newTab) {
 		let targetUrl = "https://"+classicURL[orgId]+"/servlet/servlet.su?oid="+orgId+"&suorgadminid="+userId+"&targetUrl=/home/home.jsp"
