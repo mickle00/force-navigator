@@ -9,7 +9,11 @@
 		"default_title": "Salesforce Navigator for Lightning"
 	},
 	"background": {
-		"scripts": [ "scripts/background.js" ],
+		"scripts": [
+			"scripts/shared.js",
+			"scripts/pluralize.js",
+			"scripts/background.js"
+		],
 		"persistent": true
 	},
 	"icons": {
@@ -34,7 +38,7 @@
 		"js": [
 			"scripts/mousetrap.min.js",
 			"scripts/pluralize.js",
-			"scripts/variables.js",
+			"scripts/shared.js",
 			"scripts/main.js",
 			"scripts/popup.js"
 		],

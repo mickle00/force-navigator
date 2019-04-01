@@ -1,133 +1,39 @@
 // @copyright 2012+ Daniel Nakov / Silverline CRM
 // http://silverlinecrm.com
 // @copyright 2019+ Danny Summerlin
+var orgId = null
+var userId = null
+var sessionId = null
+var sessionHash = null
+var serverInstance = ''
+var apiUrl = ''
+var commands = {}
+var searchBox
+var listPosition = -1
+var mouseClickLoginAsUserId
+var loaded = false
+
 
 var sfnav = (()=>{
-	var getServerInstance = ()=>{
-		if(serverInstance[sessionHash] == null) {
-			let targetUrl
-			let url = location.origin + ""
-			if(url.indexOf("lightning.force") != -1)
-				targetUrl = url.substring(0, url.indexOf("lightning.force")) + "lightning.force.com"
-			else if(url.indexOf("salesforce") != -1)
-				targetUrl = url.substring(0, url.indexOf("salesforce")) + "salesforce.com"
-			else if(url.indexOf("cloudforce") != -1)
-				targetUrl = url.substring(0, url.indexOf("cloudforce")) + "cloudforce.com"
-			else if(url.indexOf("visual.force") != -1) {
-				let urlParseArray = url.split(".")
-				targetUrl = 'https://' + urlParseArray[1] + ''
-			}
-			serverInstance[sessionHash] = targetUrl
-			return targetUrl
-		} else return serverInstance[sessionHash]
+	function loadCommands(force) {
+		if(serverInstance == null || orgId == null || sessionId == null) { init(); return false }
+		commands['Refresh Metadata'] = {}
+		commands['Toggle Lightning'] = {}
+		commands['Setup'] = {}
+		commands['?'] = {}
+		commands['Home'] = {}
+		let options = {
+			sessionHash: sessionHash,
+			domain: serverInstance,
+			apiUrl: apiUrl,
+			key: sessionHash,
+			sessionId: sessionId
+		}
+		chrome.runtime.sendMessage( Object.assign(options, {action:'getSetupTree'}), response=>{ Object.assign(commands, response) })
+		chrome.runtime.sendMessage( Object.assign(options, {action:'getMetadata'}), response=>{ Object.assign(commands, response) })
+		chrome.runtime.sendMessage( Object.assign(options, {action:'getCustomObjects'}), response=>{ Object.assign(commands, response) })
+		hideLoadingIndicator()
 	}
-	var getSessionHash = ()=>{
-		try {
-			let sId = document.cookie.match(regMatchSid)[1]
-			sessionHash = sId.split('!')[0] + '!' + sId.substring(sId.length - 10, sId.length)
-			return sessionHash
-		} catch(e) { if(debug) console.log(e) }
-	}
-	let getHTTP = function(targetUrl, type = "json", headers = {}, data = {}, method = "GET") {
-		let request = { method: method, headers: headers }
-		if(Object.keys(data).length > 0)
-			request.body = JSON.stringify(data)
-		return fetch(targetUrl, request).then(response => {
-			classicURL[orgId] = response.url.match(/:\/\/(.*)salesforce.com/)[1] + "salesforce.com"
-			switch(type) {
-				case "json": return response.clone().json()
-				case "document": return response.clone().text()
-			}
-		}).then(data => {
-			if(typeof data == "string")
-				return (new DOMParser()).parseFromString(data, "text/html")
-			else
-				return data
-		})
-	}
-	var getUserId = ()=> userId[orgId]
-
-	function getAllObjectMetadata(force) {
-		if(serverInstance[getSessionHash()] == null || orgId == null || sessionId[orgId] == null) { init(); return false }
-		commands[sessionHash]['Refresh Metadata'] = {}
-		commands[sessionHash]['Toggle Lightning'] = {}
-		commands[sessionHash]['Setup'] = {}
-		commands[sessionHash]['?'] = {}
-		commands[sessionHash]['Home'] = {}
-		getSetupTree()
-		getHTTP(getServerInstance() + '/services/data/' + SFAPI_VERSION + '/sobjects/', "json",
-			{"Authorization": "Bearer " + sessionId[orgId], "Accept": "application/json"}
-		).then(response => {
-			getMetadata(response)
-			getCustomObjects()
-		})
-	}
-	function getSetupTree() {
-		getHTTP(serverInstance[getSessionHash()] + "/ui/setup/Setup", "document").then(response => {
-			let strNameMain, strName
-			;[].map.call(response.querySelectorAll('.setupLeaf > a[id*="_font"]'), function(item) {
-				let hasTopParent = false, hasParent = false
-				let parent, topParent, parentEl, topParentEl
-				if (![item.parentElement, item.parentElement.parentElement, item.parentElement.parentElement.parentElement].includes(null) && item.parentElement.parentElement.parentElement.className.indexOf('parent') !== -1) {
-					hasParent = true
-					parentEl = item.parentElement.parentElement.parentElement
-					parent = parentEl.querySelector('.setupFolder').innerText
-				}
-				if(hasParent && ![parentEl.parentElement, parentEl.parentElement.parentElement].includes(null) && parentEl.parentElement.parentElement.className.indexOf('parent') !== -1) {
-					hasTopParent = true
-					topParentEl = parentEl.parentElement.parentElement
-					topParent = topParentEl.querySelector('.setupFolder').innerText
-				}
-				strNameMain = 'Setup > ' + (hasTopParent ? (topParent + ' > ') : '')
-				strNameMain += (hasParent ? (parent + ' > ') : '')
-				strName = strNameMain + item.innerText
-				let targetUrl = item.href
-				if(serverInstance[getSessionHash()].includes("lightning.force") && Object.keys(setupLabelsToLightningMap).includes(item.innerText))
-					targetUrl = serverInstance[getSessionHash()] + setupLabelsToLightningMap[item.innerText]
-				if(serverInstance[getSessionHash()].includes("lightning.force") && strNameMain.includes("Customize") && Object.keys(classicToLightingMap).includes(item.innerText)) {
-					if(commands[sessionHash]['List ' + parent ] == null) { commands[sessionHash]['List ' + parent ] = {url: serverInstance[getSessionHash()] + "/lightning/o/" + pluralize(parent, 1).replace(/\s/g,"") + "/list", key: "List " + parent} }
-					if(commands[sessionHash]['New ' + pluralize(parent, 1) ] == null) { commands[sessionHash]['New ' + pluralize(parent, 1) ] = {url: serverInstance[getSessionHash()] + "/lightning/o/" + pluralize(parent, 1).replace(/\s/g,"") + "/new", key: "New " + pluralize(parent, 1)} }
-					targetUrl = serverInstance[getSessionHash()] + "/lightning/setup/ObjectManager/" + pluralize(parent, 1).replace(/\s/g, "")
-					targetUrl += classicToLightingMap[item.innerText]
-				}
-				if(commands[sessionHash][strName] == null) commands[sessionHash][strName] = {url: targetUrl, key: strName}
-			})
-			chrome.runtime.sendMessage({action: 'storeOrgCommands', from: "getSetup", payload: commands[sessionHash], key: getSessionHash()}, function(response) { hideLoadingIndicator() })
-		})
-	}
-	function getMetadata(data) {
-		if(data.length == 0 || typeof data.sobjects == "undefined") return false
-		let labelPlural, label, name, keyPrefix
-		data.sobjects.map(obj => {
-			if(obj.keyPrefix != null) {
-				({labelPlural, label, name, keyPrefix} = obj)
-				commands[sessionHash]['List ' + labelPlural] = { key: name, keyPrefix: keyPrefix, url: serverInstance[getSessionHash()] + '/' + keyPrefix }
-				commands[sessionHash]['New ' + label] = { key: name, keyPrefix: keyPrefix, url: serverInstance[getSessionHash()] + '/' + keyPrefix + '/e' }
-			}
-		})
-		chrome.runtime.sendMessage({action: 'storeOrgCommands', from: "getMetadata", payload: commands[sessionHash], key: getSessionHash()}, function(response) { hideLoadingIndicator() })
-	}
-	function getCustomObjects() {
-		getHTTP(serverInstance[getSessionHash()] + "/p/setup/custent/CustomObjectsPage", "document").then(response => {
-			let mapKeys = Object.keys(classicToLightingMap)
-			;[].map.call(response.querySelectorAll('th a'), function(el) {
-				if(serverInstance[getSessionHash()].includes("lightning.force")) {
-					let objectId = el.href.match(/\/(\w+)\?/)[1]
-					let targetUrl = serverInstance[getSessionHash()] + "/lightning/setup/ObjectManager/" + objectId
-					commands[sessionHash]['Setup > Custom Object > ' + el.text + ' > Details'] = {url: targetUrl + "/Details/view", key: el.text + " > Fields"};
-					for (var i = 0; i < mapKeys.length; i++) {
-						let key = mapKeys[i]
-						let urlElement = classicToLightingMap[ key ]
-						commands[sessionHash]['Setup > Custom Object > ' + el.text + ' > ' + key] = {url: targetUrl + urlElement, key: el.text + " > " + key}
-					}
-				} else {
-					commands[sessionHash]['Setup > Custom Object > ' + el.text] = {url: el.href, key: el.text};
-				}
-			})
-			chrome.runtime.sendMessage({action: 'storeOrgCommands', from: "getCustomObjects", payload: commands[sessionHash], key: getSessionHash()}, function(response) { hideLoadingIndicator() })
-		})
-	}
-
 	function invokeCommand(cmd, newTab, event) {
 		if(cmd == "") { return false }
 		let checkCmd = cmd.toLowerCase()
@@ -135,32 +41,30 @@ var sfnav = (()=>{
 		switch(checkCmd) {
 			case "refresh metadata":
 				showLoadingIndicator()
-				chrome.runtime.sendMessage({ action: 'clearCommands', key: getSessionHash() } , function(response) {
-					getAllObjectMetadata(true)
-					document.getElementById("sfnav_quickSearch").value = ""
-				})
+				loadCommands(true)
+				document.getElementById("sfnav_quickSearch").value = ""
 				return true
 				break
 			case "toggle lightning":
 				let mode
 				if(window.location.href.includes("lightning.force")) mode = "classic"
 				else mode = "lex-campaign"
-				targetUrl = serverInstance[getSessionHash()] + "/ltng/switcher?destination=" + mode
+				targetUrl = serverInstance + "/ltng/switcher?destination=" + mode
 				break
 			case "setup":
-				if(serverInstance[getSessionHash()].includes("lightning.force"))
-					targetUrl = serverInstance[getSessionHash()] + "/lightning/setup/SetupOneHome/home"
+				if(serverInstance.includes("lightning.force"))
+					targetUrl = serverInstance + "/lightning/setup/SetupOneHome/home"
 				else
-					targetUrl = serverInstance[getSessionHash()] + "/ui/setup/Setup"
+					targetUrl = serverInstance + "/ui/setup/Setup"
 				break
 			case "home":
-				targetUrl = serverInstance[getSessionHash()] + "/"
+				targetUrl = serverInstance + "/"
 				break
 		}
 		if(checkCmd.substring(0,9) == 'login as ') { loginAs(cmd, newTab); return true }
 		else if(checkCmd.substring(0,1) == "!") { createTask(cmd.substring(1).trim()) }
 		else if(checkCmd.substring(0,1) == "?") { targetUrl = searchTerms(cmd.substring(1).trim()) }
-		else if(event != 'click' && typeof commands[sessionHash][cmd] != 'undefined' && commands[sessionHash][cmd].url) { targetUrl = commands[sessionHash][cmd].url }
+		else if(event != 'click' && typeof commands[cmd] != 'undefined' && commands[cmd].url) { targetUrl = commands[cmd].url }
 		else if(debug && !checkCmd.includes("create a task: !") && !checkCmd.includes("global search usage")) {
 			console.log(cmd + " not found in command list or incompatible")
 			return false
@@ -176,8 +80,8 @@ var sfnav = (()=>{
 	}
 	var goToUrl = function(url, newTab) { chrome.runtime.sendMessage({ action: 'goToUrl', url: url, newTab: newTab } , function(response) {}) }
 	var searchTerms =function (terms) {
-		var targetUrl = serverInstance[getSessionHash()]
-		if(serverInstance[getSessionHash()].includes('.force.com'))
+		var targetUrl = serverInstance
+		if(serverInstance.includes('.force.com'))
 			targetUrl += "/one/one.app#" + btoa(JSON.stringify({"componentDef":"forceSearch:search","attributes":{"term": terms,"scopeMap":{"type":"TOP_RESULTS"},"context":{"disableSpellCorrection":false,"SEARCH_ACTIVITY":{"term": terms}}}}))
 		else
 			targetUrl += "/_ui/search/ui/UnifiedSearchResults?sen=ka&sen=500&str=" + encodeURI(terms) + "#!/str=" + encodeURI(terms) + "&searchAll=true&initialViewMode=summary"
@@ -185,21 +89,24 @@ var sfnav = (()=>{
 	}
 	var createTask = function(subject) {
 		showLoadingIndicator()
-		if(subject != "" && getUserId()) {
-			getHTTP("https://" + classicURL[orgId] + "/services/data/" + SFAPI_VERSION + "/sobjects/Task", "json", {"Authorization": "Bearer " + sessionId[orgId], "Content-Type": "application/json" }, {"Subject": subject, "OwnerId": getUserId()}, "POST")
-			.then(function (reply) {
-				if(reply.errors.length == 0) {
+		if(subject != "" && userId) {
+			chrome.runtime.sendMessage({
+					action:'createTask', apiUrl: apiUrl,
+					key: sessionHash, sessionId: sessionId,
+					domain: serverInstance, sessionHash: sessionHash,
+					subject: subject, userId: userId
+				}, response=>{
+				if(response.errors.length == 0) {
 					clearOutput()
-					commands[sessionHash]["Go To Created Task"] = {url: serverInstance[getSessionHash()] + "/"+ reply.id }
+					commands["Go To Created Task"] = {url: serverInstance + "/"+ response.id }
 					document.getElementById("sfnav_quickSearch").value = ""
 					addWord('Go To Created Task')
 					addWord('(press escape to exit or enter a new command)')
 					let firstEl = document.querySelector('#sfnav_output :first-child')
-					if(listPosition == -1 && firstEl != null) firstEl.className = "sfnav_child sfnav_selected"
-				} else {
-					console.log(response)
+					if(listPosition == -1 && firstEl != null)
+						firstEl.className = "sfnav_child sfnav_selected"
+					hideLoadingIndicator()
 				}
-				hideLoadingIndicator()					
 			})
 		}
 	}
@@ -209,33 +116,33 @@ var sfnav = (()=>{
 		if(cmdSplit[3] !== undefined)
 			searchValue += '+' + cmdSplit[3]
 		showLoadingIndicator()
-		getHTTP("https://" + classicURL[orgId] + "/services/data/" + SFAPI_VERSION + "/tooling/query/?q=SELECT+Id,+Name,+Username+FROM+User+WHERE+Name+LIKE+'%25" + searchValue + "%25'+OR+Username+LIKE+'%25" + searchValue + "%25'", "json", {"Authorization": "Bearer " + sessionId[orgId], "Content-Type": "application/json" })
-		.then(function(success) {
-			hideLoadingIndicator()
+		chrome.runtime.sendMessage({
+			action:'searchLogins', apiUrl: apiUrl,
+			key: sessionHash, sessionId: sessionId,
+			domain: serverInstance, sessionHash: sessionHash,
+			searchValue: searchValue, userId: userId
+		}, success=>{
 			let numberOfUserRecords = success.records.length
+			hideLoadingIndicator()
 			if(numberOfUserRecords < 1) { addError([{"message":"No user for your search exists."}]) }
 			else if(numberOfUserRecords > 1) { loginAsShowOptions(success.records) }
 			else {
 				var userId = success.records[0].Id
 				loginAsPerform(userId, newTab)
 			}
-		}).catch(function(error) {
-			hideLoadingIndicator()
-			console.log(error)
-			addError(error.responseJSON)
 		})
 	}
 	function loginAsShowOptions(records) {
 		for(let i = 0; i < records.length; ++i) {
 			let cmd = 'Login As ' + records[i].Name
-			commands[sessionHash][cmd] = {key: cmd, id: records[i].Id}
+			commands[cmd] = {key: cmd, id: records[i].Id}
 			addWord(cmd)
 		}
 		let firstEl = document.querySelector('#sfnav_output :first-child')
 		if(listPosition == -1 && firstEl != null) firstEl.className = "sfnav_child sfnav_selected"
 	}
 	function loginAsPerform(userId, newTab) {
-		let targetUrl = "https://"+classicURL[orgId]+"/servlet/servlet.su?oid="+orgId+"&suorgadminid="+userId+"&targetUrl=/home/home.jsp"
+		let targetUrl = "https://"+apiUrl+"/servlet/servlet.su?oid="+orgId+"&suorgadminid="+userId+"&targetUrl=/home/home.jsp"
 		hideSearchBox()
 		if(newTab) goToUrl(targetUrl, true)
 		else goToUrl(targetUrl)
@@ -326,7 +233,7 @@ var sfnav = (()=>{
 		else if(input.substring(0,1) == "!") addWord('Create a Task: ! <Subject line>')
 		else if(input.substring(0,8) == 'login as') addWord('Usage: login as <FirstName> <LastName> OR <Username>')
 		else {
-			let words = getWord(input, commands[sessionHash])
+			let words = getWord(input, commands)
 			if(words.length > 0)
 				for (var i=0;i < words.length; ++i)
 					addWord(words[i])
@@ -365,11 +272,11 @@ var sfnav = (()=>{
 	function addWord(word) {
 		var d = document.createElement("div")
 		var sp
-		if(commands[sessionHash][word] != null && commands[sessionHash][word].url != null && commands[sessionHash][word].url != "") {
+		if(commands[word] != null && commands[word].url != null && commands[word].url != "") {
 			sp = document.createElement("a")
-			sp.setAttribute("href", commands[sessionHash][word].url)
+			sp.setAttribute("href", commands[word].url)
 		} else { sp = d }
-		if(commands[sessionHash][word] != null && commands[sessionHash][word].id != null && commands[sessionHash][word].id != "") { sp.id = commands[sessionHash][word].id }
+		if(commands[word] != null && commands[word].id != null && commands[word].id != "") { sp.id = commands[word].id }
 		sp.classList.add('sfnav_child')
 		sp.appendChild(document.createTextNode(word))
 		sp.onmouseover = mouseHandler
@@ -435,14 +342,15 @@ var sfnav = (()=>{
 	function init() {
 		try {
 			orgId = document.cookie.match(/sid=([\w\d]+)/)[1]
-			serverInstance[getSessionHash()] = getServerInstance()
-			if(sessionId[getSessionHash()] == null) {
-				chrome.runtime.sendMessage({ action: 'getApiSessionId', key: orgId }, function(response) {
+			serverInstance = getServerInstance()
+			sessionHash = getSessionHash()
+			if(sessionId == null) {
+				chrome.runtime.sendMessage({ action: 'getApiSessionId', key: orgId }, response=>{
 					if(response.error) console.log("response", orgId, response, chrome.runtime.lastError)
 					else {
-						sessionId[orgId] = unescape(response.sessionId)
-						userId[orgId] = unescape(response.userId)
-						classicURL[orgId] = unescape(response.classicURL)
+						sessionId = unescape(response.sessionId)
+						userId = unescape(response.userId)
+						apiUrl = unescape(response.apiUrl)
 						var div = document.createElement('div')
 						div.setAttribute('id', 'sfnav_searchBox')
 						var loaderURL = chrome.extension.getURL("images/ajax-loader.gif")
@@ -460,13 +368,7 @@ var sfnav = (()=>{
 						searchBox = document.getElementById("sfnav_output")
 						hideLoadingIndicator()
 						bindShortcuts()
-						chrome.runtime.sendMessage({ action:'getOrgCommands', from: "init", key: getSessionHash()}, (response)=>{
-							if(commands[sessionHash] == null || commands[sessionHash].length == 0) {
-								commands[sessionHash] = {}
-								getAllObjectMetadata()
-							} else commands[sessionHash] = response
-							loaded = true
-						})						
+						loadCommands()
 					}
 				})
 			}
