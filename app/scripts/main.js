@@ -231,15 +231,15 @@ var sfnav = (()=>{
 		clearOutput()
 		if(input.substring(0,1) == "?") addWord('Global Search Usage: ? <Search term(s)>')
 		else if(input.substring(0,1) == "!") addWord('Create a Task: ! <Subject line>')
-		else if(input.substring(0,8) == 'login as') addWord('Usage: login as <FirstName> <LastName> OR <Username>')
 		else {
 			let words = getWord(input, commands)
 			if(words.length > 0)
-				for (var i=0;i < words.length; ++i)
-					addWord(words[i])
+			for (var i=0;i < words.length; ++i)
+			addWord(words[i])
 			else
-				listPosition = -1
+			listPosition = -1
 		}
+		if ('login as'.includes(input.toLowerCase())) addWord('Usage: login as <FirstName> <LastName> OR <Username>')
 		let firstEl = document.querySelector('#sfnav_output :first-child')
 		if(listPosition == -1 && firstEl != null) firstEl.className = "sfnav_child sfnav_selected"
 	}
