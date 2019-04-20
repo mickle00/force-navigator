@@ -142,7 +142,7 @@ var sfnav = (()=>{
 		if(listPosition == -1 && firstEl != null) firstEl.className = "sfnav_child sfnav_selected"
 	}
 	function loginAsPerform(userId, newTab) {
-		let targetUrl = "https://"+apiUrl+"/servlet/servlet.su?oid="+orgId+"&suorgadminid="+userId+"&targetUrl=/home/home.jsp"
+		let targetUrl = "https://" + apiUrl + "/servlet/servlet.su?oid=" + orgId + "&suorgadminid=" + userId + "&targetURL=" + encodeURIComponent(window.location.pathname) + "&"
 		hideSearchBox()
 		if(newTab) goToUrl(targetUrl, true)
 		else goToUrl(targetUrl)
