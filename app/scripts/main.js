@@ -1,882 +1,186 @@
 // @copyright 2012+ Daniel Nakov / Silverline CRM
 // http://silverlinecrm.com
+// @copyright 2019+ Danny Summerlin
+var orgId = null
+var userId = null
+var sessionId = null
+var sessionHash = null
+var serverInstance = ''
+var apiUrl = ''
+var commands = {}
+var searchBox
+var listPosition = -1
+var mouseClickLoginAsUserId
+var loaded = false
 
-var sfnav = (function() {
-  var searchBox
-  var listPosition = -1
-  var newTabKeys = [
-    "ctrl+enter",
-    "command+enter",
-    "shift+enter"
-  ]
-  var input
-  var metaData = {}
-  var serverInstance = getServerInstance()
-  var classicURL
-  var orgId = false
-  var cmds = {}
-  var isCtrl = false
-  var regMatchSid = /sid=([a-zA-Z0-9\.\!]+)/
-  var clientId, omnomnom, hash
-  var loaded = false
-  var shortcut
-  var mouseClickLoginAsUserId
-  var sessionId = {}
-  var userId = {}
-  var debug = false
-  var SFAPI_VERSION = 'v40.0'
-  var ftClient = new forceTooling.Client()
-  var customObjects = {}
-  let classicToLightingMap = {
-    'Fields': "/FieldsAndRelationships/view",
-    'Page Layouts': '/PageLayouts/view',
-    'Buttons, Links, and Actions': '/ButtonsLinksActions/view',
-    'Compact Layouts': '/CompactLayouts/view',
-    'Field Sets': '/FieldSets/view',
-    'Limits': '/Limits/view',
-    'Record Types': '/RecordTypes/view',
-    'Related Lookup Filters': '/RelatedLookupFilters/view',
-    'Search Layouts': '/SearchLayouts/view',
-    'Triggers': '/Triggers/view',
-    'Validation Rules': '/ValidationRules/view'
-  }
-  let setupLabelsToLightningMap = {
-    "Setup Home": "/lightning/setup/SetupOneHome/home",
-    "Lightning Experience Transition Assistant": "/lightning/setup/EnableLightningExperience/home",
-    "Lightning Usage": "/lightning/setup/LightningUsageSetup/home",
-    "Permission Sets": "/lightning/setup/PermSets/home",
-    "Profiles": "/lightning/setup/Profiles/home",
-    "Public Groups": "/lightning/setup/PublicGroups/home",
-    "Queues": "/lightning/setup/Queues/home",
-    "Roles": "/lightning/setup/Roles/home",
-    "User Management Settings": "/lightning/setup/UserManagementSettings/home",
-    "Users": "/lightning/setup/ManageUsers/home",
-    "Big Objects": "/lightning/setup/BigObjects/home",
-    "Data Export": "/lightning/setup/DataManagementExport/home",
-    "Data Integration Metrics": "/lightning/setup/XCleanVitalsUi/home",
-    "Data Integration Rules": "/lightning/setup/CleanRules/home",
-    "Duplicate Error Logs": "/lightning/setup/DuplicateErrorLog/home",
-    "Duplicate Rules": "/lightning/setup/DuplicateRules/home",
-    "Matching Rules": "/lightning/setup/MatchingRules/home",
-    "Mass Delete Records": "/lightning/setup/DataManagementDelete/home",
-    "Mass Transfer Approval Requests": "/lightning/setup/DataManagementManageApprovals/home",
-    "Mass Transfer Records": "/lightning/setup/DataManagementTransfer/home",
-    "Mass Update Addresses": "/lightning/setup/DataManagementMassUpdateAddresses/home",
-    "Picklist Settings": "/lightning/setup/PicklistSettings/home",
-    "Schema Settings": "/lightning/setup/SchemaSettings/home",
-    "State and Country/Territory Picklists": "/lightning/setup/AddressCleanerOverview/home",
-    "Storage Usage": "/lightning/setup/CompanyResourceDisk/home",
-    "Apex Exception Email": "/lightning/setup/ApexExceptionEmail/home",
-    "Classic Email Templates": "/lightning/setup/CommunicationTemplatesEmail/home",
-    "Compliance BCC Email": "/lightning/setup/SecurityComplianceBcc/home",
-    "DKIM Keys": "/lightning/setup/EmailDKIMList/home",
-    "Deliverability": "/lightning/setup/OrgEmailSettings/home",
-    "Email Attachments": "/lightning/setup/EmailAttachmentSettings/home",
-    "Email Footers": "/lightning/setup/EmailDisclaimers/home",
-    "Email to Salesforce": "/lightning/setup/EmailToSalesforce/home",
-    "Enhanced Email": "/lightning/setup/EnhancedEmail/home",
-    "Gmail Integration and Sync": "/lightning/setup/LightningForGmailAndSyncSettings/home",
-    "Letterheads": "/lightning/setup/CommunicationTemplatesLetterheads/home",
-    "Lightning Email Templates": "/lightning/setup/LightningEmailTemplateSetup/home",
-    "Mail Merge Templates": "/lightning/setup/CommunicationTemplatesWord/home",
-    "Organization-Wide Addresses": "/lightning/setup/OrgWideEmailAddresses/home",
-    "Outlook Configurations": "/lightning/setup/EmailConfigurations/home",
-    "Outlook Integration and Sync": "/lightning/setup/LightningForOutlookAndSyncSettings/home",
-    "Send through External Email Services": "/lightning/setup/EmailTransportServiceSetupPage/home",
-    "Test Deliverability": "/lightning/setup/TestEmailDeliverability/home",
-    "App Manager": "/lightning/setup/NavigationMenus/home",
-    "AppExchange Marketplace": "/lightning/setup/AppExchangeMarketplace/home",
-    "Connected Apps OAuth Usage": "/lightning/setup/ConnectedAppsUsage/home",
-    "Manage Connected Apps": "/lightning/setup/ConnectedApplication/home",
-    "Installed Packages": "/lightning/setup/ImportedPackage/home",
-    "Flow Category": "/lightning/setup/FlowCategory/home",
-    "Lightning Bolt Solutions": "/lightning/setup/LightningBolt/home",
-    "Salesforce Branding": "/lightning/setup/Salesforce1Branding/home",
-    "Salesforce Mobile Quick Start": "/lightning/setup/Salesforce1SetupSection/home",
-    "Salesforce Navigation": "/lightning/setup/ProjectOneAppMenu/home",
-    "Salesforce Notifications": "/lightning/setup/NotificationsSettings/home",
-    "Salesforce Offline": "/lightning/setup/MobileOfflineStorageAdmin/home",
-    "Salesforce Settings": "/lightning/setup/Salesforce1Settings/home",
-    "Package Manager": "/lightning/setup/Package/home",
-    "Communities Settings": "/lightning/setup/SparkSetupPage/home",
-    "Home": "/lightning/setup/Home/home",
-    "Office 365": "/lightning/setup/NetworkSettings/home",
-    "Skype for Salesforce": "/lightning/setup/SkypeSetupPage/home",
-    "Quip": "/lightning/setup/QuipSetupAssistant/home",
-    "Asset Files": "/lightning/setup/ContentAssets/home",
-    "Content Deliveries and Public Links": "/lightning/setup/ContentDistribution/home",
-    "Files Connect": "/lightning/setup/ContentHub/home",
-    "General Settings": "/lightning/setup/FilesGeneralSettings/home",
-    "Regenerate Previews": "/lightning/setup/RegeneratePreviews/home",
-    "Salesforce CRM Content": "/lightning/setup/SalesforceCRMContent/home",
-    "Synonyms": "/lightning/setup/ManageSynonyms/home",
-    "Case Assignment Rules": "/lightning/setup/CaseRules/home",
-    "Case Auto-Response Rules": "/lightning/setup/CaseResponses/home",
-    "Case Comment Triggers": "/lightning/setup/CaseCommentTriggers/home",
-    "Case Team Roles": "/lightning/setup/CaseTeamRoles/home",
-    "Predefined Case Teams": "/lightning/setup/CaseTeamTemplates/home",
-    "Contact Roles on Cases": "/lightning/setup/CaseContactRoles/home",
-    "Customer Contact Requests": "/lightning/setup/ContactRequestFlows/home",
-    "Email-to-Case": "/lightning/setup/EmailToCase/home",
-    "Escalation Rules": "/lightning/setup/CaseEscRules/home",
-    "Feed Filters": "/lightning/setup/FeedFilterDefinitions/home",
-    "Field Service Settings": "/lightning/setup/FieldServiceSettings/home",
-    "Macro Settings": "/lightning/setup/MacroSettings/home",
-    "Omni-Channel Settings": "/lightning/setup/OmniChannelSettings/home",
-    "Snap-ins": "/lightning/setup/Snap-ins/home",
-    "Social Business Rules": "/lightning/setup/SocialCustomerServiceBusinessRules/home",
-    "Social Customer Service": "/lightning/setup/SocialCustomerManagementAccountSettings/home",
-    "Support Processes": "/lightning/setup/CaseProcess/home",
-    "Support Settings": "/lightning/setup/CaseSettings/home",
-    "Web-to-Case": "/lightning/setup/CaseWebtocase/home",
-    "Web-to-Case HTML Generator": "/lightning/setup/CaseWebToCaseHtmlGenerator/home",
-    "Survey Settings": "/lightning/setup/SurveySettings/home",
-    "Object Manager": "/lightning/setup/ObjectManager/home",
-    "Picklist Value Sets": "/lightning/setup/Picklists/home",
-    "Schema Builder": "/lightning/setup/SchemaBuilder/home",
-    "Approval Processes": "/lightning/setup/ApprovalProcesses/home",
-    "Flows": "/lightning/setup/InteractionProcesses/home",
-    "Next Best Action": "/lightning/setup/NextBestAction/home",
-    "Post Templates": "/lightning/setup/FeedTemplates/home",
-    "Process Automation Settings": "/lightning/setup/WorkflowSettings/home",
-    "Process Builder": "/lightning/setup/ProcessAutomation/home",
-    "Email Alerts": "/lightning/setup/WorkflowEmails/home",
-    "Field Updates": "/lightning/setup/WorkflowFieldUpdates/home",
-    "Outbound Messages": "/lightning/setup/WorkflowOutboundMessaging/home",
-    "Send Actions": "/lightning/setup/SendAction/home",
-    "Tasks": "/lightning/setup/WorkflowTasks/home",
-    "Workflow Rules": "/lightning/setup/WorkflowRules/home",
-    "Action Link Templates": "/lightning/setup/ActionLinkGroupTemplates/home",
-    "App Menu": "/lightning/setup/AppMenu/home",
-    "Custom Labels": "/lightning/setup/ExternalStrings/home",
-    "Density Settings": "/lightning/setup/DensitySetup/home",
-    "Global Actions": "/lightning/setup/GlobalActions/home",
-    "Publisher Layouts": "/lightning/setup/GlobalPublisherLayouts/home",
-    "Guided Actions": "/lightning/setup/GuidedActions/home",
-    "Lightning App Builder": "/lightning/setup/FlexiPageList/home",
-    "Path Settings": "/lightning/setup/PathAssistantSetupHome/home",
-    "Quick Text Settings": "/lightning/setup/LightningQuickTextSettings/home",
-    "Rename Tabs and Labels": "/lightning/setup/RenameTab/home",
-    "Custom URLs": "/lightning/setup/DomainSites/home",
-    "Domains": "/lightning/setup/DomainNames/home",
-    "Sites": "/lightning/setup/CustomDomain/home",
-    "Tabs": "/lightning/setup/CustomTabs/home",
-    "Themes and Branding": "/lightning/setup/ThemingAndBranding/home",
-    "Export": "/lightning/setup/LabelWorkbenchExport/home",
-    "Import": "/lightning/setup/LabelWorkbenchImport/home",
-    "Override": "/lightning/setup/LabelWorkbenchOverride/home",
-    "Translate": "/lightning/setup/LabelWorkbenchTranslate/home",
-    "Translation Settings": "/lightning/setup/LabelWorkbenchSetup/home",
-    "User Interface": "/lightning/setup/UserInterfaceUI/home",
-    "Apex Classes": "/lightning/setup/ApexClasses/home",
-    "Apex Hammer Test Results": "/lightning/setup/ApexHammerResultStatus/home",
-    "Apex Settings": "/lightning/setup/ApexSettings/home",
-    "Apex Test Execution": "/lightning/setup/ApexTestQueue/home",
-    "Apex Test History": "/lightning/setup/ApexTestHistory/home",
-    "Apex Triggers": "/lightning/setup/ApexTriggers/home",
-    "Canvas App Previewer": "/lightning/setup/CanvasPreviewerUi/home",
-    "Custom Metadata Types": "/lightning/setup/CustomMetadata/home",
-    "Custom Permissions": "/lightning/setup/CustomPermissions/home",
-    "Custom Settings": "/lightning/setup/CustomSettings/home",
-    "Email Services": "/lightning/setup/EmailToApexFunction/home",
-    "Debug Mode": "/lightning/setup/UserDebugModeSetup/home",
-    "Lightning Components": "/lightning/setup/LightningComponentBundles/home",
-    "Platform Cache": "/lightning/setup/PlatformCache/home",
-    "Remote Access": "/lightning/setup/RemoteAccess/home",
-    "Static Resources": "/lightning/setup/StaticResources/home",
-    "Tools": "/lightning/setup/ClientDevTools/home",
-    "Visualforce Components": "/lightning/setup/ApexComponents/home",
-    "Visualforce Pages": "/lightning/setup/ApexPages/home",
-    "Dev Hub": "/lightning/setup/DevHub/home",
-    "Inbound Change Sets": "/lightning/setup/InboundChangeSet/home",
-    "Outbound Change Sets": "/lightning/setup/OutboundChangeSet/home",
-    "Deployment Settings": "/lightning/setup/DeploymentSettings/home",
-    "Deployment Status": "/lightning/setup/DeployStatus/home",
-    "Apex Flex Queue": "/lightning/setup/ApexFlexQueue/home",
-    "Apex Jobs": "/lightning/setup/AsyncApexJobs/home",
-    "Background Jobs": "/lightning/setup/ParallelJobsStatus/home",
-    "Bulk Data Load Jobs": "/lightning/setup/AsyncApiJobStatus/home",
-    "Scheduled Jobs": "/lightning/setup/ScheduledJobs/home",
-    "Debug Logs": "/lightning/setup/ApexDebugLogs/home",
-    "Email Log Files": "/lightning/setup/EmailLogFiles/home",
-    "API Usage Notifications": "/lightning/setup/MonitoringRateLimitingNotification/home",
-    "Case Escalations": "/lightning/setup/DataManagementManageCaseEscalation/home",
-    "Email Snapshots": "/lightning/setup/EmailCapture/home",
-    "Outbound Messages": "/lightning/setup/WorkflowOmStatus/home",
-    "Time-Based Workflow": "/lightning/setup/DataManagementManageWorkflowQueue/home",
-    "Sandboxes": "/lightning/setup/DataManagementCreateTestInstance/home",
-    "System Overview": "/lightning/setup/SystemOverview/home",
-    "Adoption Assistance": "/lightning/setup/AdoptionAssistance/home",
-    "Help Menu": "/lightning/setup/HelpMenu/home",
-    "API": "/lightning/setup/WebServices/home",
-    "Change Data Capture": "/lightning/setup/CdcObjectEnablement/home",
-    "Data Import Wizard": "/lightning/setup/DataManagementDataImporter/home",
-    "Data Loader": "/lightning/setup/DataLoader/home",
-    "Dataloader.io": "/lightning/setup/DataLoaderIo/home",
-    "External Data Sources": "/lightning/setup/ExternalDataSource/home",
-    "External Objects": "/lightning/setup/ExternalObjects/home",
-    "External Services": "/lightning/setup/ExternalServices/home",
-    "Platform Events": "/lightning/setup/EventObjects/home",
-    "Business Hours": "/lightning/setup/BusinessHours/home",
-    "Public Calendars and Resources": "/lightning/setup/Calendars/home",
-    "Company Information": "/lightning/setup/CompanyProfileInfo/home",
-    "Critical Updates": "/lightning/setup/CriticalUpdates/home",
-    "Data Protection and Privacy": "/lightning/setup/ConsentManagement/home",
-    "Fiscal Year": "/lightning/setup/ForecastFiscalYear/home",
-    "Holidays": "/lightning/setup/Holiday/home",
-    "Language Settings": "/lightning/setup/LanguageSettings/home",
-    "Maps and Location Settings": "/lightning/setup/MapsAndLocationServicesSettings/home",
-    "My Domain": "/lightning/setup/OrgDomain/home",
-    "Data Classification (Beta)": "/lightning/setup/DataClassificationSettings/home",
-    "Data Classification Download": "/lightning/setup/DataClassificationDownload/home",
-    "Data Classification Upload": "/lightning/setup/DataClassificationUpload/home",
-    "Auth. Providers": "/lightning/setup/AuthProviders/home",
-    "Identity Provider": "/lightning/setup/IdpPage/home",
-    "Identity Provider Event Log": "/lightning/setup/IdpErrorLog/home",
-    "Identity Verification": "/lightning/setup/IdentityVerification/home",
-    "Identity Verification History": "/lightning/setup/VerificationHistory/home",
-    "Login Flows": "/lightning/setup/LoginFlow/home",
-    "Login History": "/lightning/setup/OrgLoginHistory/home",
-    "Single Sign-On Settings": "/lightning/setup/SingleSignOn/home",
-    "Activations": "/lightning/setup/ActivatedIpAddressAndClientBrowsersPage/home",
-    "CORS": "/lightning/setup/CorsWhitelistEntries/home",
-    "CSP Trusted Sites": "/lightning/setup/SecurityCspTrustedSite/home",
-    "Certificate and Key Management": "/lightning/setup/CertificatesAndKeysManagement/home",
-    "Delegated Administration": "/lightning/setup/DelegateGroups/home",
-    "Event Monitoring Settings": "/lightning/setup/EventMonitoringSetup/home",
-    "Expire All Passwords": "/lightning/setup/SecurityExpirePasswords/home",
-    "Field Accessibility": "/lightning/setup/FieldAccessibility/home",
-    "File Upload and Download Security": "/lightning/setup/FileTypeSetting/home",
-    "Health Check": "/lightning/setup/HealthCheck/home",
-    "Login Access Policies": "/lightning/setup/LoginAccessPolicies/home",
-    "Named Credentials": "/lightning/setup/NamedCredential/home",
-    "Network Access": "/lightning/setup/NetworkAccess/home",
-    "Password Policies": "/lightning/setup/SecurityPolicies/home",
-    "Remote Site Settings": "/lightning/setup/SecurityRemoteProxy/home",
-    "Session Management": "/lightning/setup/SessionManagementPage/home",
-    "Session Settings": "/lightning/setup/SecuritySession/home",
-    "Sharing Settings": "/lightning/setup/SecuritySharing/home",
-    "View Setup Audit Trail": "/lightning/setup/SecurityEvents/home",
-    "Optimizer": "/lightning/setup/SalesforceOptimizer/home",
-    "Task Fields": "/lightning/setup/ObjectManager/Task/FieldsAndRelationships/view",
-    "Activity Custom Fields": "/lightning/setup/ObjectManager/Task/FieldsAndRelationships/view",
-    "Task Page Layouts": "/lightning/setup/ObjectManager/Task/PageLayouts/view",
-    "Task Buttons, Links, and Actions": "/lightning/setup/ObjectManager/Task/ButtonsLinksActions/view",
-    "Task Compact Layouts": "/lightning/setup/ObjectManager/Task/CompactLayouts/view",
-    "Task Field Sets": "/lightning/setup/ObjectManager/Task/FieldSets/view",
-    "Task Limits": "/lightning/setup/ObjectManager/Task/Limits/view",
-    "Task Record Types": "/lightning/setup/ObjectManager/Task/RecordTypes/view",
-    "Task Related Lookup Filters": "/lightning/setup/ObjectManager/Task/RelatedLookupFilters/view",
-    "Task Search Layouts": "/lightning/setup/ObjectManager/Task/SearchLayouts/view",
-    "Task Triggers": "/lightning/setup/ObjectManager/Task/Triggers/view",
-    "Task Validation Rules": "/lightning/setup/ObjectManager/Task/ValidationRules/view",
-    "Event Fields": "/lightning/setup/ObjectManager/Event/FieldsAndRelationships/view",
-    "Event Page Layouts": "/lightning/setup/ObjectManager/Event/PageLayouts/view",
-    "Event Buttons, Links, and Actions": "/lightning/setup/ObjectManager/Event/ButtonsLinksActions/view",
-    "Event Compact Layouts": "/lightning/setup/ObjectManager/Event/CompactLayouts/view",
-    "Event Field Sets": "/lightning/setup/ObjectManager/Event/FieldSets/view",
-    "Event Limits": "/lightning/setup/ObjectManager/Event/Limits/view",
-    "Event Record Types": "/lightning/setup/ObjectManager/Event/RecordTypes/view",
-    "Event Related Lookup Filters": "/lightning/setup/ObjectManager/Event/RelatedLookupFilters/view",
-    "Event Search Layouts": "/lightning/setup/ObjectManager/Event/SearchLayouts/view",
-    "Event Triggers": "/lightning/setup/ObjectManager/Event/Triggers/view",
-    "Event Validation Rules": "/lightning/setup/ObjectManager/Event/ValidationRules/view"
-  }
 
-  /**
-   * adds a bindGlobal method to Mousetrap that allows you to
-   * bind specific keyboard shortcuts that will still work
-   * inside a text input field
-   *
-   * usage:
-   * Mousetrap.bindGlobal('ctrl+s', _saveChanges);
-   */
-  Mousetrap = (function(Mousetrap) {
-    var _global_callbacks = {},
-      _original_stop_callback = Mousetrap.stopCallback;
-
-    Mousetrap.stopCallback = function(e, element, combo) {
-      if (_global_callbacks[combo]) {
-        return false;
-      }
-
-      return _original_stop_callback(e, element, combo);
-    };
-
-    Mousetrap.bindGlobal = function(keys, callback, action) {
-      Mousetrap.bind(keys, callback, action);
-
-      if (keys instanceof Array) {
-        for (var i = 0; i < keys.length; i++) {
-          _global_callbacks[keys[i]] = true;
-        }
-        return;
-      }
-
-      _global_callbacks[keys] = true;
-    };
-
-    return Mousetrap;
-  }) (Mousetrap);
-
-  var mouseHandler=
-    function(){
-      this.classList.add('sfnav_selected');
-      mouseClickLoginAsUserId = this.getAttribute("id");
-      return true;
-    }
-
-  var mouseHandlerOut=
-    function(){
-      this.classList.remove('sfnav_selected');
-      return true;
-    }
-
-  var mouseClick=
-    function(){
-      document.getElementById("sfnav_quickSearch").value = this.firstChild.nodeValue;
-      listPosition = -1;
-      setVisibleSearch("hidden");
-      invokeCommand(this.firstChild.nodeValue,false,'click');
-      return true;
-    }
-
-  var mouseClickLoginAs = function() {
-    loginAsPerform(mouseClickLoginAsUserId)
-    return true
-  }
-
-	var goToUrl = function(url, newTab) {
-		chrome.runtime.sendMessage({ action: 'goToUrl', url: url, newTab: newTab } , function(response) {})
+var sfnav = (()=>{
+	function loadCommands(force) {
+		if(serverInstance == null || orgId == null || sessionId == null) { init(); return false }
+		commands['Refresh Metadata'] = {}
+		commands['Toggle Lightning'] = {}
+		commands['Setup'] = {}
+		commands['?'] = {}
+		commands['Home'] = {}
+		let options = {
+			sessionHash: sessionHash,
+			domain: serverInstance,
+			apiUrl: apiUrl,
+			key: sessionHash,
+			sessionId: sessionId
+		}
+		chrome.runtime.sendMessage( Object.assign(options, {action:'getSetupTree'}), response=>{ Object.assign(commands, response) })
+		chrome.runtime.sendMessage( Object.assign(options, {action:'getMetadata'}), response=>{ Object.assign(commands, response) })
+		chrome.runtime.sendMessage( Object.assign(options, {action:'getCustomObjects'}), response=>{ Object.assign(commands, response) })
+		hideLoadingIndicator()
+	}
+	function invokeCommand(cmd, newTab, event) {
+		if(cmd == "") { return false }
+		let checkCmd = cmd.toLowerCase()
+		let targetUrl = ""
+		switch(checkCmd) {
+			case "refresh metadata":
+				showLoadingIndicator()
+				loadCommands(true)
+				document.getElementById("sfnav_quickSearch").value = ""
+				return true
+				break
+			case "toggle lightning":
+				let mode
+				if(window.location.href.includes("lightning.force")) mode = "classic"
+				else mode = "lex-campaign"
+				targetUrl = serverInstance + "/ltng/switcher?destination=" + mode
+				break
+			case "setup":
+				if(serverInstance.includes("lightning.force"))
+					targetUrl = serverInstance + "/lightning/setup/SetupOneHome/home"
+				else
+					targetUrl = serverInstance + "/ui/setup/Setup"
+				break
+			case "home":
+				targetUrl = serverInstance + "/"
+				break
+		}
+		if(checkCmd.substring(0,9) == 'login as ') { loginAs(cmd, newTab); return true }
+		else if(checkCmd.substring(0,1) == "!") { createTask(cmd.substring(1).trim()) }
+		else if(checkCmd.substring(0,1) == "?") { targetUrl = searchTerms(cmd.substring(1).trim()) }
+		else if(event != 'click' && typeof commands[cmd] != 'undefined' && commands[cmd].url) { targetUrl = commands[cmd].url }
+		else if(debug && !checkCmd.includes("create a task: !") && !checkCmd.includes("global search usage")) {
+			console.log(cmd + " not found in command list or incompatible")
+			return false
+		}
+		if(targetUrl != "") {
+			hideSearchBox()
+			if(newTab)
+				goToUrl(targetUrl, newTab)
+			else
+				goToUrl(targetUrl)
+			return true
+		} else { return false }
+	}
+	var goToUrl = function(url, newTab) { chrome.runtime.sendMessage({ action: 'goToUrl', url: url, newTab: newTab } , function(response) {}) }
+	var searchTerms =function (terms) {
+		var targetUrl = serverInstance
+		if(serverInstance.includes('.force.com'))
+			targetUrl += "/one/one.app#" + btoa(JSON.stringify({"componentDef":"forceSearch:search","attributes":{"term": terms,"scopeMap":{"type":"TOP_RESULTS"},"context":{"disableSpellCorrection":false,"SEARCH_ACTIVITY":{"term": terms}}}}))
+		else
+			targetUrl += "/_ui/search/ui/UnifiedSearchResults?sen=ka&sen=500&str=" + encodeURI(terms) + "#!/str=" + encodeURI(terms) + "&searchAll=true&initialViewMode=summary"
+		return targetUrl
+	}
+	var createTask = function(subject) {
+		showLoadingIndicator()
+		if(subject != "" && userId) {
+			chrome.runtime.sendMessage({
+					action:'createTask', apiUrl: apiUrl,
+					key: sessionHash, sessionId: sessionId,
+					domain: serverInstance, sessionHash: sessionHash,
+					subject: subject, userId: userId
+				}, response=>{
+				if(response.errors.length == 0) {
+					clearOutput()
+					commands["Go To Created Task"] = {url: serverInstance + "/"+ response.id }
+					document.getElementById("sfnav_quickSearch").value = ""
+					addWord('Go To Created Task')
+					addWord('(press escape to exit or enter a new command)')
+					let firstEl = document.querySelector('#sfnav_output :first-child')
+					if(listPosition == -1 && firstEl != null)
+						firstEl.className = "sfnav_child sfnav_selected"
+					hideLoadingIndicator()
+				}
+			})
+		}
+	}
+	function loginAs(cmd, newTab) {
+		let cmdSplit = cmd.split(' ')
+		let searchValue = cmdSplit[2]
+		if(cmdSplit[3] !== undefined)
+			searchValue += '+' + cmdSplit[3]
+		showLoadingIndicator()
+		chrome.runtime.sendMessage({
+			action:'searchLogins', apiUrl: apiUrl,
+			key: sessionHash, sessionId: sessionId,
+			domain: serverInstance, sessionHash: sessionHash,
+			searchValue: searchValue, userId: userId
+		}, success=>{
+			let numberOfUserRecords = success.records.length
+			hideLoadingIndicator()
+			if(numberOfUserRecords < 1) { addError([{"message":"No user for your search exists."}]) }
+			else if(numberOfUserRecords > 1) { loginAsShowOptions(success.records) }
+			else {
+				var userId = success.records[0].Id
+				loginAsPerform(userId, newTab)
+			}
+		})
+	}
+	function loginAsShowOptions(records) {
+		for(let i = 0; i < records.length; ++i) {
+			let cmd = 'Login As ' + records[i].Name
+			commands[cmd] = {key: cmd, id: records[i].Id}
+			addWord(cmd)
+		}
+		let firstEl = document.querySelector('#sfnav_output :first-child')
+		if(listPosition == -1 && firstEl != null) firstEl.className = "sfnav_child sfnav_selected"
+	}
+	function loginAsPerform(userId, newTab) {
+		let targetUrl = "https://"+apiUrl+"/servlet/servlet.su?oid="+orgId+"&suorgadminid="+userId+"&targetUrl=/home/home.jsp"
+		hideSearchBox()
+		if(newTab) goToUrl(targetUrl, true)
+		else goToUrl(targetUrl)
+		return true
 	}
 
-	function setVisibleSearch(visibility) {
-		var searchBox = document.getElementById("sfnav_searchBox")
-		if(visibility == "hidden") {
-            searchBox.style.opacity = 0
-            searchBox.style.zIndex = -1
-        }
-        else {
-            searchBox.style.opacity = 0.98
-    		searchBox.style.zIndex = 9999
-    		document.getElementById("sfnav_quickSearch").focus()
-        }
+// interaction
+	Mousetrap = (function(Mousetrap) {
+		var _global_callbacks = {},
+			_original_stop_callback = Mousetrap.stopCallback
+		Mousetrap.stopCallback = function(e, element, combo) {
+			if (_global_callbacks[combo]) { return false }
+			return _original_stop_callback(e, element, combo)
+		}
+		Mousetrap.bindGlobal = function(keys, callback, action) {
+			Mousetrap.bind(keys, callback, action)
+			if (keys instanceof Array) {
+				for (var i = 0; i < keys.length; i++) { _global_callbacks[keys[i]] = true }
+				return
+			}
+			_global_callbacks[keys] = true
+		}
+		return Mousetrap
+	})(Mousetrap)
+	var mouseHandler = function() {
+		this.classList.add('sfnav_selected')
+		mouseClickLoginAsUserId = this.getAttribute("id")
+		return true
 	}
-
-  function lookAt() {
-    let newSearchVal = document.getElementById('sfnav_quickSearch').value
-    if(newSearchVal !== '') {
-      addElements(newSearchVal)
-    } else {
-      document.querySelector('#sfnav_output').innerHTML = ''
-      listPosition = -1
-    }
-  }
-  function addElements(ins) {
-    if(ins.substring(0,1) == "?") {
-      clearOutput()
-      addWord('Global Search Usage: ? <Search term(s)>')
-    }
-    else if(ins.substring(0,1) == "!") {
-      clearOutput()
-      addWord('Create a Task: ! <Subject line>')
-    }
-    else if(ins.substring(0,9) == 'login as ' /* && !serverInstance.includes('.force.com') */) {
-      clearOutput()
-      addWord('Usage: login as <FirstName> <LastName> OR <Username>')
-    }
-    else {
-      words = getWord(ins, cmds)
-      if(words.length > 0) {
-        clearOutput()
-        for (var i=0;i<words.length; ++i)
-          addWord(words[i])
-        input = document.getElementById("sfnav_quickSearch").value
-      } else {
-        clearOutput()
-        listPosition = -1
-      }
-    }
-    var firstEl = document.querySelector('#sfnav_output :first-child')
-    if(listPosition == -1 && firstEl != null) firstEl.className = "sfnav_child sfnav_selected"
-  }
-
-  var getWord = function(input, dict) {
-    if(typeof input === 'undefined' || input == '') return []
-    var words = []
-    var arrFound = []
-    var terms = input.toLowerCase().split(" ")
-    for (var key in dict) {
-      if(arrFound.length > 10) break // stop at 10 since we can't see longer than that anyways - should make this a setting
-      if(key.toLowerCase().indexOf(input) != -1) {
-          arrFound.push({num: 10, key: key})
-      } else {
-        let match = 0
-        for(var i = 0;i<terms.length;i++) {
-          if(key.toLowerCase().indexOf(terms[i]) != -1) {
-            match++
-            sortValue = 1
-          }
-        }
-        if (match == terms.length)
-          arrFound.push({num : sortValue, key : key})
-      }
-    }
-    arrFound.sort(function(a,b) { return b.num - a.num })
-    for(var i = 0;i<arrFound.length;i++)
-      words[words.length] = arrFound[i].key
-    return words    
-  } 
-
-  function addWord(word) {
-    var d = document.createElement("div");
-    var sp;
-    if(cmds[word] != null && cmds[word].url != null && cmds[word].url != "") {
-      sp = document.createElement("a");
-      sp.setAttribute("href", cmds[word].url);
-
-    } else {
-      sp = d;
-    }
-
-    if(cmds[word] != null && cmds[word].id != null && cmds[word].id != "") {
-      sp.id = cmds[word].id;
-    }
-
-    sp.classList.add('sfnav_child');
-    sp.appendChild(document.createTextNode(word));
-    sp.onmouseover = mouseHandler;
-    sp.onmouseout = mouseHandlerOut;
-    sp.onclick = mouseClick;
-    if(sp.id && sp.length > 0){
-      sp.onclick = mouseClickLoginAs;
-    }
-    searchBox.appendChild(sp);
-  }
-
-  function addSuccess(text)
-  {
-    clearOutput();
-    var err = document.createElement("div");
-    err.className = 'sfnav_child sfnav-success-wrapper';
-    var errorText = '';
-    err.appendChild(document.createTextNode('Success! '));
-    err.appendChild(document.createElement('br'));
-    err.appendChild(document.createTextNode('Field ' + text.id + ' created!'));
-    searchBox.appendChild(err);
-  }
-
-  function addError(text)
-  {
-    clearOutput();
-    var err = document.createElement("div");
-    err.className = 'sfnav_child sfnav-error-wrapper';
-
-    var errorText = '';
-    err.appendChild(document.createTextNode('Error! '));
-    err.appendChild(document.createElement('br'));
-    for(var i = 0;i<text.length;i++)
-      {
-        err.appendChild(document.createTextNode(text[i].message));
-        err.appendChild(document.createElement('br'));
-      }
-
-    /*
-       var ta = document.createElement('textarea');
-       ta.className = 'sfnav-error-textarea';
-       ta.value = JSON.stringify(text, null, 4);
-
-       err.appendChild(ta);
-     */
-    searchBox.appendChild(err);
-  }
-
-  function clearOutput() {
-    if(typeof searchBox != 'undefined') {
-      while (searchBox.hasChildNodes()) {
-        noten=searchBox.firstChild
-        searchBox.removeChild(noten)
-      }
-    }
-  }
-
-  function invokeCommand(cmd, newTab, event) {
-    if(cmd == "") { return false }
-    var targetURL = ""
-    if(cmd.toLowerCase() == 'refresh metadata') {
-      showLoadingIndicator()
-      chrome.runtime.sendMessage({ action: 'Clear Commands', key: getCmdHash() } , function(response) {})
-      getAllObjectMetadata(true)
-      document.getElementById("sfnav_quickSearch").value = ""
-      return true
-    }
-    else if(cmd.toLowerCase() == 'toggle lightning') {
-      var mode
-      if(window.location.href.includes("lightning.force")) mode = "classic"
-      else mode = "lex-campaign"
-      goToUrl(serverInstance + "/ltng/switcher?destination=" + mode)
-      return true
-    }
-    else if(cmd.toLowerCase().substring(0,9) == 'login as ' /* && !serverInstance.includes('.force.com') */) { loginAs(cmd, newTab); return true }
-
-    else if(cmd.toLowerCase() == 'setup') {
-      if(serverInstance.includes("lightning.force")) {
-        targetURL = serverInstance + "/lightning/setup/SetupOneHome/home"
-      } else {
-        targetURL = serverInstance + '/ui/setup/Setup'
-      }
-    }
-    else if(cmd.toLowerCase() == 'home') { targetURL = serverInstance + "/" }
-    else if(cmd.substring(0,1) == "!") { createTask(cmd.substring(1).trim()) }
-    else if(cmd.substring(0,1) == "?") { targetURL = searchTerms(cmd.substring(1).trim()) }
-    else if(event != 'click' && typeof cmds[cmd] != 'undefined' && cmds[cmd].url) { targetURL = cmds[cmd].url }
-    else if(!cmd.includes("Create a Task: !") && !cmd.includes("Global Search Usage")){
-      console.log(cmd + " not found in command list or incompatible"); return false
-    }
-
-    if(targetURL != "") {
-      if(newTab) {
-        goToUrl(targetURL, newTab)
-        hideSearchBox()
-      } else { goToUrl(targetURL) }
-      return true
-    } else { return false }
-  }
-
-  function store(action, payload) {
-    var req = {}
-    req.action = action;
-    req.key = getCmdHash();
-    req.payload = payload;
-
-    chrome.runtime.sendMessage(req, function(response) {});
-  }
-  var searchTerms =function (terms) {
-      var targetURL = serverInstance
-      if(serverInstance.includes('.force.com')) {
-          targetURL += "/one/one.app#" + btoa(JSON.stringify({"componentDef":"forceSearch:search","attributes":{"term": terms,"scopeMap":{"type":"TOP_RESULTS"},"context":{"disableSpellCorrection":false,"SEARCH_ACTIVITY":{"term": terms}}}}))
-      } else { targetURL += "/_ui/search/ui/UnifiedSearchResults?sen=ka&sen=500&str=" + encodeURI(terms) + "#!/str=" + encodeURI(terms) + "&searchAll=true&initialViewMode=summary" }
-      hideSearchBox()
-      return targetURL
-  }
-  var createTask = function(subject) {
-    showLoadingIndicator()
-    if(subject != "" && getUserId()) {
-      var xhr = new XMLHttpRequest()
-      xhr.open("POST", "https://" + classicURL + "/services/data/" + SFAPI_VERSION + "/sobjects/Task", true)
-      xhr.setRequestHeader("Authorization", "Bearer " + sessionId[orgId])
-      xhr.setRequestHeader("Content-Type", "application/json")
-      xhr.onload = function(response) {
-        reply = JSON.parse(response.target.response)
-        if(reply.errors.length == 0) {
-          clearOutput()
-          cmds["Go To Created Task"] = {url: "/"+ reply.id }
-          document.getElementById("sfnav_quickSearch").value = ""
-          addWord('Go To Created Task')
-          addWord('(press escape to exit or enter a new command)')
-        } else {
-          console.log(response)
-        }
-        hideLoadingIndicator()
-      }
-      xhr.send( JSON.stringify({"Subject": subject, "OwnerId": getUserId()}) )
-    }
-  }
-
-  function loginAs(cmd, newTab) {
-    var arrSplit = cmd.split(' ')
-    var searchValue = arrSplit[2]
-    if(arrSplit[3] !== undefined)
-      searchValue += '+' + arrSplit[3]
-    var query = 'SELECT+Id,+Name,+Username+FROM+User+WHERE+Name+LIKE+\'%25' + searchValue + '%25\'+OR+Username+LIKE+\'%25' + searchValue + '%25\''
-    showLoadingIndicator()
-    ftClient.query(query,
-      function(success) {
-        hideLoadingIndicator()
-        var numberOfUserRecords = success.records.length
-        if(numberOfUserRecords < 1) { addError([{"message":"No user for your search exists."}]) }
-        else if(numberOfUserRecords > 1) { loginAsShowOptions(success.records) }
-        else {
-          var userId = success.records[0].Id
-          loginAsPerform(userId, newTab)
-        }
-      },
-      function(error) {
-        console.log(error);
-        hideLoadingIndicator()
-        addError(error.responseJSON)
-      }
-    )
-  }
-
-  function loginAsShowOptions(records) {
-    for(var i = 0; i < records.length; ++i) {
-      var cmd = 'Login As ' + records[i].Name
-      cmds[cmd] = {key: cmd, id: records[i].Id}
-      addWord(cmd)
-    }
-  }
-
-  function loginAsPerform(userId, newTab) {
-    var targetURL = "https://"+classicURL+"/servlet/servlet.su?oid="+orgId+"&suorgadminid="+userId+"&targetURL=/home/home.jsp"
-    if(newTab) {
-      goToUrl(targetURL, true)
-      hideSearchBox()
-    } else {
-      goToUrl(targetURL)
-    }
-    return true
-    // xmlhttp = new XMLHttpRequest()
-    // xmlhttp.onreadystatechange = function() {
-    //   if (xmlhttp.readyState == XMLHttpRequest.DONE ) {
-    //     document.write(xmlhttp.responseText)
-    //     document.close()
-    //     setTimeout(function() {
-    //       document.getElementsByName("login")[0].click();
-    //     }, 1000)
-    //   }
-    // }
-    // xmlhttp.open("GET", 'https://' + classicURL + '/' + userId + '?noredirect=1', true)
-    // xmlhttp.send()
-  }
-
-  function getMetadata(_data) {
-    if(_data.length == 0) return;
-    var data = JSON.parse(_data)
-    var mRecord = {}
-    var act = {}
-    metaData = {}
-    if(typeof data.sobjects != "undefined") {
-        data.sobjects.map( obj => {
-          if(obj.keyPrefix != null) {
-            mRecord = {label, labelPlural, keyPrefix, urls} = obj
-            metaData[obj.keyPrefix] = mRecord
-            cmds['List ' + mRecord.labelPlural] = {
-              key: obj.name,
-              keyPrefix: obj.keyPrefix,
-              url: serverInstance + '/' + obj.keyPrefix
-            }
-            // cmds['List ' + mRecord.labelPlural]['synonyms'] = [obj.name]
-            cmds['New ' + mRecord.label] = {
-              key: obj.name,
-              keyPrefix: obj.keyPrefix,
-              url: serverInstance + '/' + obj.keyPrefix + '/e',
-            }
-            // cmds['New ' + mRecord.label]['synonyms'] = [obj.name]
-          }
-        })
-    }
-    store('Store Commands', cmds)
-    hideLoadingIndicator()
-  }
-
-  function getAllObjectMetadata(force) {
-    serverInstance = getServerInstance()
-    cmds['Refresh Metadata'] = {}
-    cmds['Toggle Lightning'] = {}
-    cmds['Setup'] = {}
-    cmds['?'] = {}
-    cmds['Home'] = {}
-    getSetupTree()
-    var token = getApiSessionId(force)
-    while(token == '' || typeof token == "undefined") {
-      token = getApiSessionId()
-    }
-    var theurl = getServerInstance() + '/services/data/' + SFAPI_VERSION + '/sobjects/'
-    var req = new XMLHttpRequest()
-    req.open("GET", theurl, true)
-    req.setRequestHeader("Authorization", "Bearer " + token)
-    req.setRequestHeader("Accept", "application/json")
-    req.onload = function(response) { getMetadata(response.target.responseText) }
-    req.send()
-    getCustomObjects() // switching to the old way because it is more performant and simple
-  }
-
-  function parseSetupTree(html) {
-    var textLeafSelector = '.setupLeaf > a[id*="_font"]';
-    var all = html.querySelectorAll(textLeafSelector);
-    var strName;
-    var as;
-    var strNameMain;
-    var strName;
-    [].map.call(all, function(item) {
-      var hasTopParent = false, hasParent = false;
-      var parent, topParent;
-      var parentEl, topParentEl;
-
-      if (item.parentElement != null && item.parentElement.parentElement != null && item.parentElement.parentElement.parentElement != null
-          && item.parentElement.parentElement.parentElement.className.indexOf('parent') !== -1) {
-        hasParent = true;
-        parentEl = item.parentElement.parentElement.parentElement;
-        parent = parentEl.querySelector('.setupFolder').innerText;
-      }
-      if(hasParent && parentEl.parentElement != null && parentEl.parentElement.parentElement != null
-         && parentEl.parentElement.parentElement.className.indexOf('parent') !== -1) {
-        hasTopParent = true;
-        topParentEl = parentEl.parentElement.parentElement;
-        topParent = topParentEl.querySelector('.setupFolder').innerText;
-      }
-
-      strNameMain = 'Setup > ' + (hasTopParent ? (topParent + ' > ') : '');
-      strNameMain += (hasParent ? (parent + ' > ') : '');
-
-      strName = strNameMain + item.innerText;
-      let theurl = item.href
-      if(serverInstance.includes("lightning.force") && Object.keys(setupLabelsToLightningMap).includes(item.innerText)) {
-        theurl = serverInstance + setupLabelsToLightningMap[item.innerText]
-      }
-      if(serverInstance.includes("lightning.force") && strNameMain.includes("Customize") && Object.keys(classicToLightingMap).includes(item.innerText)) {
-        if(cmds['List ' + parent ] == null) { cmds['List ' + parent ] = {url: serverInstance + "/lightning/o/" + pluralize(parent, 1).replace(/\s/g,"") + "/list", key: "List " + parent} }
-        if(cmds['New ' + pluralize(parent, 1) ] == null) { cmds['New ' + pluralize(parent, 1) ] = {url: serverInstance + "/lightning/o/" + pluralize(parent, 1).replace(/\s/g,"") + "/new", key: "New " + pluralize(parent, 1)} }
-        theurl = serverInstance + "/lightning/setup/ObjectManager/" + pluralize(parent, 1).replace(/\s/g, "")
-        theurl += classicToLightingMap[item.innerText]
-      }
-
-      if(cmds[strName] == null) cmds[strName] = {url: theurl, key: strName};
-    })
-    store('Store Commands', cmds)
-  }
-
-  function parseCustomObjectTree(html) {
-    let mapKeys = Object.keys(classicToLightingMap)
-    jQuery(html).find('th a').each(function(el) {
-      if(serverInstance.includes("lightning.force")) {
-        let objectId = this.href.match(/\/(\w+)\?/)[1]
-        let theurl = serverInstance + "/lightning/setup/ObjectManager/" + objectId
-        cmds['Setup > Custom Object > ' + this.text + ' > Details'] = {url: theurl + "/Details/view", key: this.text + " > Fields"};
-        for (var i = 0; i < mapKeys.length; i++) {
-          let key = mapKeys[i]
-          let urlElement = classicToLightingMap[ key ]
-          cmds['Setup > Custom Object > ' + this.text + ' > ' + key] = {url: theurl + urlElement, key: this.text + " > " + key}
-        }
-      } else {
-        cmds['Setup > Custom Object > ' + this.text] = {url: this.href, key: this.text};
-      }
-    })
-    store('Store Commands', cmds)
-  }
-
-  function getSetupTree() {
-    var theurl = serverInstance + '/ui/setup/Setup'
-    var req = new XMLHttpRequest()
-    req.onload = function() {
-      classicURL = this.responseURL.match(/:\/\/(.*)salesforce.com/)[1] + "salesforce.com"
-      parseSetupTree(this.response)
-      hideLoadingIndicator()
-    }
-    req.open("GET", theurl)
-    req.responseType = 'document'
-    req.send()
-  }
-
-  function getCustomObjects() {
-    var theurl = serverInstance + '/p/setup/custent/CustomObjectsPage'
-    var req = new XMLHttpRequest()
-    req.onload = function() { parseCustomObjectTree(this.response) }
-    req.open("GET", theurl)
-    req.responseType = 'document'
-    req.send()
-  }
-
-  function getServerInstance() {
-    var url = location.origin + "";
-    var urlParseArray = url.split(".");
-    var i;
-    var returnUrl;
-
-    if(url.indexOf("lightning.force") != -1) {
-      returnUrl = url.substring(0, url.indexOf("lightning.force")) + "lightning.force.com";
-    }
-    else if(url.indexOf("salesforce") != -1) {
-      returnUrl = url.substring(0, url.indexOf("salesforce")) + "salesforce.com";
-    }
-    else if(url.indexOf("cloudforce") != -1) {
-      returnUrl = url.substring(0, url.indexOf("cloudforce")) + "cloudforce.com";
-    }
-    else if(url.indexOf("visual.force") != -1) {
-      returnUrl = 'https://' + urlParseArray[1] + '';
-    }
-    return returnUrl;
-  }
-  var setCurrentOrgId = function(force) {
-    if(orgId && !force) { return orgId }
-    try { orgId = document.cookie.match(/sid=([\w\d]+)/)[1]; return orgId }
-    catch(e) { if(debug) console.log(e) }
-  }
-  var getUserId = function() { return userId[orgId] }
-  var getApiSessionId = function(force, orgId) {
-    orgId = setCurrentOrgId()
-
-    if(sessionId[orgId] != null && force != true) return sessionId[orgId]
-    if(serverInstance.includes('.force.com') || true /*forcing all to run this now */) {
-      chrome.runtime.sendMessage({ action: 'Get API Session ID', key: orgId }, function(response) {
-        if(response.error) {
-          console.log("response", orgId, response)
-          console.log(chrome.runtime.lastError)
-        }
-        else {
-          sessionId[orgId] = unescape(response.sessionId)
-          userId[orgId] = unescape(response.userId)
-          classicURL = unescape(response.classicURL)
-          if(!loaded)
-            init()
-          return unescape(sessionId[orgId])
-        }
-      })
-    }
-  }
-
-  function kbdCommand(e, key) {
-    var position = listPosition
-    var origText = '', newText = ''
-    if(position <0) position = 0
-    origText = document.getElementById("sfnav_quickSearch").value
-    if(typeof searchBox.childNodes[position] != 'undefined') {
-      newText = searchBox.childNodes[position].firstChild.nodeValue
-    }
-    var newTab = newTabKeys.indexOf(key) >= 0 ? true : false
-    if(!newTab) {
-      clearOutput()
-    }
-    if(!invokeCommand(newText, newTab))
-      invokeCommand(origText, newTab)
-  }
-
-  function selectMove(direction) {
-    let searchBar = document.getElementById('sfnav_quickSearch');
-
-    var firstChild;
-
-    if(searchBox.childNodes[listPosition] != null)
-      firstChild = searchBox.childNodes[listPosition].firstChild.nodeValue;
-    else
-      firstChild = null;
-
-    let textfield = searchBar;
-    let isLastPos = direction == 'down' ? listPosition < words.length-1 : listPosition >= 0
-
-    if (words.length > 0 && isLastPos) {
-      if(listPosition < 0) listPosition = 0;
-      listPosition = listPosition + (direction == 'down' ? 1 : -1);
-      if(searchBox.childNodes[listPosition] != null)
-        firstChild = searchBox.childNodes[listPosition].firstChild.nodeValue;
-      else
-        firstChild = null;
-      if (listPosition >=0) {
-        searchBox.childNodes[listPosition + (direction == 'down' ? -1 : 1) ].classList.remove('sfnav_selected');
-        searchBox.childNodes[listPosition].classList.add('sfnav_selected');
-        searchBox.childNodes[listPosition].scrollIntoViewIfNeeded();
-        textfield.value = firstChild;
-        return false
-        //if(textfield.value.indexOf('<') != -1 && textfield.value.indexOf('>') != -1) {
-          //textfield.setSelectionRange(textfield.value.indexOf('<'), textfield.value.length);
-          //textfield.focus();
-         // return false;
-        //}
-      }
-    }
-  }
-
+	var mouseClick = function() {
+		document.getElementById("sfnav_quickSearch").value = this.firstChild.nodeValue
+		listPosition = -1
+		setVisibleSearch("hidden")
+		invokeCommand(this.firstChild.nodeValue,false,'click')
+		return true
+	}
+	var mouseHandlerOut = function() { this.classList.remove('sfnav_selected'); return true }
+	var mouseClickLoginAs = function() { loginAsPerform(mouseClickLoginAsUserId); return true }
 	function bindShortcuts() {
 		let searchBar = document.getElementById('sfnav_quickSearch')
 		Mousetrap.bindGlobal('esc', function(e) { hideSearchBox() })
@@ -893,66 +197,182 @@ var sfnav = (function() {
 		}
 	}
 
-  function showLoadingIndicator() { document.getElementById('sfnav_loader').style.visibility = 'visible' }
-  function hideLoadingIndicator() { document.getElementById('sfnav_loader').style.visibility = 'hidden' }
-  var hideSearchBox = function() {
-    let searchBar = document.getElementById('sfnav_quickSearch')
-    searchBar.blur()
-    clearOutput()
-    searchBar.value = ''
-    setVisibleSearch("hidden")
-  }
-
-	var getCmdHash = function() {
-		try {
-			omnomnom = document.cookie.match(regMatchSid)[1]
-			clientId = omnomnom.split('!')[0]
-			hash = clientId + '!' + omnomnom.substring(omnomnom.length - 10, omnomnom.length)
-			return hash
-		} catch(e) {
-			if(debug) console.log(e)
+// interface
+	function showLoadingIndicator() { document.getElementById('sfnav_loader').style.visibility = 'visible' }
+	function hideLoadingIndicator() { document.getElementById('sfnav_loader').style.visibility = 'hidden' }
+	var hideSearchBox = function() {
+		let searchBar = document.getElementById('sfnav_quickSearch')
+		searchBar.blur()
+		clearOutput()
+		searchBar.value = ''
+		setVisibleSearch("hidden")
+	}
+	function setVisibleSearch(visibility) {
+		let searchBox = document.getElementById("sfnav_searchBox")
+		if(visibility == "hidden") {
+			searchBox.style.opacity = 0
+			searchBox.style.zIndex = -1
+		}
+		else {
+			searchBox.style.opacity = 0.98
+			searchBox.style.zIndex = 9999
+			document.getElementById("sfnav_quickSearch").focus()
 		}
 	}
-
-	function init() {
-		if(document.body != null) {
-			setCurrentOrgId()
-			if(sessionId[orgId] == undefined) { getApiSessionId(true, orgId) }
-			else { ftClient.setSessionToken( sessionId[orgId], SFAPI_VERSION, serverInstance + '') }
-			var div = document.createElement('div')
-			div.setAttribute('id', 'sfnav_searchBox')
-			var loaderURL = chrome.extension.getURL("images/ajax-loader.gif")
-			var logoURL = chrome.extension.getURL("images/sf-navigator128.png")
-			div.innerHTML = `
-				<div class="sfnav_wrapper">
-				<input type="text" id="sfnav_quickSearch" autocomplete="off"/>
-				<img id="sfnav_loader" src= "${loaderURL}"/>
-				<img id="sfnav_logo" src= "${logoURL}"/>
-				</div>
-				<div class="sfnav_shadow" id="sfnav_shadow"/>
-				<div class="sfnav_output" id="sfnav_output"/>
-			`
-			document.body.appendChild(div);
-			searchBox = document.getElementById("sfnav_output")
-			hideLoadingIndicator()
-			bindShortcuts()
-			hash = getCmdHash()
-			loaded = true
-
-			chrome.runtime.sendMessage({ action:'Get Commands', 'key': hash}, function(response) {
-				cmds = response
-				if(cmds == null || cmds.length == 0) {
-					cmds = {}
-					metaData = {}
-					getAllObjectMetadata()
+	function lookAt() {
+		let newSearchVal = document.getElementById('sfnav_quickSearch').value
+		if(newSearchVal !== '') addElements(newSearchVal)
+		else {
+			document.querySelector('#sfnav_output').innerHTML = ''
+			listPosition = -1
+		}
+	}
+	function addElements(input) {
+		clearOutput()
+		if(input.substring(0,1) == "?") addWord('Global Search Usage: ? <Search term(s)>')
+		else if(input.substring(0,1) == "!") addWord('Create a Task: ! <Subject line>')
+		else if(input.substring(0,8) == 'login as') addWord('Usage: login as <FirstName> <LastName> OR <Username>')
+		else {
+			let words = getWord(input, commands)
+			if(words.length > 0)
+				for (var i=0;i < words.length; ++i)
+					addWord(words[i])
+			else
+				listPosition = -1
+		}
+		let firstEl = document.querySelector('#sfnav_output :first-child')
+		if(listPosition == -1 && firstEl != null) firstEl.className = "sfnav_child sfnav_selected"
+	}
+	var getWord = function(input, dict) {
+		if(typeof input === 'undefined' || input == '') return []
+		let foundCommands = [],
+			dictItems = [],
+			terms = input.toLowerCase().split(" ")
+		for (var key in dict) {
+			if(dictItems.length > 10) break // stop at 10 since we can't see longer than that anyways - should make this a setting
+			if(key.toLowerCase().indexOf(input) != -1) {
+				dictItems.push({num: 10, key: key})
+			} else {
+				let match = 0
+				for(var i = 0;i<terms.length;i++) {
+					if(key.toLowerCase().indexOf(terms[i]) != -1) {
+						match++
+						sortValue = 1
+					}
 				}
-			})
+				if (match == terms.length)
+					dictItems.push({num : sortValue, key : key})
+			}
+		}
+		dictItems.sort(function(a,b) { return b.num - a.num })
+		for(var i = 0;i < dictItems.length;i++)
+			foundCommands.push(dictItems[i].key)
+		return foundCommands
+	} 
+	function addWord(word) {
+		var d = document.createElement("div")
+		var sp
+		if(commands[word] != null && commands[word].url != null && commands[word].url != "") {
+			sp = document.createElement("a")
+			sp.setAttribute("href", commands[word].url)
+		} else { sp = d }
+		if(commands[word] != null && commands[word].id != null && commands[word].id != "") { sp.id = commands[word].id }
+		sp.classList.add('sfnav_child')
+		sp.appendChild(document.createTextNode(word))
+		sp.onmouseover = mouseHandler
+		sp.onmouseout = mouseHandlerOut
+		sp.onclick = mouseClick
+		if(sp.id && sp.length > 0) { sp.onclick = mouseClickLoginAs }
+		searchBox.appendChild(sp)
+	}
+	function addError(text) {
+		clearOutput()
+		let err = document.createElement("div")
+		err.className = "sfnav_child sfnav-error-wrapper"
+		err.appendChild(document.createTextNode('Error! '))
+		err.appendChild(document.createElement('br'))
+		for(var i = 0;i<text.length;i++) {
+			err.appendChild(document.createTextNode(text[i].message))
+			err.appendChild(document.createElement('br'))
+		}
+		searchBox.appendChild(err)
+	}
+	function clearOutput() { if(typeof searchBox != 'undefined') searchBox.innerHTML = "" }
+	function kbdCommand(e, key) {
+		let position = listPosition
+		let origText = '', newText = ''
+		if(position < 0) position = 0
+			origText = document.getElementById("sfnav_quickSearch").value
+		if(typeof searchBox.childNodes[position] != 'undefined')
+			newText = searchBox.childNodes[position].firstChild.nodeValue
+		let newTab = newTabKeys.indexOf(key) >= 0 ? true : false
+		if(!newTab)
+			clearOutput()
+		if(!invokeCommand(newText, newTab))
+			invokeCommand(origText, newTab)
+	}
+	function selectMove(direction) {
+		let searchBar = document.getElementById('sfnav_quickSearch')
+		let firstChild
+		let words = []
+		for (var i = 0; i < searchBox.childNodes.length; i++)
+			words.push(searchBox.childNodes[i].textContent)
+		if(searchBox.childNodes[listPosition] != null)
+			firstChild = searchBox.childNodes[listPosition].firstChild.nodeValue
+		else
+			firstChild = null
+		let isLastPos = direction == 'down' ? listPosition < words.length-1 : listPosition >= 0
+		if (words.length > 0 && isLastPos) {
+			if(listPosition < 0) listPosition = 0
+				listPosition = listPosition + (direction == 'down' ? 1 : -1)
+			if(searchBox.childNodes[listPosition] != null)
+				firstChild = searchBox.childNodes[listPosition].firstChild.nodeValue
+			else
+				firstChild = null
+			if (listPosition >=0) {
+				searchBox.childNodes[listPosition + (direction == 'down' ? -1 : 1) ].classList.remove('sfnav_selected')
+				searchBox.childNodes[listPosition].classList.add('sfnav_selected')
+				searchBox.childNodes[listPosition].scrollIntoViewIfNeeded()
+				return false
+			}
 		}
 	}
 
-	if(serverInstance == null) {
-		console.log('error', getServerInstance(), getApiSessionId())
-		return false
+// setup
+	function init() {
+		try {
+			orgId = document.cookie.match(/sid=([\w\d]+)/)[1]
+			serverInstance = getServerInstance()
+			sessionHash = getSessionHash()
+			if(sessionId == null) {
+				chrome.runtime.sendMessage({ action: 'getApiSessionId', key: orgId }, response=>{
+					if(response.error) console.log("response", orgId, response, chrome.runtime.lastError)
+					else {
+						sessionId = unescape(response.sessionId)
+						userId = unescape(response.userId)
+						apiUrl = unescape(response.apiUrl)
+						var div = document.createElement('div')
+						div.setAttribute('id', 'sfnav_searchBox')
+						var loaderURL = chrome.extension.getURL("images/ajax-loader.gif")
+						var logoURL = chrome.extension.getURL("images/sf-navigator128.png")
+						div.innerHTML = `
+<div class="sfnav_wrapper">
+	<input type="text" id="sfnav_quickSearch" autocomplete="off"/>
+	<img id="sfnav_loader" src= "${loaderURL}"/>
+	<img id="sfnav_logo" src= "${logoURL}"/>
+</div>
+<div class="sfnav_shadow" id="sfnav_shadow"/>
+<div class="sfnav_output" id="sfnav_output"/>
+`
+						document.body.appendChild(div)
+						searchBox = document.getElementById("sfnav_output")
+						hideLoadingIndicator()
+						bindShortcuts()
+						loadCommands()
+					}
+				})
+			}
+		} catch(e) { if(debug) console.log(e) }
 	}
-	else getApiSessionId()
+	init()
 })()

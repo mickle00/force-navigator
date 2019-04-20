@@ -1,11 +1,19 @@
 {
 	"name": "Salesforce Navigator for Lightning",
-	"version": "2.0.6",
+	"version": "2.4.1",
 	"manifest_version": 2,
 	"default_locale": "en",
-	"browser_action": { "default_icon": "images/sf-navigator32.png" },
+	"page_action": {
+		"default_icon": "images/sf-navigator32.png",
+		"default_popup": "popup.html",
+		"default_title": "Salesforce Navigator for Lightning"
+	},
 	"background": {
-		"scripts": [ "scripts/background.js" ],
+		"scripts": [
+			"scripts/shared.js",
+			"scripts/pluralize.js",
+			"scripts/background.js"
+		],
 		"persistent": true
 	},
 	"icons": {
@@ -28,10 +36,9 @@
 		],
 		"all_frames": true,
 		"js": [
-			"scripts/jquery.js",
 			"scripts/mousetrap.min.js",
-			"scripts/forceTooling.js",
 			"scripts/pluralize.js",
+			"scripts/shared.js",
 			"scripts/main.js",
 			"scripts/popup.js"
 		],

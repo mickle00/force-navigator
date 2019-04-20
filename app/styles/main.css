@@ -1,6 +1,7 @@
 #sfnav_searchBox {
 	opacity: 0;
-	transition: .2s;
+	transition-property: opacity;
+	transition-duration: .2s;
 	overflow:hidden;
 	z-index: -1;
 	background-color:#1797c0;
