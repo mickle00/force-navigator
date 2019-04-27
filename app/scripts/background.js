@@ -85,12 +85,12 @@ var parseCustomObjects = (response, url)=>{
 var goToUrl = (targetUrl, newTab)=>{
 	targetUrl = targetUrl.replace(/chrome-extension:\/\/\w+\//,"/")
 	chrome.tabs.query({currentWindow: true, active: true}, (tabs)=>{
-		let newUrl = targetUrl.match(/.*\.com(.*)/)
+		let newUrl = targetUrl.match(/.*?\.com(.*)/)
 		newUrl = newUrl ? newUrl[1] : targetUrl
 		if(newTab)
-			chrome.tabs.create({ active: false, url: tabs[0].url.match(/.*\.com/)[0] + newUrl})
+			chrome.tabs.create({ active: false, url: tabs[0].url.match(/.*?\.com/)[0] + newUrl})
 		else
-			chrome.tabs.update(tabs[0].id, { url: tabs[0].url.match(/.*\.com/)[0] + newUrl})
+			chrome.tabs.update(tabs[0].id, { url: tabs[0].url.match(/.*?\.com/)[0] + newUrl})
 	})
 }
 
