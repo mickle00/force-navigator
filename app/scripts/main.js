@@ -64,7 +64,7 @@ var sfnav = (()=>{
 		if(checkCmd.substring(0,9) == 'login as ') { loginAs(cmd, newTab); return true }
 		else if(checkCmd.substring(0,1) == "!") { createTask(cmd.substring(1).trim()) }
 		else if(checkCmd.substring(0,1) == "?") { targetUrl = searchTerms(cmd.substring(1).trim()) }
-		else if(event != 'click' && typeof commands[cmd] != 'undefined' && commands[cmd].url) { targetUrl = commands[cmd].url }
+		else if(typeof commands[cmd] != 'undefined' && commands[cmd].url) { targetUrl = commands[cmd].url }
 		else if(debug && !checkCmd.includes("create a task: !") && !checkCmd.includes("global search usage")) {
 			console.log(cmd + " not found in command list or incompatible")
 			return false
