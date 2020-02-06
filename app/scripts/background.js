@@ -52,15 +52,14 @@ var parseSetupTree = (response, url)=>{
 }
 var parseMetadata = (data, url)=>{
 	if (data.length == 0 || typeof data.sobjects == "undefined") return false
-	let commands = {}
-	data.sobjects.map(obj => {
-		if(obj.keyPrefix != null) {
-			({labelPlural, label, name, keyPrefix} = obj)
+	return data.sobjects.reduce((commands, obj) => {
+		if (obj.keyPrefix != null) {
+			({ labelPlural, label, name, keyPrefix } = obj)
 			commands['List ' + labelPlural] = { key: name, keyPrefix: keyPrefix, url: url + '/' + keyPrefix }
 			commands['New ' + label] = { key: name, keyPrefix: keyPrefix, url: url + '/' + keyPrefix + '/e' }
 		}
-	})
-	return commands
+		return commands
+	}, {})
 }
 var parseCustomObjects = (response, url)=>{
 	let commands = {}
