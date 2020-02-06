@@ -51,8 +51,8 @@ var parseSetupTree = (response, url)=>{
 	return commands
 }
 var parseMetadata = (data, url)=>{
+	if (data.length == 0 || typeof data.sobjects == "undefined") return false
 	let commands = {}
-	if(data.length == 0 || typeof data.sobjects == "undefined") return false
 	let labelPlural, label, name, keyPrefix
 	data.sobjects.map(obj => {
 		if(obj.keyPrefix != null) {
