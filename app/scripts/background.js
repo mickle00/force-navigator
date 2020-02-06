@@ -56,8 +56,12 @@ var parseMetadata = (data, url)=>{
 		if (!keyPrefix) {
 			return commands
 		}
-		commands['List ' + labelPlural] = { key: name, keyPrefix: keyPrefix, url: url + '/' + keyPrefix }
-		commands['New ' + label] = { key: name, keyPrefix: keyPrefix, url: url + '/' + keyPrefix + '/e' }
+		let baseUrl = "/";
+		if (url.includes("lightning.force") && name.endsWith("__mdt")) {
+			baseUrl += "lightning/setup/CustomMetadata/page?address=";
+		}
+		commands["List " + labelPlural] = { key: name, keyPrefix, url: `${baseUrl}/${keyPrefix}` }
+		commands["New " + label] = { key: name, keyPrefix, url: `${baseUrl}/${keyPrefix}/e` }
 		return commands
 	}, {})
 }
