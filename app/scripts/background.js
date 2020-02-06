@@ -52,9 +52,8 @@ var parseSetupTree = (response, url)=>{
 }
 var parseMetadata = (data, url)=>{
 	if (data.length == 0 || typeof data.sobjects == "undefined") return false
-	return data.sobjects.reduce((commands, obj) => {
+	return data.sobjects.reduce((commands, { labelPlural, label, name, keyPrefix }) => {
 		if (obj.keyPrefix != null) {
-			({ labelPlural, label, name, keyPrefix } = obj)
 			commands['List ' + labelPlural] = { key: name, keyPrefix: keyPrefix, url: url + '/' + keyPrefix }
 			commands['New ' + label] = { key: name, keyPrefix: keyPrefix, url: url + '/' + keyPrefix + '/e' }
 		}
