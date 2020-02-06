@@ -53,7 +53,6 @@ var parseSetupTree = (response, url)=>{
 var parseMetadata = (data, url)=>{
 	if (data.length == 0 || typeof data.sobjects == "undefined") return false
 	let commands = {}
-	let labelPlural, label, name, keyPrefix
 	data.sobjects.map(obj => {
 		if(obj.keyPrefix != null) {
 			({labelPlural, label, name, keyPrefix} = obj)
