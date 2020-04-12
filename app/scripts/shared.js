@@ -150,7 +150,7 @@ const setupLabelsToLightningMap = {
 	"Picklist Value Sets": "/lightning/setup/Picklists/home",
 	"Schema Builder": "/lightning/setup/SchemaBuilder/home",
 	"Approval Processes": "/lightning/setup/ApprovalProcesses/home",
-	"Flows": "/lightning/setup/InteractionProcesses/home",
+	"Flows": "/lightning/setup/Flows/home",
 	"Next Best Action": "/lightning/setup/NextBestAction/home",
 	"Post Templates": "/lightning/setup/FeedTemplates/home",
 	"Process Automation Settings": "/lightning/setup/WorkflowSettings/home",
