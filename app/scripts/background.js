@@ -51,17 +51,19 @@ var parseSetupTree = (response, url)=>{
 	return commands
 }
 var parseMetadata = (data, url)=>{
-	let commands = {}
-	if(data.length == 0 || typeof data.sobjects == "undefined") return false
-	let labelPlural, label, name, keyPrefix
-	data.sobjects.map(obj => {
-		if(obj.keyPrefix != null) {
-			({labelPlural, label, name, keyPrefix} = obj)
-			commands['List ' + labelPlural] = { key: name, keyPrefix: keyPrefix, url: url + '/' + keyPrefix }
-			commands['New ' + label] = { key: name, keyPrefix: keyPrefix, url: url + '/' + keyPrefix + '/e' }
+	if (data.length == 0 || typeof data.sobjects == "undefined") return false
+	return data.sobjects.reduce((commands, { labelPlural, label, name, keyPrefix }) => {
+		if (!keyPrefix) {
+			return commands
 		}
-	})
-	return commands
+		let baseUrl = "/";
+		if (url.includes("lightning.force") && name.endsWith("__mdt")) {
+			baseUrl += "lightning/setup/CustomMetadata/page?address=";
+		}
+		commands["List " + labelPlural] = { key: name, keyPrefix, url: `${baseUrl}/${keyPrefix}` }
+		commands["New " + label] = { key: name, keyPrefix, url: `${baseUrl}/${keyPrefix}/e` }
+		return commands
+	}, {})
 }
 var parseCustomObjects = (response, url)=>{
 	let commands = {}
