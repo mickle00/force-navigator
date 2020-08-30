@@ -7,6 +7,7 @@ var sessionId = null
 var sessionHash = null
 var serverInstance = ''
 var apiUrl = ''
+var ctrlKey = false
 var commands = {}
 var searchBox
 var listPosition = -1
@@ -176,7 +177,10 @@ var sfnav = (()=>{
 		document.getElementById("sfnav_quickSearch").value = this.firstChild.nodeValue
 		listPosition = -1
 		setVisibleSearch("hidden")
-		invokeCommand(this.firstChild.nodeValue,false,'click')
+		if(!window.ctrlKey)
+			invokeCommand(this.firstChild.nodeValue, false,'click')
+		else
+			hideSearchBox()
 		return true
 	}
 	var mouseHandlerOut = function() { this.classList.remove('sfnav_selected'); return true }
@@ -274,6 +278,8 @@ var sfnav = (()=>{
 		var sp
 		if(commands[word] != null && commands[word].url != null && commands[word].url != "") {
 			sp = document.createElement("a")
+			if(commands[word].url.startsWith('//'))
+				commands[word].url = commands[word].url.replace('//','/')
 			sp.setAttribute("href", commands[word].url)
 		} else { sp = d }
 		if(commands[word] != null && commands[word].id != null && commands[word].id != "") { sp.id = commands[word].id }
@@ -341,6 +347,8 @@ var sfnav = (()=>{
 // setup
 	function init() {
 		try {
+			document.onkeyup = (ev)=>{ window.ctrlKey = ev.ctrlKey }
+			document.onkeydown = (ev)=>{ window.ctrlKey = ev.ctrlKey }
 			orgId = document.cookie.match(/sid=([\w\d]+)/)[1]
 			serverInstance = getServerInstance()
 			sessionHash = getSessionHash()

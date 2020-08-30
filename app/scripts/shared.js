@@ -41,7 +41,7 @@ let getHTTP = function(targetUrl, type = "json", headers = {}, data = {}, method
 const debug = false
 const newTabKeys = [ "ctrl+enter", "command+enter", "shift+enter" ]
 const regMatchSid = /sid=([a-zA-Z0-9\.\!]+)/
-const SFAPI_VERSION = 'v40.0'
+const SFAPI_VERSION = 'v49.0'
 const classicToLightingMap = {
 	'Fields': "/FieldsAndRelationships/view",
 	'Page Layouts': '/PageLayouts/view',
@@ -56,7 +56,7 @@ const classicToLightingMap = {
 	'Validation Rules': '/ValidationRules/view'
 }
 const setupLabelsToLightningMap = {
-	"Access Policies": "/lightning/setup/SessionLevelPolicyUI/home",
+"Access Policies": "/lightning/setup/SessionLevelPolicyUI/home",
 "Account Settings": "/lightning/setup/AccountSettings/home",
 "Account Teams": "/lightning/setup/AccountTeamSelling/home",
 "Action Link Templates": "/lightning/setup/ActionLinkGroupTemplates/home",
@@ -163,6 +163,7 @@ const setupLabelsToLightningMap = {
 "Email-to-Case": "/lightning/setup/EmailToCase/home",
 "Embedded Service Deployments": "/lightning/setup/EmbeddedServiceDeployments/home",
 "Enhanced Email": "/lightning/setup/EnhancedEmail/home",
+"Enhanced Profiles": "/lightning/setup/EnhancedProfiles/home",
 "Entitlement Settings": "/lightning/setup/EntitlementSettings/home",
 "Escalation Rules": "/lightning/setup/CaseEscRules/home",
 "Event Buttons, Links, and Actions": "/lightning/setup/ObjectManager/Event/ButtonsLinksActions/view",
@@ -294,7 +295,6 @@ const setupLabelsToLightningMap = {
 "Product Schedules Settings": "/lightning/setup/Product2ScheduleSetup/home",
 "Product Settings": "/lightning/setup/Product2Settings/home",
 "Profiles": "/lightning/setup/EnhancedProfiles/home",
-"Profiles": "/lightning/setup/Profiles/home",
 "Public Calendars and Resources": "/lightning/setup/Calendars/home",
 "Public Groups": "/lightning/setup/PublicGroups/home",
 "Publisher Layouts": "/lightning/setup/GlobalPublisherLayouts/home",
