@@ -1,6 +1,6 @@
 {
 	"name": "Salesforce Navigator for Lightning",
-	"version": "2.6.1",
+	"version": "2.7.2",
 	"manifest_version": 2,
 	"default_locale": "en",
 	"page_action": {
@@ -76,6 +76,8 @@
 		"https://*.salesforce.com/*",
 		"https://*.cloudforce.com/*",
 		"storage",
+		"clipboardWrite",
+		"clipboardRead",
 		"cookies"
 	]
 }

@@ -19,6 +19,7 @@ var sfnav = (()=>{
 	function loadCommands(force) {
 		if(serverInstance == null || orgId == null || sessionId == null) { init(); return false }
 		commands['Refresh Metadata'] = {}
+		commands['Merge Accounts'] = {}
 		commands['Toggle Lightning'] = {}
 		commands['Setup'] = {}
 		commands['?'] = {}
@@ -63,6 +64,8 @@ var sfnav = (()=>{
 				break
 		}
 		if(checkCmd.substring(0,9) == 'login as ') { loginAs(cmd, newTab); return true }
+		else if(checkCmd.substring(0,14) == "merge accounts") { launchMergerAccounts(cmd.substring(14).trim()) }
+		// else if(checkCmd.substring(0,11) == "merge cases") { launchMergerCases(cmd.substring(11).trim()) } //TODO more complicated merge call, will make later
 		else if(checkCmd.substring(0,1) == "!") { createTask(cmd.substring(1).trim()) }
 		else if(checkCmd.substring(0,1) == "?") { targetUrl = searchTerms(cmd.substring(1).trim()) }
 		else if(typeof commands[cmd] != 'undefined' && commands[cmd].url) { targetUrl = commands[cmd].url }
@@ -88,6 +91,63 @@ var sfnav = (()=>{
 			targetUrl += "/_ui/search/ui/UnifiedSearchResults?sen=ka&sen=500&str=" + encodeURI(terms) + "#!/str=" + encodeURI(terms) + "&searchAll=true&initialViewMode=summary"
 		return targetUrl
 	}
+	var pasteFromClipboard = (newtab)=>{
+		let cb = document.createElement("textarea")
+		let body = document.getElementsByTagName('body')[0]
+		body.appendChild(cb)
+		cb.select()
+		document.execCommand('paste')
+		const clipboardValue = cb.value.trim()
+		cb.remove()
+		return clipboardValue
+	}
+	var getIdFromUrl = ()=>{
+		const url = document.location.href
+		const ID_RE = [
+			/http[s]?\:\/\/.*force\.com\/.*([a-zA-Z0-9]{18})[^\w]*/, // tries to find the first 18 digit
+			/http[s]?\:\/\/.*force\.com\/.*([a-zA-Z0-9]{15})[^\w]*/ // falls back to 15 digit
+		]
+		for(var i in ID_RE) {
+			var match = url.match(ID_RE[i])
+			if (match != null) { return match[1] }
+		}
+		return false
+	}
+	var launchMerger = function(otherId, object) {
+		if(!otherId)
+			otherId = pasteFromClipboard()
+		if(![15,18].includes(otherId.length)) {
+			clearOutput()
+			addWord('[ERROR: you must have an Account ID in your clipboard or type one after the merge command]')
+			return
+		}
+		const thisId = getIdFromUrl()
+		if(thisId)
+			switch(object) {
+				case 'Account':
+					document.location.href = `${serverInstance}/merge/accmergewizard.jsp?goNext=+Next+&cid=${otherId}&cid=${thisId}`
+					break
+				case 'Case':
+					//TODO - needs to be a post request, so fetch or background will have to happen here
+					/*
+					const options = {
+						method: 'POST',
+						body: `{"message": {
+							"actions": [{
+								"id":"2319;a",
+								"descriptor":"serviceComponent://ui.merge.components.controller.MergeController/ACTION$loadMergeComparisonData",
+								"callingDescriptor":"UNKNOWN",
+								"params":{"recordIds":[otherId,thisId]}
+							}]
+						}}`
+					}
+						fetch(serverInstance+"/aura?r=23&ui-merge-components-controller.Merge.loadMergeComparisonData=1",options)
+					*/
+					break
+			}
+	}
+	var launchMergerAccounts = (otherId)=>launchMerger(otherId, 'Account')
+	var launchMergerCases = (otherId)=>launchMerger(otherId, 'Case')
 	var createTask = function(subject) {
 		showLoadingIndicator()
 		if(subject != "" && userId) {

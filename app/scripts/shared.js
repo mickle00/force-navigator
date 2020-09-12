@@ -45,6 +45,7 @@ const SFAPI_VERSION = 'v49.0'
 const classicToLightingMap = {
 	'Fields': "/FieldsAndRelationships/view",
 	'Page Layouts': '/PageLayouts/view',
+	'Lightning Record Pages': '/LightningPages/view',
 	'Buttons, Links, and Actions': '/ButtonsLinksActions/view',
 	'Compact Layouts': '/CompactLayouts/view',
 	'Field Sets': '/FieldSets/view',
@@ -244,7 +245,6 @@ const setupLabelsToLightningMap = {
 "LinkedIn Accounts": "/lightning/setup/LinkedInLeadGenAccounts/home",
 "LinkedIn Sales Navigator": "/lightning/setup/LinkedInSalesNavigatorPage/home",
 "Login Access Policies": "/lightning/setup/LoginAccessPolicies/home",
-"Login Flows": "/lightning/setup/LoginFlow/home",
 "Login History": "/lightning/setup/OrgLoginHistory/home",
 "Macro Settings": "/lightning/setup/MacroSettings/home",
 "Mail Merge Templates": "/lightning/setup/CommunicationTemplatesWord/home",
@@ -388,3 +388,4 @@ const setupLabelsToLightningMap = {
 "Whitelisted URLs for Redirects": "/lightning/setup/SecurityRedirectWhitelistUrl/home",
 "Workflow Rules": "/lightning/setup/WorkflowRules/home",
 }
+// removed "Login Flows": "/lightning/setup/LoginFlow/home", to not conflict with Flows in general
