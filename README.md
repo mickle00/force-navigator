@@ -33,3 +33,9 @@ _based on Salesforce Navigator by [Daniel Nakov](https://twitter.com/dnak0v) and
 
 ## License
 [MIT License](http://en.wikipedia.org/wiki/MIT_License)
+
+## Privacy Policy
+This extension only runs locally in communication with your instance of Salesforce. No data is collected from any user, nor is extension activity tracked or reported to a third-party.
+
+## Terms of Service
+This extension is not intended to support the work of any individual or organization that is discriminatory or outright illegal.
