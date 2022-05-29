@@ -40,7 +40,7 @@ var parseSetupTree = (response, url)=>{
 		strNameMain += (hasParent ? (parent + ' > ') : '')
 		strName = strNameMain + item.innerText
 		let targetUrl = item.href
-	// Manual fixes
+	// Manual fixes -- should look for way to generalize this
 		if(strName.match(/(Members|Fields)/g)?.length > 1 && url.includes("lightning"))
 			targetUrl = url + '/lightning/setup/ObjectManager/CampaignMember/Details/view'
 		if(strName.match(/(Opportunity|Product|Fields)/g)?.length > 2 && url.includes("lightning"))
@@ -50,7 +50,9 @@ var parseSetupTree = (response, url)=>{
 		if(url.includes("lightning.force") && strNameMain.includes("Customize") && Object.keys(classicToLightingMap).includes(item.innerText)) {
 			if(commands['List ' + parent ] == null) { commands['List ' + parent ] = {url: url + "/lightning/o/" + pluralize(parent, 1).replace(/\s/g,"") + "/list", key: "List " + parent} }
 			if(commands['New ' + pluralize(parent, 1) ] == null) { commands['New ' + pluralize(parent, 1) ] = {url: url + "/lightning/o/" + pluralize(parent, 1).replace(/\s/g,"") + "/new", key: "New " + pluralize(parent, 1)} }
-			targetUrl = url + "/lightning/setup/ObjectManager/" + pluralize(parent, 1).replace(/\s/g, "")
+			let objectName = pluralize(parent, 1).replace(/\s/g, "")
+			if(objectName.includes('Product')) { objectName += '2' }
+			targetUrl = url + "/lightning/setup/ObjectManager/" + objectName
 			targetUrl += classicToLightingMap[item.innerText]
 		}
 		if(targetUrl.includes('-extension')) {
