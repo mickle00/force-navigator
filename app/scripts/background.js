@@ -40,6 +40,9 @@ var parseSetupTree = (response, url)=>{
 		strNameMain += (hasParent ? (parent + ' > ') : '')
 		strName = strNameMain + item.innerText
 		let targetUrl = item.href
+	// Manual fixes
+		if(strName.match(/(Members|Fields)/g)?.length > 1 && url.includes("lightning"))
+			targetUrl = url + '/lightning/setup/ObjectManager/CampaignMember/Details/view'
 		if(url.includes("lightning.force") && Object.keys(setupLabelsToLightningMap).includes(item.innerText))
 			targetUrl = url + setupLabelsToLightningMap[item.innerText]
 		if(url.includes("lightning.force") && strNameMain.includes("Customize") && Object.keys(classicToLightingMap).includes(item.innerText)) {
