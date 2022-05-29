@@ -21,6 +21,8 @@ var sfnav = (()=>{
 		commands['Refresh Metadata'] = {}
 		commands['Merge Accounts'] = {}
 		commands['Toggle Lightning'] = {}
+		commands['Object Manager'] = {}
+		commands['Toggle All Checkboxes'] = {}
 		commands['Setup'] = {}
 		commands['?'] = {}
 		commands['Home'] = {}
@@ -47,6 +49,9 @@ var sfnav = (()=>{
 				document.getElementById("sfnav_quickSearch").value = ""
 				return true
 				break
+			case "object manager":
+				targetUrl = serverInstance + "/lightning/setup/ObjectManager/home"
+				break
 			case "toggle lightning":
 				let mode
 				if(window.location.href.includes("lightning.force")) mode = "classic"
@@ -62,10 +67,13 @@ var sfnav = (()=>{
 			case "home":
 				targetUrl = serverInstance + "/"
 				break
+			case "toggle all checkboxes":
+				Array.from(document.querySelectorAll('input[type="checkbox"]')).forEach(c => c.checked=(c.checked ? false : true))
+				hideSearchBox()
+				break
 		}
 		if(checkCmd.substring(0,9) == 'login as ') { loginAs(cmd, newTab); return true }
 		else if(checkCmd.substring(0,14) == "merge accounts") { launchMergerAccounts(cmd.substring(14).trim()) }
-		// else if(checkCmd.substring(0,11) == "merge cases") { launchMergerCases(cmd.substring(11).trim()) } //TODO more complicated merge call, will make later
 		else if(checkCmd.substring(0,1) == "!") { createTask(cmd.substring(1).trim()) }
 		else if(checkCmd.substring(0,1) == "?") { targetUrl = searchTerms(cmd.substring(1).trim()) }
 		else if(typeof commands[cmd] != 'undefined' && commands[cmd].url) { targetUrl = commands[cmd].url }
@@ -127,22 +135,7 @@ var sfnav = (()=>{
 				case 'Account':
 					document.location.href = `${serverInstance}/merge/accmergewizard.jsp?goNext=+Next+&cid=${otherId}&cid=${thisId}`
 					break
-				case 'Case':
-					//TODO - needs to be a post request, so fetch or background will have to happen here
-					/*
-					const options = {
-						method: 'POST',
-						body: `{"message": {
-							"actions": [{
-								"id":"2319;a",
-								"descriptor":"serviceComponent://ui.merge.components.controller.MergeController/ACTION$loadMergeComparisonData",
-								"callingDescriptor":"UNKNOWN",
-								"params":{"recordIds":[otherId,thisId]}
-							}]
-						}}`
-					}
-						fetch(serverInstance+"/aura?r=23&ui-merge-components-controller.Merge.loadMergeComparisonData=1",options)
-					*/
+				default:
 					break
 			}
 	}
@@ -171,6 +164,7 @@ var sfnav = (()=>{
 			})
 		}
 	}
+// login as
 	function loginAs(cmd, newTab) {
 		let cmdSplit = cmd.split(' ')
 		let searchValue = cmdSplit[2]
@@ -412,18 +406,11 @@ var sfnav = (()=>{
 			orgId = document.cookie.match(/sid=([\w\d]+)/)[1]
 			serverInstance = getServerInstance()
 			sessionHash = getSessionHash()
-			if(sessionId == null) {
-				chrome.runtime.sendMessage({ action: 'getApiSessionId', key: orgId }, response=>{
-					if(response.error) console.log("response", orgId, response, chrome.runtime.lastError)
-					else {
-						sessionId = unescape(response.sessionId)
-						userId = unescape(response.userId)
-						apiUrl = unescape(response.apiUrl)
-						var div = document.createElement('div')
-						div.setAttribute('id', 'sfnav_searchBox')
-						var loaderURL = chrome.extension.getURL("images/ajax-loader.gif")
-						var logoURL = chrome.extension.getURL("images/sf-navigator128.png")
-						div.innerHTML = `
+			var div = document.createElement('div')
+			div.setAttribute('id', 'sfnav_searchBox')
+			var loaderURL = chrome.extension.getURL("images/ajax-loader.gif")
+			var logoURL = chrome.extension.getURL("images/sf-navigator128.png")
+			div.innerHTML = `
 <div class="sfnav_wrapper">
 	<input type="text" id="sfnav_quickSearch" autocomplete="off"/>
 	<img id="sfnav_loader" src= "${loaderURL}"/>
@@ -432,8 +419,15 @@ var sfnav = (()=>{
 <div class="sfnav_shadow" id="sfnav_shadow"/>
 <div class="sfnav_output" id="sfnav_output"/>
 `
-						document.body.appendChild(div)
-						searchBox = document.getElementById("sfnav_output")
+			document.body.appendChild(div)
+			searchBox = document.getElementById("sfnav_output")
+			if(sessionId == null) {
+				chrome.runtime.sendMessage({ action: 'getApiSessionId', key: orgId }, response=>{
+					if(response.error) console.log("response", orgId, response, chrome.runtime.lastError)
+					else {
+						sessionId = unescape(response.sessionId)
+						userId = unescape(response.userId)
+						apiUrl = unescape(response.apiUrl)
 						hideLoadingIndicator()
 						bindShortcuts()
 						loadCommands()

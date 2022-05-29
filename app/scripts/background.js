@@ -10,9 +10,11 @@ var showElement = (element)=>{
 				break
 			case "searchBox":
 				chrome.tabs.executeScript(tabs[0].id, {code: `
-					document.getElementById("sfnav_searchBox").style.zIndex = 9999
-					document.getElementById("sfnav_searchBox").style.opacity = 0.98
-					document.getElementById("sfnav_quickSearch").focus()
+					if(document.getElementById("sfnav_searchBox")) {
+						document.getElementById("sfnav_searchBox").style.zIndex = 9999
+						document.getElementById("sfnav_searchBox").style.opacity = 0.98
+						document.getElementById("sfnav_quickSearch").focus()
+					}
 				`})
 				break
 		}
@@ -169,7 +171,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse)=>{
 			getHTTP("https://" + request.apiUrl + "/services/data/" + SFAPI_VERSION + "/tooling/query/?q=SELECT+Id,+Name,+Username+FROM+User+WHERE+Name+LIKE+'%25" + request.searchValue + "%25'+OR+Username+LIKE+'%25" + request.searchValue + "%25'", "json", {"Authorization": "Bearer " + request.sessionId, "Content-Type": "application/json" })
 			.then(function(success) { sendResponse(success) }).catch(function(error) {
 				console.log(error)
-//				addError(error.responseJSON)
 			})
 	}
 	return true

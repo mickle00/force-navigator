@@ -41,7 +41,7 @@ let getHTTP = function(targetUrl, type = "json", headers = {}, data = {}, method
 const debug = false
 const newTabKeys = [ "ctrl+enter", "command+enter", "shift+enter" ]
 const regMatchSid = /sid=([a-zA-Z0-9\.\!]+)/
-const SFAPI_VERSION = 'v49.0'
+const SFAPI_VERSION = 'v52.0'
 const classicToLightingMap = {
 	'Fields': "/FieldsAndRelationships/view",
 	'Page Layouts': '/PageLayouts/view',
@@ -388,4 +388,3 @@ const setupLabelsToLightningMap = {
 "Whitelisted URLs for Redirects": "/lightning/setup/SecurityRedirectWhitelistUrl/home",
 "Workflow Rules": "/lightning/setup/WorkflowRules/home",
 }
-// removed "Login Flows": "/lightning/setup/LoginFlow/home", to not conflict with Flows in general
