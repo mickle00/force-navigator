@@ -43,6 +43,8 @@ var parseSetupTree = (response, url)=>{
 	// Manual fixes
 		if(strName.match(/(Members|Fields)/g)?.length > 1 && url.includes("lightning"))
 			targetUrl = url + '/lightning/setup/ObjectManager/CampaignMember/Details/view'
+		if(strName.match(/(Opportunity|Product|Fields)/g)?.length > 2 && url.includes("lightning"))
+			targetUrl = url + '/lightning/setup/ObjectManager/OpportunityLineItem/Details/view'
 		if(url.includes("lightning.force") && Object.keys(setupLabelsToLightningMap).includes(item.innerText))
 			targetUrl = url + setupLabelsToLightningMap[item.innerText]
 		if(url.includes("lightning.force") && strNameMain.includes("Customize") && Object.keys(classicToLightingMap).includes(item.innerText)) {
@@ -50,6 +52,9 @@ var parseSetupTree = (response, url)=>{
 			if(commands['New ' + pluralize(parent, 1) ] == null) { commands['New ' + pluralize(parent, 1) ] = {url: url + "/lightning/o/" + pluralize(parent, 1).replace(/\s/g,"") + "/new", key: "New " + pluralize(parent, 1)} }
 			targetUrl = url + "/lightning/setup/ObjectManager/" + pluralize(parent, 1).replace(/\s/g, "")
 			targetUrl += classicToLightingMap[item.innerText]
+		}
+		if(targetUrl.includes('-extension')) {
+			targetUrl = targetUrl.replace(item.origin,'')
 		}
 		if(commands[strName] == null) commands[strName] = {url: targetUrl, key: strName}
 	})
