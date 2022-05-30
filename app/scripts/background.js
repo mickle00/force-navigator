@@ -51,9 +51,9 @@ var parseSetupTree = (response, url, settings = {})=>{
 		let targetUrl = item.href
 	// Manual fixes -- should look for way to generalize this
 		if(strName.match(/(Members|Fields)/g)?.length > 1 && url.includes("lightning"))
-			targetUrl = url + '/lightning/setup/ObjectManager/CampaignMember/Details/view'
+			targetUrl = url + '/lightning/setup/ObjectManager/CampaignMember/FieldsAndRelationships/view'
 		if(strName.match(/(Opportunity|Product|Fields)/g)?.length > 2 && url.includes("lightning"))
-			targetUrl = url + '/lightning/setup/ObjectManager/OpportunityLineItem/Details/view'
+			targetUrl = url + '/lightning/setup/ObjectManager/OpportunityLineItem/FieldsAndRelationships/view'
 		if(url.includes("lightning.force") && strNameMain.includes("Customize") && Object.keys(classicToLightingMap).includes(item.innerText)) {
 			let objectLabel = pluralize(parent, 1) // need to add developerName handling for standard objects
 			let objectName = objectLabel.replace(/\s/g, "")
