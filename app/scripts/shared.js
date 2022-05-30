@@ -54,6 +54,7 @@ const classicToLightingMap = {
 	'Related Lookup Filters': '/RelatedLookupFilters/view',
 	'Search Layouts': '/SearchLayouts/view',
 	'Triggers': '/Triggers/view',
+	'Lightning Record Pages': '/LightningPages/view',
 	'Validation Rules': '/ValidationRules/view'
 }
 const setupLabelsToLightningMap = {

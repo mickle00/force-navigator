@@ -48,10 +48,17 @@ var parseSetupTree = (response, url)=>{
 		if(url.includes("lightning.force") && Object.keys(setupLabelsToLightningMap).includes(item.innerText))
 			targetUrl = url + setupLabelsToLightningMap[item.innerText]
 		if(url.includes("lightning.force") && strNameMain.includes("Customize") && Object.keys(classicToLightingMap).includes(item.innerText)) {
-			if(commands['List ' + parent ] == null) { commands['List ' + parent ] = {url: url + "/lightning/o/" + pluralize(parent, 1).replace(/\s/g,"") + "/list", key: "List " + parent} }
-			if(commands['New ' + pluralize(parent, 1) ] == null) { commands['New ' + pluralize(parent, 1) ] = {url: url + "/lightning/o/" + pluralize(parent, 1).replace(/\s/g,"") + "/new", key: "New " + pluralize(parent, 1)} }
-			let objectName = pluralize(parent, 1).replace(/\s/g, "")
-			if(objectName.includes('Product')) { objectName += '2' }
+			let objectLabel = pluralize(parent, 1)
+			let objectName = objectLabel.replace(/\s/g, "")
+				if(objectName.includes('Product')) { objectName += '2' }
+			if(commands['List ' + parent ] == null) { commands['List ' + parent ] = {url: url + "/lightning/o/" + objectName + "/list", key: "List " + parent} }
+			if(commands['New ' + objectLabel ] == null) { commands['New ' + objectLabel ] = {url: url + "/lightning/o/" + objectName + "/new", key: "New " + objectLabel} }
+			if(commands['Setup > Customize > ' + objectLabel + ' > Lightning Record Pages'] == null) {
+				commands['Setup > Customize > ' + objectLabel + ' > Lightning Record Pages'] = {
+					url: url + "/lightning/setup/ObjectManager/" + objectName + "/LightningPages/view",
+					key: "New " + objectLabel
+				}
+			}
 			targetUrl = url + "/lightning/setup/ObjectManager/" + objectName
 			targetUrl += classicToLightingMap[item.innerText]
 		}
