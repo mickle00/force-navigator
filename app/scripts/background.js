@@ -20,7 +20,7 @@ var showElement = (element)=>{
 		}
 	})
 }
-var parseSetupTree = (response, url)=>{
+var parseSetupTree = (response, url, settings = {})=>{
 	let commands = {}
 	let strNameMain, strName
 	;[].map.call(response.querySelectorAll('.setupLeaf > a[id*="_font"]'), function(item) {
@@ -46,7 +46,7 @@ var parseSetupTree = (response, url)=>{
 		if(strName.match(/(Opportunity|Product|Fields)/g)?.length > 2 && url.includes("lightning"))
 			targetUrl = url + '/lightning/setup/ObjectManager/OpportunityLineItem/Details/view'
 		if(url.includes("lightning.force") && strNameMain.includes("Customize") && Object.keys(classicToLightingMap).includes(item.innerText)) {
-			let objectLabel = pluralize(parent, 1)
+			let objectLabel = pluralize(parent, 1) // need to add developerName handling for standard objects
 			let objectName = objectLabel.replace(/\s/g, "")
 				if(objectName.includes('Product')) { objectName += '2' }
 			if(commands['List ' + parent ] == null) { commands['List ' + parent ] = {url: url + "/lightning/o/" + objectName + "/list", key: "List " + parent} }
@@ -76,12 +76,10 @@ var parseSetupTree = (response, url)=>{
 	}
 	return commands
 }
-var parseMetadata = (data, url)=>{
+var parseMetadata = (data, url, settings = {})=>{
 	if (data.length == 0 || typeof data.sobjects == "undefined") return false
 	return data.sobjects.reduce((commands, { labelPlural, label, name, keyPrefix }) => {
-		if (!keyPrefix) {
-			return commands
-		}
+		if (!keyPrefix) { return commands }
 		let baseUrl = "/";
 		if (url.includes("lightning.force") && name.endsWith("__mdt")) {
 			baseUrl += "lightning/setup/CustomMetadata/page?address=";
@@ -91,9 +89,10 @@ var parseMetadata = (data, url)=>{
 		return commands
 	}, {})
 }
-var parseCustomObjects = (response, url)=>{
+var parseCustomObjects = (response, url, settings = {})=>{
 	let commands = {}
 	let mapKeys = Object.keys(classicToLightingMap)
+// will likely have to change this to a REST call to get the API names
 	;[].map.call(response.querySelectorAll('th a'), function(el) {
 		if(url.includes("lightning.force")) {
 			let objectId = el.href.match(/\/(\w+)\?/)[1]
@@ -159,7 +158,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse)=>{
 		case 'getSetupTree':
 			if(setupTree[request.sessionHash] == null || request.force)
 				getHTTP("https://" + request.apiUrl + "/ui/setup/Setup", "document").then(response => {
-					setupTree[request.sessionHash] = parseSetupTree(response, request.domain)
+					setupTree[request.sessionHash] = parseSetupTree(response, request.domain, request.settings)
 					sendResponse(setupTree[request.sessionHash])
 				})
 			else
@@ -170,7 +169,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse)=>{
 				getHTTP("https://" + request.apiUrl + '/services/data/' + SFAPI_VERSION + '/sobjects/', "json",
 					{"Authorization": "Bearer " + request.sessionId, "Accept": "application/json"})
 					.then(response => {
-						metaData[request.sessionHash] = parseMetadata(response, request.domain)
+						metaData[request.sessionHash] = parseMetadata(response, request.domain, request.settings)
 						sendResponse(metaData[request.sessionHash])
 					})
 			else
@@ -179,7 +178,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse)=>{
 		case 'getCustomObjects':
 			if(customObjects[request.sessionHash] == null || request.force)
 				getHTTP('https://' + request.apiUrl + "/p/setup/custent/CustomObjectsPage", "document").then(response => {
-					customObjects[request.sessionHash] = parseCustomObjects(response, request.domain)
+					customObjects[request.sessionHash] = parseCustomObjects(response, request.domain, request.settings)
 					sendResponse(customObjects[request.sessionHash])
 				})
 			else

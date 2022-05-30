@@ -5,6 +5,7 @@ var orgId = null
 var userId = null
 var sessionId = null
 var sessionHash = null
+var sessionSettings = {}
 var serverInstance = ''
 var apiUrl = ''
 var ctrlKey = false
@@ -16,24 +17,29 @@ var loaded = false
 
 
 var sfnav = (()=>{
-	function loadCommands(force) {
+	function loadCommands(settings, force = false) {
 		if(serverInstance == null || orgId == null || sessionId == null) { init(); return false }
 		commands['Refresh Metadata'] = {}
 		commands['Merge Accounts'] = {}
-		commands['Toggle Dark Mode'] = {}
 		commands['Toggle All Checkboxes'] = {}
 		commands['Toggle Lightning'] = {}
 		commands['Object Manager'] = {}
-		commands['Toggle Enhanced Profile'] = {}
+		commands['Toggle Enhanced Profiles'] = {}
 		commands['Toggle Developer Name'] = {}
 		commands['Setup'] = {}
 		commands['?'] = {}
 		commands['Home'] = {}
+		const themes = Array('Default','Dark','Unicorn') // should be able to pull dynamically from CSS, or else push it over
+		for (var i = themes.length - 1; i >= 0; i--) {
+			commands['Set Theme: ' + themes[i]] = {}
+		}
 		let options = {
 			sessionHash: sessionHash,
 			domain: serverInstance,
 			apiUrl: apiUrl,
 			key: sessionHash,
+			settings: settings,
+			force: force,
 			sessionId: sessionId
 		}
 		chrome.runtime.sendMessage( Object.assign(options, {action:'getSetupTree'}), response=>{ Object.assign(commands, response) })
@@ -41,28 +47,22 @@ var sfnav = (()=>{
 		chrome.runtime.sendMessage( Object.assign(options, {action:'getCustomObjects'}), response=>{ Object.assign(commands, response) })
 		hideLoadingIndicator()
 	}
+	function refreshAndClear() {
+		showLoadingIndicator()
+		loadCommands(sessionSettings, true)
+		document.getElementById("sfnav_quickSearch").value = ""
+	}
 	function invokeCommand(cmd, newTab, event) {
 		if(cmd == "") { return false }
 		let checkCmd = cmd.toLowerCase()
 		let targetUrl = ""
 		switch(checkCmd) {
 			case "refresh metadata":
-				showLoadingIndicator()
-				loadCommands(true)
-				document.getElementById("sfnav_quickSearch").value = ""
+				return refreshAndClear()
 				return true
 				break
 			case "object manager":
 				targetUrl = serverInstance + "/lightning/setup/ObjectManager/home"
-				break
-			case "toggle dark mode":
-				let cList = document.getElementById('sfnav_styleBox').classList
-				if(cList.contains('dark'))
-				    newClass = 'default'
-				else
-					newClass = 'dark'
-				document.getElementById('sfnav_styleBox').classList = [newClass]
-				chrome.storage.local.set({'theme':newClass}) //.then(setItem, onError);
 				break
 			case "toggle lightning":
 				let mode
@@ -70,15 +70,19 @@ var sfnav = (()=>{
 				else mode = "lex-campaign"
 				targetUrl = serverInstance + "/ltng/switcher?destination=" + mode
 				break
-			case "toggle enhanced profile":
-				globalenhancedProfileMode = !globalenhancedProfileMode // figure out a global and where to put it in background.js
-				chrome.storage.local.set({'enhancedprofile':globalenhancedProfileMode})
-				// alert -- updated mode to (enhanced) profile
+			case "toggle enhanced profiles":
+				sessionSettings.enhancedprofiles = !sessionSettings.enhancedprofiles
+				chrome.storage.sync.set({enhancedprofiles: sessionSettings.enhancedprofiles}, response=>{
+					refreshAndClear()
+				})
+				return true
 				break
 			case "toggle developer name":
-			    globaldeveloperNameMode = !globaldeveloperNameMode // figure out a global and run refreshMetadata probably
-				chrome.storage.local.set({'developername':globaldeveloperNameMode})
-				// alert -- updated to (developer)
+			    sessionSettings.developername = !sessionSettings.developername
+				chrome.storage.sync.set({developername: sessionSettings.developername}, response=>{
+					refreshAndClear()
+				})
+				return true
 				break
 			case "setup":
 				if(serverInstance.includes("lightning.force"))
@@ -95,6 +99,7 @@ var sfnav = (()=>{
 				break
 		}
 		if(checkCmd.substring(0,9) == 'login as ') { loginAs(cmd, newTab); return true }
+		else if(checkCmd.substring(0,10) == "set theme:") { setTheme(cmd); return true }
 		else if(checkCmd.substring(0,14) == "merge accounts") { launchMergerAccounts(cmd.substring(14).trim()) }
 		else if(checkCmd.substring(0,1) == "!") { createTask(cmd.substring(1).trim()) }
 		else if(checkCmd.substring(0,1) == "?") { targetUrl = searchTerms(cmd.substring(1).trim()) }
@@ -113,7 +118,7 @@ var sfnav = (()=>{
 		} else { return false }
 	}
 	var goToUrl = function(url, newTab) { chrome.runtime.sendMessage({ action: 'goToUrl', url: url, newTab: newTab } , function(response) {}) }
-	var searchTerms =function (terms) {
+	var searchTerms = function (terms) {
 		var targetUrl = serverInstance
 		if(serverInstance.includes('.force.com'))
 			targetUrl += "/one/one.app#" + btoa(JSON.stringify({"componentDef":"forceSearch:search","attributes":{"term": terms,"scopeMap":{"type":"TOP_RESULTS"},"context":{"disableSpellCorrection":false,"SEARCH_ACTIVITY":{"term": terms}}}}))
@@ -186,6 +191,14 @@ var sfnav = (()=>{
 			})
 		}
 	}
+// theme handling
+	function setTheme(cmd) {
+		let cmdSplit = cmd.split(' ')
+		const newTheme = 'theme-' + cmdSplit[2].toLowerCase()
+		document.getElementById('sfnav_styleBox').classList = [newTheme]
+		chrome.storage.sync.set({theme: newTheme}, response=>{ sessionSettings.theme = newTheme; hideSearchBox() })
+	}
+
 // login as
 	function loginAs(cmd, newTab) {
 		let cmdSplit = cmd.split(' ')
@@ -324,6 +337,14 @@ var sfnav = (()=>{
 		if(listPosition == -1 && firstEl != null) firstEl.className = "sfnav_child sfnav_selected"
 	}
 	var getWord = function(input, dict) {
+		// only works here for some reason, pruning the command dictionary on load would carry over for some reason?!
+		if(sessionSettings.enhancedprofiles) {
+			dict['Setup > Manage Users > Profiles'] = dict['Enhanced Profiles']
+			delete dict['Profiles']
+		} else {
+			dict['Setup > Manage Users > Profiles'] = dict['Profiles']
+			delete dict['Enhanced Profiles']
+		}
 		if(typeof input === 'undefined' || input == '') return []
 		let foundCommands = [],
 			dictItems = [],
@@ -428,8 +449,13 @@ var sfnav = (()=>{
 			orgId = document.cookie.match(/sid=([\w\d]+)/)[1]
 			serverInstance = getServerInstance()
 			sessionHash = getSessionHash()
-			chrome.storage.local.get({'theme':'default'}).then(s=> {
-				let theme = s.theme
+			chrome.storage.sync.get({
+				theme:'theme-default',
+				enhancedprofiles: true,
+				developername: false
+			}, settings=> {
+				sessionSettings = settings
+				let theme = settings.theme
 				var div = document.createElement('div')
 				div.setAttribute('id', 'sfnav_styleBox')
 				div.setAttribute('class', theme)
@@ -448,20 +474,20 @@ var sfnav = (()=>{
 `
 				document.body.appendChild(div)
 				searchBox = document.getElementById("sfnav_output")
+				if(sessionId == null) {
+					chrome.runtime.sendMessage({ action: 'getApiSessionId', key: orgId }, response=>{
+						if(response.error) console.log("response", orgId, response, chrome.runtime.lastError)
+						else {
+							sessionId = unescape(response.sessionId)
+							userId = unescape(response.userId)
+							apiUrl = unescape(response.apiUrl)
+							hideLoadingIndicator()
+							bindShortcuts()
+							loadCommands(settings)
+						}
+					})
+				}
 			})
-			if(sessionId == null) {
-				chrome.runtime.sendMessage({ action: 'getApiSessionId', key: orgId }, response=>{
-					if(response.error) console.log("response", orgId, response, chrome.runtime.lastError)
-					else {
-						sessionId = unescape(response.sessionId)
-						userId = unescape(response.userId)
-						apiUrl = unescape(response.apiUrl)
-						hideLoadingIndicator()
-						bindShortcuts()
-						loadCommands()
-					}
-				})
-			}
 		} catch(e) { if(debug) console.log(e) }
 	}
 	init()

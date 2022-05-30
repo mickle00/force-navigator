@@ -295,7 +295,7 @@ const setupLabelsToLightningMap = {
 "Process Builder": "/lightning/setup/ProcessAutomation/home",
 "Product Schedules Settings": "/lightning/setup/Product2ScheduleSetup/home",
 "Product Settings": "/lightning/setup/Product2Settings/home",
-"Profiles": "/lightning/setup/EnhancedProfiles/home",
+"Profiles": "/lightning/setup/Profiles/home",
 "Public Calendars and Resources": "/lightning/setup/Calendars/home",
 "Public Groups": "/lightning/setup/PublicGroups/home",
 "Publisher Layouts": "/lightning/setup/GlobalPublisherLayouts/home",
