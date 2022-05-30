@@ -56,9 +56,11 @@ var sfnav = (()=>{
 			case "toggle dark mode":
 				let cList = document.getElementById('sfnav_styleBox').classList
 				if(cList.contains('dark'))
-					document.getElementById('sfnav_styleBox').classList = ['default']
+				    newClass = 'default'
 				else
-					document.getElementById('sfnav_styleBox').classList = ['dark']
+					newClass = 'dark'
+				document.getElementById('sfnav_styleBox').classList = [newClass]
+				chrome.storage.local.set({'theme':newClass}) //.then(setItem, onError);
 				break
 			case "toggle lightning":
 				let mode
@@ -414,12 +416,14 @@ var sfnav = (()=>{
 			orgId = document.cookie.match(/sid=([\w\d]+)/)[1]
 			serverInstance = getServerInstance()
 			sessionHash = getSessionHash()
-			var div = document.createElement('div')
-			div.setAttribute('id', 'sfnav_styleBox')
-			div.setAttribute('class', 'default')
-			var loaderURL = chrome.extension.getURL("images/ajax-loader.gif")
-			var logoURL = chrome.extension.getURL("images/sf-navigator128.png")
-			div.innerHTML = `
+			chrome.storage.local.get({'theme':'default'}).then(s=> {
+				let theme = s.theme
+				var div = document.createElement('div')
+				div.setAttribute('id', 'sfnav_styleBox')
+				div.setAttribute('class', theme)
+				var loaderURL = chrome.extension.getURL("images/ajax-loader.gif")
+				var logoURL = chrome.extension.getURL("images/sf-navigator128.png")
+				div.innerHTML = `
 <div id="sfnav_searchBox">
 	<div class="sfnav_wrapper">
 		<input type="text" id="sfnav_quickSearch" autocomplete="off"/>
@@ -430,8 +434,9 @@ var sfnav = (()=>{
 	<div class="sfnav_output" id="sfnav_output"/>
 </div>
 `
-			document.body.appendChild(div)
-			searchBox = document.getElementById("sfnav_output")
+				document.body.appendChild(div)
+				searchBox = document.getElementById("sfnav_output")
+			})
 			if(sessionId == null) {
 				chrome.runtime.sendMessage({ action: 'getApiSessionId', key: orgId }, response=>{
 					if(response.error) console.log("response", orgId, response, chrome.runtime.lastError)
@@ -447,5 +452,20 @@ var sfnav = (()=>{
 			}
 		} catch(e) { if(debug) console.log(e) }
 	}
+	function saveSetting(setting) {
+        chrome.storage.sync.set({
+            favoriteColor: color,
+            likesColor: likesColor
+          }, function() {
+            // Update status to let user know options were saved.
+            var status = document.getElementById('status');
+            status.textContent = 'Options saved.';
+            setTimeout(function() {
+              status.textContent = '';
+            }, 750);
+          });
+	}
+	function getSetting(setting) {}
+
 	init()
 })()
