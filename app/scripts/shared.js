@@ -216,7 +216,7 @@ const setupLabelsToLightningMap = {
 "Help Menu": "/lightning/setup/HelpMenu/home",
 "Historical Trending": "/lightning/setup/HistoricalTrendingUI/home",
 "Holidays": "/lightning/setup/Holiday/home",
-"Home": "/lightning/setup/Home/home",
+"Home": "/lightning/page/home",
 "Identity Provider Event Log": "/lightning/setup/IdpErrorLog/home",
 "Identity Provider": "/lightning/setup/IdpPage/home",
 "Identity Verification History": "/lightning/setup/VerificationHistory/home",

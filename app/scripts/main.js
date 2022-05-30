@@ -25,7 +25,7 @@ var sfnav = (()=>{
 		commands['Toggle Lightning'] = {}
 		commands['Object Manager'] = {}
 		commands['Toggle Enhanced Profiles'] = {}
-		commands['Toggle Developer Name'] = {}
+		// commands['Toggle Developer Name'] = {}
 		commands['Setup'] = {}
 		commands['?'] = {}
 		commands['Home'] = {}
@@ -196,7 +196,7 @@ var sfnav = (()=>{
 		let cmdSplit = cmd.split(' ')
 		const newTheme = 'theme-' + cmdSplit[2].toLowerCase()
 		document.getElementById('sfnav_styleBox').classList = [newTheme]
-		chrome.storage.sync.set({theme: newTheme}, response=>{ sessionSettings.theme = newTheme; hideSearchBox() })
+		chrome.storage.sync.set({theme: newTheme}, response=>{ sessionSettings.theme = newTheme; document.getElementById('sfnav_quickSearch').value = '' })
 	}
 
 // login as

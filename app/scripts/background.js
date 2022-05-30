@@ -23,6 +23,15 @@ var showElement = (element)=>{
 var parseSetupTree = (response, url, settings = {})=>{
 	let commands = {}
 	let strNameMain, strName
+	// add Lightning direct links
+	if(url.includes("lightning.force")) {
+		Object.keys(setupLabelsToLightningMap).forEach(k => {
+			if(commands[k] == null) { commands[k] = {
+				url: url + setupLabelsToLightningMap[k],
+				key: k
+			}}
+		})
+	}
 	;[].map.call(response.querySelectorAll('.setupLeaf > a[id*="_font"]'), function(item) {
 		let hasTopParent = false, hasParent = false
 		let parent, topParent, parentEl, topParentEl
@@ -65,15 +74,6 @@ var parseSetupTree = (response, url, settings = {})=>{
 		}
 		if(commands[strName] == null) commands[strName] = {url: targetUrl, key: strName}
 	})
-// add Lightning direct links
-	if(url.includes("lightning.force")) {
-		Object.keys(setupLabelsToLightningMap).forEach(k => {
-			if(commands[k] == null) { commands[k] = {
-				url: url + setupLabelsToLightningMap[k],
-				key: k
-			}}
-		})
-	}
 	return commands
 }
 var parseMetadata = (data, url, settings = {})=>{
