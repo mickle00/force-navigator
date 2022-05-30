@@ -21,8 +21,9 @@ var sfnav = (()=>{
 		commands['Refresh Metadata'] = {}
 		commands['Merge Accounts'] = {}
 		commands['Toggle Lightning'] = {}
-		commands['Object Manager'] = {}
+		commands['Toggle Dark Mode'] = {}
 		commands['Toggle All Checkboxes'] = {}
+		commands['Object Manager'] = {}
 		commands['Setup'] = {}
 		commands['?'] = {}
 		commands['Home'] = {}
@@ -51,6 +52,13 @@ var sfnav = (()=>{
 				break
 			case "object manager":
 				targetUrl = serverInstance + "/lightning/setup/ObjectManager/home"
+				break
+			case "toggle dark mode":
+				let cList = document.getElementById('sfnav_styleBox').classList
+				if(cList.contains('dark'))
+					document.getElementById('sfnav_styleBox').classList = ['default']
+				else
+					document.getElementById('sfnav_styleBox').classList = ['dark']
 				break
 			case "toggle lightning":
 				let mode
@@ -407,17 +415,20 @@ var sfnav = (()=>{
 			serverInstance = getServerInstance()
 			sessionHash = getSessionHash()
 			var div = document.createElement('div')
-			div.setAttribute('id', 'sfnav_searchBox')
+			div.setAttribute('id', 'sfnav_styleBox')
+			div.setAttribute('class', 'default')
 			var loaderURL = chrome.extension.getURL("images/ajax-loader.gif")
 			var logoURL = chrome.extension.getURL("images/sf-navigator128.png")
 			div.innerHTML = `
-<div class="sfnav_wrapper">
-	<input type="text" id="sfnav_quickSearch" autocomplete="off"/>
-	<img id="sfnav_loader" src= "${loaderURL}"/>
-	<img id="sfnav_logo" src= "${logoURL}"/>
+<div id="sfnav_searchBox">
+	<div class="sfnav_wrapper">
+		<input type="text" id="sfnav_quickSearch" autocomplete="off"/>
+		<img id="sfnav_loader" src= "${loaderURL}"/>
+		<img id="sfnav_logo" src= "${logoURL}"/>
+	</div>
+	<div class="sfnav_shadow" id="sfnav_shadow"/>
+	<div class="sfnav_output" id="sfnav_output"/>
 </div>
-<div class="sfnav_shadow" id="sfnav_shadow"/>
-<div class="sfnav_output" id="sfnav_output"/>
 `
 			document.body.appendChild(div)
 			searchBox = document.getElementById("sfnav_output")

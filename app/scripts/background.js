@@ -68,7 +68,10 @@ var parseSetupTree = (response, url)=>{
 // add Lightning direct links
 	if(url.includes("lightning.force")) {
 		Object.keys(setupLabelsToLightningMap).forEach(k => {
-			if(commands[k] == null) { commands[k] = {url: url + setupLabelsToLightningMap[k], key: k } }
+			if(commands[k] == null) { commands[k] = {
+				url: url + setupLabelsToLightningMap[k],
+				key: k
+			}}
 		})
 	}
 	return commands
