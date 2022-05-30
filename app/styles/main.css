@@ -4,6 +4,7 @@
 	--boxGlow: #0070D2;
 	--boxBackgroundColor: white;
 	--itemColor: #000;
+	--itemColorHover: #000;
 	--itemBackground: #f0f0f0;
 	--iconFilter: invert(0%);
 }
@@ -12,8 +13,9 @@
 	--boxShadow: #FFBCCDaa;
 	--boxGlow: #FEEB8Faa;
 	--boxBackgroundColor: #fff;
-	--itemColor: #00D2C5;
-	--itemBackground: #B7EAFF;
+	--itemColor: turquoise;
+	--itemColorHover: hotpink;
+	--itemBackground: #B7EAF388;
 	--iconFilter: hue-rotate(185deg) brightness(1.5);
 }
 .theme-dark {
@@ -22,8 +24,19 @@
 	--boxGlow: #0070D2;
 	--boxBackgroundColor: #212121;
 	--itemColor: #8BA8E2;
+	--itemColorHover: #8BA8E2;
 	--itemBackground: #0f0f0f;
 	--iconFilter: invert(100%) hue-rotate(185deg) brightness(1.5);
+}
+.theme-solarized {
+	--boxBorderColor: #0E2B36;
+	--boxShadow: #A5782755;
+	--boxGlow: #5697D3;
+	--boxBackgroundColor: #FBF6E3;
+	--itemColor: #A57827;
+	--itemColorHover: #59A39B;
+	--itemBackground: #173642;
+	--iconFilter: hue-rotate(240deg);	
 }
 
 #sfnav_searchBox {
@@ -58,6 +71,9 @@
 	max-height:100%;
 	overflow:auto;
 }
+.sfnav_child:hover {
+	color: var(--itemColorHover);
+}
 .sfnav_child {
 	display:block;
 	color:var(--itemColor);
@@ -77,7 +93,7 @@
 }
 .sfnav_selected {
 	background-color:var(--itemBackground);
-	color:var(--itemColor);
+	color:var(--itemColorHover);
 }
 #sfnav_logo {
 	filter:  var(--iconFilter);

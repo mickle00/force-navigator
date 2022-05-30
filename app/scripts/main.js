@@ -29,7 +29,7 @@ var sfnav = (()=>{
 		commands['Setup'] = {}
 		commands['?'] = {}
 		commands['Home'] = {}
-		const themes = Array('Default','Dark','Unicorn') // should be able to pull dynamically from CSS, or else push it over
+		const themes = Array('Default','Dark','Unicorn', 'Solarized') // should be able to pull dynamically from CSS, or else push it over
 		for (var i = themes.length - 1; i >= 0; i--) {
 			commands['Set Theme: ' + themes[i]] = {}
 		}
