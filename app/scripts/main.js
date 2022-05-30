@@ -20,10 +20,12 @@ var sfnav = (()=>{
 		if(serverInstance == null || orgId == null || sessionId == null) { init(); return false }
 		commands['Refresh Metadata'] = {}
 		commands['Merge Accounts'] = {}
-		commands['Toggle Lightning'] = {}
 		commands['Toggle Dark Mode'] = {}
 		commands['Toggle All Checkboxes'] = {}
+		commands['Toggle Lightning'] = {}
 		commands['Object Manager'] = {}
+		commands['Toggle Enhanced Profile'] = {}
+		commands['Toggle Developer Name'] = {}
 		commands['Setup'] = {}
 		commands['?'] = {}
 		commands['Home'] = {}
@@ -67,6 +69,16 @@ var sfnav = (()=>{
 				if(window.location.href.includes("lightning.force")) mode = "classic"
 				else mode = "lex-campaign"
 				targetUrl = serverInstance + "/ltng/switcher?destination=" + mode
+				break
+			case "toggle enhanced profile":
+				globalenhancedProfileMode = !globalenhancedProfileMode // figure out a global and where to put it in background.js
+				chrome.storage.local.set({'enhancedprofile':globalenhancedProfileMode})
+				// alert -- updated mode to (enhanced) profile
+				break
+			case "toggle developer name":
+			    globaldeveloperNameMode = !globaldeveloperNameMode // figure out a global and run refreshMetadata probably
+				chrome.storage.local.set({'developername':globaldeveloperNameMode})
+				// alert -- updated to (developer)
 				break
 			case "setup":
 				if(serverInstance.includes("lightning.force"))
