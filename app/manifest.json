@@ -78,5 +78,10 @@
 		"storage",
 		"clipboardRead",
 		"cookies"
-	]
+	],
+	"browser_specific_settings": {
+		"gecko": {
+			"id": "navigator@summerlin.co"
+		}
+	}
 }

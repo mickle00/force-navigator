@@ -5,7 +5,12 @@ var orgId = null
 var userId = null
 var sessionId = null
 var sessionHash = null
-var sessionSettings = {}
+var sessionSettings = {
+	theme:'theme-default',
+	enhancedprofiles: true,
+	debug: false,
+	developername: false
+}
 var serverInstance = ''
 var apiUrl = ''
 var ctrlKey = false
@@ -449,11 +454,7 @@ var sfnav = (()=>{
 			orgId = document.cookie.match(/sid=([\w\d]+)/)[1]
 			serverInstance = getServerInstance()
 			sessionHash = getSessionHash()
-			chrome.storage.sync.get({
-				theme:'theme-default',
-				enhancedprofiles: true,
-				developername: false
-			}, settings=> {
+			chrome.storage.sync.get(sessionSettings, settings=> {
 				sessionSettings = settings
 				let theme = settings.theme
 				var div = document.createElement('div')
@@ -488,7 +489,7 @@ var sfnav = (()=>{
 					})
 				}
 			})
-		} catch(e) { if(debug) console.log(e) }
+		} catch(e) { if(sessionSettings.debug) console.log(e) }
 	}
 	init()
 })()
