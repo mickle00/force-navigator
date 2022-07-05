@@ -23,15 +23,6 @@ var showElement = (element)=>{
 var parseSetupTree = (response, url, settings = {})=>{
 	let commands = {}
 	let strNameMain, strName
-	// add Lightning direct links
-	if(url.includes("lightning.force")) {
-		Object.keys(setupLabelsToLightningMap).forEach(k => {
-			if(commands[k] == null) { commands[k] = {
-				url: url + setupLabelsToLightningMap[k],
-				key: k
-			}}
-		})
-	}
 	;[].map.call(response.querySelectorAll('.setupLeaf > a[id*="_font"]'), function(item) {
 		let hasTopParent = false, hasParent = false
 		let parent, topParent, parentEl, topParentEl
@@ -54,6 +45,10 @@ var parseSetupTree = (response, url, settings = {})=>{
 			targetUrl = url + '/lightning/setup/ObjectManager/CampaignMember/FieldsAndRelationships/view'
 		if(strName.match(/(Opportunity|Product|Fields)/g)?.length > 2 && url.includes("lightning"))
 			targetUrl = url + '/lightning/setup/ObjectManager/OpportunityLineItem/FieldsAndRelationships/view'
+		if(url.includes("lightning.force") && Object.keys(setupLabelsToLightningMap).includes(item.innerText)) {
+			targetUrl = url + setupLabelsToLightningMap[item.innerText]
+			delete setupLabelsToLightningMap[item.innerText]
+		}
 		if(url.includes("lightning.force") && strNameMain.includes("Customize") && Object.keys(classicToLightingMap).includes(item.innerText)) {
 			let objectLabel = pluralize(parent, 1) // need to add developerName handling for standard objects
 			let objectName = objectLabel.replace(/\s/g, "")
@@ -74,6 +69,15 @@ var parseSetupTree = (response, url, settings = {})=>{
 		}
 		if(commands[strName] == null) commands[strName] = {url: targetUrl, key: strName}
 	})
+	// add Lightning direct links
+	if(url.includes("lightning.force")) {
+		Object.keys(setupLabelsToLightningMap).forEach(k => {
+			if(commands[k] == null) { commands[k] = {
+				url: url + setupLabelsToLightningMap[k],
+				key: k
+			}}
+		})
+	}
 	return commands
 }
 var parseMetadata = (data, url, settings = {})=>{
