@@ -81,9 +81,10 @@ var parseSetupTree = (response, url, settings = {})=>{
 	return commands
 }
 var parseMetadata = (data, url, settings = {})=>{
+	skipObjects = ["0DM"]
 	if (data.length == 0 || typeof data.sobjects == "undefined") return false
 	return data.sobjects.reduce((commands, { labelPlural, label, name, keyPrefix }) => {
-		if (!keyPrefix) { return commands }
+		if (!keyPrefix || skipObjects.includes(keyPrefix)) { return commands }
 		let baseUrl = "/";
 		if (url.includes("lightning.force") && name.endsWith("__mdt")) {
 			baseUrl += "lightning/setup/CustomMetadata/page?address=";
@@ -108,7 +109,7 @@ var parseCustomObjects = (response, url, settings = {})=>{
 				commands['Setup > Custom Object > ' + el.text + ' > ' + key] = {url: targetUrl + urlElement, key: el.text + " > " + key}
 			}
 		} else {
-			commands['Setup > Custom Object > ' + el.text] = {url: el.href, key: el.text};
+			commands['Setup > Custom Object > ' + el.text] = {url: el.href, key: el.text}
 		}
 	})
 	return commands
