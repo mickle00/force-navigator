@@ -30,6 +30,7 @@ var sfnav = (()=>{
 		commands['Toggle Lightning'] = {}
 		commands['Object Manager'] = {}
 		commands['Toggle Enhanced Profiles'] = {}
+		commands['Dump Debug Info to Console'] = {}
 		// commands['Toggle Developer Name'] = {}
 		commands['Setup'] = {}
 		commands['?'] = {}
@@ -50,6 +51,9 @@ var sfnav = (()=>{
 		chrome.runtime.sendMessage( Object.assign(options, {action:'getSetupTree'}), response=>{ Object.assign(commands, response) })
 		chrome.runtime.sendMessage( Object.assign(options, {action:'getMetadata'}), response=>{ Object.assign(commands, response) })
 		chrome.runtime.sendMessage( Object.assign(options, {action:'getCustomObjects'}), response=>{ Object.assign(commands, response) })
+		otherExtensions.forEach(e=>{
+			chrome.runtime.sendMessage( Object.assign(options, {action:'getOtherExtensionCommands', otherExtension: e}), response=>{ Object.assign(commands, response) })
+		})
 		hideLoadingIndicator()
 	}
 	function refreshAndClear() {
@@ -82,6 +86,11 @@ var sfnav = (()=>{
 				})
 				return true
 				break
+			case "dump debug info to console":
+				console.info("session settings:", sessionSettings)
+				console.info("server instance: ", serverInstance)
+				console.info("API Url: ", apiUrl)
+				return true; break
 			case "toggle developer name":
 			    sessionSettings.developername = !sessionSettings.developername
 				chrome.storage.sync.set({developername: sessionSettings.developername}, response=>{

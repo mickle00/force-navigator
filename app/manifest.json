@@ -72,6 +72,7 @@
 	},
 	"permissions": [
 		"activeTab",
+		"management",
 		"https://*.force.com/*",
 		"https://*.salesforce.com/*",
 		"https://*.cloudforce.com/*",

@@ -42,6 +42,16 @@ const debug = false
 const newTabKeys = [ "ctrl+enter", "command+enter", "shift+enter" ]
 const regMatchSid = /sid=([a-zA-Z0-9\.\!]+)/
 const SFAPI_VERSION = 'v52.0'
+const otherExtensions = [
+	{
+		"id": "aodjmnfhjibkcdimpodiifdjnnncaafh",
+		"name": "Salesforce Inspector",
+		"checkData": {message: "getSfHost", url: location.href},
+		"commands": [
+			{label: "Data Export", url: "/data-export.html?host=$APIURL"}
+		]
+	}
+]
 const classicToLightingMap = {
 	'Fields': "/FieldsAndRelationships/view",
 	'Page Layouts': '/PageLayouts/view',

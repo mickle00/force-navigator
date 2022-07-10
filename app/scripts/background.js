@@ -1,6 +1,7 @@
 var setupTree = {}
 var metaData = {}
 var customObjects = {}
+const navDebug = false
 
 var showElement = (element)=>{
 	chrome.tabs.query({currentWindow: true, active: true}, (tabs)=>{
@@ -19,6 +20,26 @@ var showElement = (element)=>{
 				break
 		}
 	})
+}
+var getOtherExtensionCommands = (otherExtension, requestDetails, settings = {}, sendResponse)=>{
+	const url = requestDetails.domain.replace(/https*:\/\//, '')
+	const apiUrl = requestDetails.apiUrl
+	let commands = {}
+	if(chrome.management) {
+		chrome.management.get(otherExtension.id, response => {
+			if(response) {
+				otherExtension.commands.forEach(c=>{
+					commands[otherExtension.name + ' > ' + c.label] = {
+						"url": "chrome-extension://" + otherExtension.id + c.url.replace("$URL",url).replace("$APIURL",apiUrl),
+						"key": otherExtension.name + ' > ' + c.label
+					}
+				})
+			} else {
+				navDebug ? console.log("Extension not found", chrome.runtime.lastError) : null
+			}
+			sendResponse(commands)
+		})
+	}
 }
 var parseSetupTree = (response, url, settings = {})=>{
 	let commands = {}
@@ -115,14 +136,19 @@ var parseCustomObjects = (response, url, settings = {})=>{
 	return commands
 }
 var goToUrl = (targetUrl, newTab)=>{
-	targetUrl = targetUrl.replace(/chrome-extension:\/\/\w+\//,"/")
+	// removing this to work with otherExtension handling
+	// targetUrl = targetUrl.replace(/chrome-extension:\/\/\w+\//,"/")
 	chrome.tabs.query({currentWindow: true, active: true}, (tabs)=>{
 		let newUrl = targetUrl.match(/.*?\.com(.*)/)
 		newUrl = newUrl ? newUrl[1] : targetUrl
-		if(newTab)
-			chrome.tabs.create({ active: false, url: tabs[0].url.match(/.*?\.com/)[0] + newUrl})
+		if(!targetUrl.includes('chrome-extension'))
+			newUrl = tabs[0].url.match(/.*?\.com/)[0] + newUrl
 		else
-			chrome.tabs.update(tabs[0].id, { url: tabs[0].url.match(/.*?\.com/)[0] + newUrl})
+			newUrl = targetUrl
+		if(newTab)
+			chrome.tabs.create({ active: false, url: newUrl })
+		else
+			chrome.tabs.update(tabs[0].id, { url: newUrl })
 	})
 }
 
@@ -160,6 +186,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse)=>{
 	}
 	switch(request.action) {
 		case 'goToUrl': goToUrl(request.url, request.newTab); break
+		case 'getOtherExtensionCommands': getOtherExtensionCommands(request.otherExtension, request, request.settings, sendResponse); break
 		case 'getSetupTree':
 			if(setupTree[request.sessionHash] == null || request.force)
 				getHTTP("https://" + request.apiUrl + "/ui/setup/Setup", "document").then(response => {
