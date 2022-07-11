@@ -90,6 +90,7 @@ var sfnav = (()=>{
 				console.info("session settings:", sessionSettings)
 				console.info("server instance: ", serverInstance)
 				console.info("API Url: ", apiUrl)
+				console.info("Commands: ", commands)
 				return true; break
 			case "toggle developer name":
 			    sessionSettings.developername = !sessionSettings.developername
@@ -118,7 +119,7 @@ var sfnav = (()=>{
 		else if(checkCmd.substring(0,1) == "!") { createTask(cmd.substring(1).trim()) }
 		else if(checkCmd.substring(0,1) == "?") { targetUrl = searchTerms(cmd.substring(1).trim()) }
 		else if(typeof commands[cmd] != 'undefined' && commands[cmd].url) { targetUrl = commands[cmd].url }
-		else if(debug && !checkCmd.includes("create a task: !") && !checkCmd.includes("global search usage")) {
+		else if(sessionSettings.debug && !checkCmd.includes("create a task: !") && !checkCmd.includes("global search usage")) {
 			console.log(cmd + " not found in command list or incompatible")
 			return false
 		}

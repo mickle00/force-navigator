@@ -44,7 +44,19 @@ const regMatchSid = /sid=([a-zA-Z0-9\.\!]+)/
 const SFAPI_VERSION = 'v52.0'
 const otherExtensions = [
 	{
+		"platform": "chrome-extension",
 		"id": "aodjmnfhjibkcdimpodiifdjnnncaafh",
+		"urlId": "aodjmnfhjibkcdimpodiifdjnnncaafh",
+		"name": "Salesforce Inspector",
+		"checkData": {message: "getSfHost", url: location.href},
+		"commands": [
+			{label: "Data Export", url: "/data-export.html?host=$APIURL"}
+		]
+	},
+	{
+		"platform": "moz-extension",
+		"id": "jid1-DBcuAQpfLMcvOQ@jetpack",
+		"urlId": "e348e121-3b7c-4203-beaf-9f53cf606077",
 		"name": "Salesforce Inspector",
 		"checkData": {message: "getSfHost", url: location.href},
 		"commands": [

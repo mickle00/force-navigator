@@ -1,7 +1,6 @@
 var setupTree = {}
 var metaData = {}
 var customObjects = {}
-const navDebug = false
 
 var showElement = (element)=>{
 	chrome.tabs.query({currentWindow: true, active: true}, (tabs)=>{
@@ -30,12 +29,14 @@ var getOtherExtensionCommands = (otherExtension, requestDetails, settings = {}, 
 			if(response) {
 				otherExtension.commands.forEach(c=>{
 					commands[otherExtension.name + ' > ' + c.label] = {
-						"url": "chrome-extension://" + otherExtension.id + c.url.replace("$URL",url).replace("$APIURL",apiUrl),
+						"url": otherExtension.platform + "://" + otherExtension.urlId + c.url.replace("$URL",url).replace("$APIURL",apiUrl),
 						"key": otherExtension.name + ' > ' + c.label
 					}
 				})
 			} else {
-				navDebug ? console.log("Extension not found", chrome.runtime.lastError) : null
+				if(chrome.runtime.lastError) {
+					console.log("Extension not found", chrome.runtime.lastError)
+				}
 			}
 			sendResponse(commands)
 		})
@@ -141,7 +142,7 @@ var goToUrl = (targetUrl, newTab)=>{
 	chrome.tabs.query({currentWindow: true, active: true}, (tabs)=>{
 		let newUrl = targetUrl.match(/.*?\.com(.*)/)
 		newUrl = newUrl ? newUrl[1] : targetUrl
-		if(!targetUrl.includes('chrome-extension'))
+		if(!targetUrl.includes('-extension:'))
 			newUrl = tabs[0].url.match(/.*?\.com/)[0] + newUrl
 		else
 			newUrl = targetUrl
