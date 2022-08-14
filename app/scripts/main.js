@@ -6,7 +6,7 @@ var userId = null
 var sessionId = null
 var sessionHash = null
 var MAX_SEARCH_RESULTS = 32
-var sessionSettings = {
+var sessionSettings = { // further ideas: custom object filters (like ia_shadow)
 	theme:'theme-default',
 	searchLimit: 16,
 	enhancedprofiles: true,
@@ -26,6 +26,8 @@ var loaded = false
 var sfnav = (()=>{
 	function loadCommands(settings, force = false) {
 		if(serverInstance == null || orgId == null || sessionId == null) { init(); return false }
+		commands['Home'] = {}
+		commands['Setup'] = {}
 		commands['Merge Accounts'] = {}
 		commands['Toggle All Checkboxes'] = {}
 		commands['Toggle Lightning'] = {}
@@ -33,9 +35,7 @@ var sfnav = (()=>{
 		commands['Toggle Enhanced Profiles'] = {}
 		commands['Login As [login as <FirstName> <LastName> OR <Username>]'] = {}
 		// commands['Toggle Developer Name'] = {}
-		commands['Setup'] = {}
 		commands['?'] = {}
-		commands['Home'] = {}
 		let options = {
 			sessionHash: sessionHash,
 			domain: serverInstance,
@@ -47,17 +47,20 @@ var sfnav = (()=>{
 		}
 		chrome.runtime.sendMessage( Object.assign(options, {action:'getSetupTree'}), response=>{ Object.assign(commands, response) })
 		chrome.runtime.sendMessage( Object.assign(options, {action:'getMetadata'}), response=>{ Object.assign(commands, response) })
-		chrome.runtime.sendMessage( Object.assign(options, {action:'getCustomObjects'}), response=>{ Object.assign(commands, response) })
+		chrome.runtime.sendMessage( Object.assign(options, {action:'getCustomObjects'}), response=>{
+			Object.assign(commands, response)
+			// add settings to end of list
+			commands['⚙️ Refresh Metadata'] = {}
+			commands['⚙️ Dump Debug Info to Console'] = {}
+			commands['⚙️ Set Search Limit [set search result limit <##> (where the <##> is 32 or less)]'] = {}
+			const themes = Array('Default','Dark','Unicorn', 'Solarized') // should be able to pull dynamically from CSS, or else push it over
+			for (let i=themes.length-1;i>=0;i--) {
+				commands['⚙️ Set Theme: ' + themes[i]] = {}
+			}
+		})
 		otherExtensions.forEach(e=>{
 			chrome.runtime.sendMessage( Object.assign(options, {action:'getOtherExtensionCommands', otherExtension: e}), response=>{
 				Object.assign(commands, response)
-				commands['⚙️ Refresh Metadata'] = {}
-				commands['⚙️ Dump Debug Info to Console'] = {}
-				commands['⚙️ Set Search Limit [set search result limit <##> (where the <##> is 32 or less)]'] = {}
-				const themes = Array('Default','Dark','Unicorn', 'Solarized') // should be able to pull dynamically from CSS, or else push it over
-				for (var i = themes.length - 1; i >= 0; i--) {
-					commands['⚙️ Set Theme: ' + themes[i]] = {}
-				}
 			})
 		})
 		hideLoadingIndicator()
