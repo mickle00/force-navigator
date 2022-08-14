@@ -5,8 +5,10 @@ var orgId = null
 var userId = null
 var sessionId = null
 var sessionHash = null
+var MAX_SEARCH_RESULTS = 32
 var sessionSettings = {
 	theme:'theme-default',
+	searchLimit: 16,
 	enhancedprofiles: true,
 	debug: false,
 	developername: false
@@ -24,21 +26,16 @@ var loaded = false
 var sfnav = (()=>{
 	function loadCommands(settings, force = false) {
 		if(serverInstance == null || orgId == null || sessionId == null) { init(); return false }
-		commands['Refresh Metadata'] = {}
 		commands['Merge Accounts'] = {}
 		commands['Toggle All Checkboxes'] = {}
 		commands['Toggle Lightning'] = {}
 		commands['Object Manager'] = {}
 		commands['Toggle Enhanced Profiles'] = {}
-		commands['Dump Debug Info to Console'] = {}
+		commands['Login As [login as <FirstName> <LastName> OR <Username>]'] = {}
 		// commands['Toggle Developer Name'] = {}
 		commands['Setup'] = {}
 		commands['?'] = {}
 		commands['Home'] = {}
-		const themes = Array('Default','Dark','Unicorn', 'Solarized') // should be able to pull dynamically from CSS, or else push it over
-		for (var i = themes.length - 1; i >= 0; i--) {
-			commands['Set Theme: ' + themes[i]] = {}
-		}
 		let options = {
 			sessionHash: sessionHash,
 			domain: serverInstance,
@@ -52,7 +49,16 @@ var sfnav = (()=>{
 		chrome.runtime.sendMessage( Object.assign(options, {action:'getMetadata'}), response=>{ Object.assign(commands, response) })
 		chrome.runtime.sendMessage( Object.assign(options, {action:'getCustomObjects'}), response=>{ Object.assign(commands, response) })
 		otherExtensions.forEach(e=>{
-			chrome.runtime.sendMessage( Object.assign(options, {action:'getOtherExtensionCommands', otherExtension: e}), response=>{ Object.assign(commands, response) })
+			chrome.runtime.sendMessage( Object.assign(options, {action:'getOtherExtensionCommands', otherExtension: e}), response=>{
+				Object.assign(commands, response)
+				commands['⚙️ Refresh Metadata'] = {}
+				commands['⚙️ Dump Debug Info to Console'] = {}
+				commands['⚙️ Set Search Limit [set search result limit <##> (where the <##> is 32 or less)]'] = {}
+				const themes = Array('Default','Dark','Unicorn', 'Solarized') // should be able to pull dynamically from CSS, or else push it over
+				for (var i = themes.length - 1; i >= 0; i--) {
+					commands['⚙️ Set Theme: ' + themes[i]] = {}
+				}
+			})
 		})
 		hideLoadingIndicator()
 	}
@@ -114,6 +120,24 @@ var sfnav = (()=>{
 				break
 		}
 		if(checkCmd.substring(0,9) == 'login as ') { loginAs(cmd, newTab); return true }
+		if(checkCmd.replace(/\d+/,'').trim().split(' ').reduce((i,c) => {
+			if('set search limit'.includes(c))
+				return ++i
+			else
+				return i
+		}, 0) > 1) {
+			const newLimit = parseInt(checkCmd.replace(/\D+/,''))
+			if(newLimit != NaN && newLimit <= MAX_SEARCH_RESULTS) {
+				sessionSettings.searchLimit = newLimit
+				chrome.storage.sync.set({searchLimit: sessionSettings.searchLimit}, response=>{
+					refreshAndClear()
+					addWord('Search settings updated')
+				})
+				return true
+			} else {
+				addError([{'message':'Be sure to set your search limit to 32 or less'}])
+			}
+		}
 		else if(checkCmd.substring(0,10) == "set theme:") { setTheme(cmd); return true }
 		else if(checkCmd.substring(0,14) == "merge accounts") { launchMergerAccounts(cmd.substring(14).trim()) }
 		else if(checkCmd.substring(0,1) == "!") { createTask(cmd.substring(1).trim()) }
@@ -347,7 +371,6 @@ var sfnav = (()=>{
 			else
 			listPosition = -1
 		}
-		if ('login as'.includes(input.toLowerCase())) addWord('Usage: login as <FirstName> <LastName> OR <Username>')
 		let firstEl = document.querySelector('#sfnav_output :first-child')
 		if(listPosition == -1 && firstEl != null) firstEl.className = "sfnav_child sfnav_selected"
 	}
@@ -365,23 +388,28 @@ var sfnav = (()=>{
 			dictItems = [],
 			terms = input.toLowerCase().split(" ")
 		for (var key in dict) {
-			if(dictItems.length > 10) break // stop at 10 since we can't see longer than that anyways - should make this a setting
 			if(key.toLowerCase().indexOf(input) != -1) {
-				dictItems.push({num: 10, key: key})
+				dictItems.push({num: sessionSettings.searchLimit, key: key})
 			} else {
 				let match = 0
-				for(var i = 0;i<terms.length;i++) {
+				for(let i=0;i<terms.length;i++) {
 					if(key.toLowerCase().indexOf(terms[i]) != -1) {
 						match++
 						sortValue = 1
 					}
+				}
+				for(let i=1;i<=terms.length;i++) {
+					if(key.toLowerCase().indexOf(terms.slice(0,i).join(' ')) != -1)
+						sortValue++
+					else
+						break
 				}
 				if (match == terms.length)
 					dictItems.push({num : sortValue, key : key})
 			}
 		}
 		dictItems.sort(function(a,b) { return b.num - a.num })
-		for(var i = 0;i < dictItems.length;i++)
+		for(let i = 0;i < sessionSettings.searchLimit && dictItems[i];i++)
 			foundCommands.push(dictItems[i].key)
 		return foundCommands
 	} 

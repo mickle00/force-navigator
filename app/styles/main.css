@@ -64,7 +64,7 @@
 	display: flex;
 }
 #sfnav_searchBox .sfnav_output {
-	max-height:240px;
+	max-height:640px;
 	overflow:auto;
 }
 .sfnav_shadow {

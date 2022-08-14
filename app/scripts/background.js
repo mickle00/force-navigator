@@ -137,8 +137,6 @@ var parseCustomObjects = (response, url, settings = {})=>{
 	return commands
 }
 var goToUrl = (targetUrl, newTab)=>{
-	// removing this to work with otherExtension handling
-	// targetUrl = targetUrl.replace(/chrome-extension:\/\/\w+\//,"/")
 	chrome.tabs.query({currentWindow: true, active: true}, (tabs)=>{
 		let newUrl = targetUrl.match(/.*?\.com(.*)/)
 		newUrl = newUrl ? newUrl[1] : targetUrl
