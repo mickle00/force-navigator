@@ -45,6 +45,7 @@ var getOtherExtensionCommands = (otherExtension, requestDetails, settings = {}, 
 var parseSetupTree = (response, url, settings = {})=>{
 	let commands = {}
 	let strNameMain, strName
+	const lightningMode = settings.lightningMode || url.includes("lightning.force")
 	;[].map.call(response.querySelectorAll('.setupLeaf > a[id*="_font"]'), function(item) {
 		let hasTopParent = false, hasParent = false
 		let parent, topParent, parentEl, topParentEl
@@ -62,29 +63,31 @@ var parseSetupTree = (response, url, settings = {})=>{
 		strNameMain += (hasParent ? (parent + ' > ') : '')
 		strName = strNameMain + item.innerText
 		let targetUrl = item.href
-	// Manual fixes -- should look for way to generalize this
-		if(strName.match(/(Members|Fields)/g)?.length > 1 && url.includes("lightning"))
-			targetUrl = url + '/lightning/setup/ObjectManager/CampaignMember/FieldsAndRelationships/view'
-		if(strName.match(/(Opportunity|Product|Fields)/g)?.length > 2 && url.includes("lightning"))
-			targetUrl = url + '/lightning/setup/ObjectManager/OpportunityLineItem/FieldsAndRelationships/view'
-		if(url.includes("lightning.force") && Object.keys(setupLabelsToLightningMap).includes(item.innerText)) {
-			targetUrl = url + setupLabelsToLightningMap[item.innerText]
-			delete setupLabelsToLightningMap[item.innerText]
-		}
-		if(url.includes("lightning.force") && strNameMain.includes("Customize") && Object.keys(classicToLightingMap).includes(item.innerText)) {
-			let objectLabel = pluralize(parent, 1) // need to add developerName handling for standard objects
-			let objectName = objectLabel.replace(/\s/g, "")
-				if(objectName.includes('Product')) { objectName += '2' }
-			if(commands['List ' + parent ] == null) { commands['List ' + parent ] = {url: url + "/lightning/o/" + objectName + "/list", key: "List " + parent} }
-			if(commands['New ' + objectLabel ] == null) { commands['New ' + objectLabel ] = {url: url + "/lightning/o/" + objectName + "/new", key: "New " + objectLabel} }
-			if(commands['Setup > Customize > ' + objectLabel + ' > Lightning Record Pages'] == null) {
-				commands['Setup > Customize > ' + objectLabel + ' > Lightning Record Pages'] = {
-					url: url + "/lightning/setup/ObjectManager/" + objectName + "/LightningPages/view",
-					key: "New " + objectLabel
-				}
+		// Manual fixes -- should look for way to generalize this
+		if(lightningMode) {
+			if(strName.match(/(Members|Fields)/g)?.length > 1)
+				targetUrl = url + '/lightning/setup/ObjectManager/CampaignMember/FieldsAndRelationships/view'
+			if(strName.match(/(Opportunity|Product|Fields)/g)?.length > 2)
+				targetUrl = url + '/lightning/setup/ObjectManager/OpportunityLineItem/FieldsAndRelationships/view'
+			if(Object.keys(setupLabelsToLightningMap).includes(item.innerText)) {
+				targetUrl = url + setupLabelsToLightningMap[item.innerText]
+				delete setupLabelsToLightningMap[item.innerText]
 			}
-			targetUrl = url + "/lightning/setup/ObjectManager/" + objectName
-			targetUrl += classicToLightingMap[item.innerText]
+			if(strNameMain.includes("Customize") && Object.keys(classicToLightningMap).includes(item.innerText)) {
+				let objectLabel = pluralize(parent, 1) // need to add developerName handling for standard objects
+				let objectName = objectLabel.replace(/\s/g, "")
+					if(objectName.includes('Product')) { objectName += '2' }
+				if(commands['List ' + parent ] == null) { commands['List ' + parent ] = {url: url + "/lightning/o/" + objectName + "/list", key: "List " + parent} }
+				if(commands['New ' + objectLabel ] == null) { commands['New ' + objectLabel ] = {url: url + "/lightning/o/" + objectName + "/new", key: "New " + objectLabel} }
+				if(commands['Setup > Customize > ' + objectLabel + ' > Lightning Record Pages'] == null) {
+					commands['Setup > Customize > ' + objectLabel + ' > Lightning Record Pages'] = {
+						url: url + "/lightning/setup/ObjectManager/" + objectName + "/LightningPages/view",
+						key: "New " + objectLabel
+					}
+				}
+				targetUrl = url + "/lightning/setup/ObjectManager/" + objectName
+				targetUrl += classicToLightningMap[item.innerText]
+			}
 		}
 		if(targetUrl.includes('-extension')) {
 			targetUrl = targetUrl.replace(item.origin,'')
@@ -92,7 +95,7 @@ var parseSetupTree = (response, url, settings = {})=>{
 		if(commands[strName] == null) commands[strName] = {url: targetUrl, key: strName}
 	})
 	// add Lightning direct links
-	if(url.includes("lightning.force")) {
+	if(lightningMode) {
 		Object.keys(setupLabelsToLightningMap).forEach(k => {
 			if(commands[k] == null) { commands[k] = {
 				url: url + setupLabelsToLightningMap[k],
@@ -103,12 +106,13 @@ var parseSetupTree = (response, url, settings = {})=>{
 	return commands
 }
 var parseMetadata = (data, url, settings = {})=>{
-	skipObjects = ["0DM"]
+	const skipObjects = ["0DM"]
+	const lightningMode = settings.lightningMode || url.includes("lightning.force")
 	if (data.length == 0 || typeof data.sobjects == "undefined") return false
 	return data.sobjects.reduce((commands, { labelPlural, label, name, keyPrefix }) => {
 		if (!keyPrefix || skipObjects.includes(keyPrefix)) { return commands }
 		let baseUrl = "/";
-		if (url.includes("lightning.force") && name.endsWith("__mdt")) {
+		if (lightningMode && name.endsWith("__mdt")) {
 			baseUrl += "lightning/setup/CustomMetadata/page?address=";
 		}
 		commands["List " + labelPlural] = { key: name, keyPrefix, url: `${baseUrl}/${keyPrefix}` }
@@ -118,16 +122,17 @@ var parseMetadata = (data, url, settings = {})=>{
 }
 var parseCustomObjects = (response, url, settings = {})=>{
 	let commands = {}
-	let mapKeys = Object.keys(classicToLightingMap)
+	let mapKeys = Object.keys(classicToLightningMap)
+	const lightningMode = settings.lightningMode || url.includes("lightning.force")
 // will likely have to change this to a REST call to get the API names
 	;[].map.call(response.querySelectorAll('th a'), function(el) {
-		if(url.includes("lightning.force")) {
+		if(lightningMode) {
 			let objectId = el.href.match(/\/(\w+)\?/)[1]
 			let targetUrl = url + "/lightning/setup/ObjectManager/" + objectId
 			commands['Setup > Custom Object > ' + el.text + ' > Details'] = {url: targetUrl + "/Details/view", key: el.text + " > Fields"};
 			for (var i = 0; i < mapKeys.length; i++) {
 				let key = mapKeys[i]
-				let urlElement = classicToLightingMap[ key ]
+				let urlElement = classicToLightningMap[ key ]
 				commands['Setup > Custom Object > ' + el.text + ' > ' + key] = {url: targetUrl + urlElement, key: el.text + " > " + key}
 			}
 		} else {

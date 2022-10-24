@@ -64,7 +64,7 @@ const otherExtensions = [
 		]
 	}
 ]
-const classicToLightingMap = {
+const classicToLightningMap = {
 	'Fields': "/FieldsAndRelationships/view",
 	'Page Layouts': '/PageLayouts/view',
 	'Lightning Record Pages': '/LightningPages/view',
@@ -358,8 +358,8 @@ const setupLabelsToLightningMap = {
 "Send through External Email Services": "/lightning/setup/EmailTransportServiceSetupPage/home",
 "Session Management": "/lightning/setup/SessionManagementPage/home",
 "Session Settings": "/lightning/setup/SecuritySession/home",
-"Settings": "/lightning/setup/ActivitySyncEngineSettingsMain/home",
 "Setup Home": "/lightning/setup/SetupOneHome/home",
+"Setup > Manage Territories > Settings": "/lightning/setup/Territory2Settings/home",
 "Sharing Settings": "/lightning/setup/SecuritySharing/home",
 "Single Sign-On Settings": "/lightning/setup/SingleSignOn/home",
 "Sites": "/lightning/setup/CustomDomain/home",

@@ -11,8 +11,10 @@ var sessionSettings = { // further ideas: custom object filters (like ia_shadow)
 	searchLimit: 16,
 	enhancedprofiles: true,
 	debug: false,
-	developername: false
-}
+	developername: false,
+	lightningMode: true,
+	ignoreList: ''
+} // ignoreList will be for filtering custom objects, will need an add, remove, and list call
 var serverInstance = ''
 var apiUrl = ''
 var ctrlKey = false
@@ -45,9 +47,9 @@ var sfnav = (()=>{
 			force: force,
 			sessionId: sessionId
 		}
-		chrome.runtime.sendMessage( Object.assign(options, {action:'getSetupTree'}), response=>{ Object.assign(commands, response) })
-		chrome.runtime.sendMessage( Object.assign(options, {action:'getMetadata'}), response=>{ Object.assign(commands, response) })
-		chrome.runtime.sendMessage( Object.assign(options, {action:'getCustomObjects'}), response=>{
+		chrome.runtime.sendMessage( Object.assign(options, {action:'getSetupTree', settings: sessionSettings}), response=>{ Object.assign(commands, response) })
+		chrome.runtime.sendMessage( Object.assign(options, {action:'getMetadata', settings: sessionSettings}), response=>{ Object.assign(commands, response) })
+		chrome.runtime.sendMessage( Object.assign(options, {action:'getCustomObjects', settings: sessionSettings}), response=>{
 			Object.assign(commands, response)
 			// add settings to end of list
 			commands['⚙️ Refresh Metadata'] = {}
@@ -84,9 +86,17 @@ var sfnav = (()=>{
 				break
 			case "toggle lightning":
 				let mode
-				if(window.location.href.includes("lightning.force")) mode = "classic"
-				else mode = "lex-campaign"
+				if(window.location.href.includes("lightning.force")) {
+					mode = "classic"
+					sessionSettings.lightningMode = false
+				} else {
+					mode = "lex-campaign"
+					sessionSettings.lightningMode = true
+				}
 				targetUrl = serverInstance + "/ltng/switcher?destination=" + mode
+				chrome.storage.sync.set({lightningMode: sessionSettings.lightningMode}, response=>{
+					refreshAndClear()
+				})
 				break
 			case "toggle enhanced profiles":
 				sessionSettings.enhancedprofiles = !sessionSettings.enhancedprofiles
@@ -95,12 +105,14 @@ var sfnav = (()=>{
 				})
 				return true
 				break
+			case "dump":
 			case "dump debug info to console":
 				console.info("session settings:", sessionSettings)
 				console.info("server instance: ", serverInstance)
 				console.info("API Url: ", apiUrl)
 				console.info("Commands: ", commands)
-				return true; break
+				hideSearchBox
+				break
 			case "toggle developer name":
 			    sessionSettings.developername = !sessionSettings.developername
 				chrome.storage.sync.set({developername: sessionSettings.developername}, response=>{
