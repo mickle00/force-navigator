@@ -180,8 +180,11 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse)=>{
 					getHTTP("https://" + request.domain + '/services/data/' + SFAPI_VERSION, "json",
 						{"Authorization": "Bearer " + request.sid, "Accept": "application/json"}
 					).then(response => {
-						request.uid = response.identity.match(/005.*/)[0]
-						sendResponse({sessionId: request.sid, userId: request.uid, apiUrl: request.domain})
+						if(response?.identity) {
+							request.uid = response.identity.match(/005.*/)[0]
+							sendResponse({sessionId: request.sid, userId: request.uid, apiUrl: request.domain})
+						}
+						else sendResponse({error: "No user data found for " + request.key})
 					})
 				}
 				else sendResponse({error: "No session data found for " + request.key})
