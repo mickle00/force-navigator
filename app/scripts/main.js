@@ -32,6 +32,10 @@ var sfnav = (()=>{
 		commands['Setup'] = {}
 		commands['Merge Accounts'] = {}
 		commands['Toggle All Checkboxes'] = {}
+		if(sessionSettings.lightningMode)
+			commands['Switch to Classic'] = {}
+		else
+			commands['Switch to Lightning'] = {}
 		commands['Toggle Lightning'] = {}
 		commands['Object Manager'] = {}
 		commands['Toggle Enhanced Profiles'] = {}
@@ -84,6 +88,8 @@ var sfnav = (()=>{
 			case "object manager":
 				targetUrl = serverInstance + "/lightning/setup/ObjectManager/home"
 				break
+			case "switch to classic":
+			case "switch to lightning":
 			case "toggle lightning":
 				let mode
 				if(window.location.href.includes("lightning.force")) {
@@ -177,7 +183,19 @@ var sfnav = (()=>{
 			return false
 		}
 	}
-	var goToUrl = function(url, newTab, settings) { chrome.runtime.sendMessage({ action: 'goToUrl', url: url, newTab: newTab, settings: Object.assign(settings, {serverInstance: serverInstance, lightningMode: sessionSettings.lightningMode}) } , function(response) {}) }
+	var hotfixUrl = function(url) { // forcing fixes for mysterious Classic hotswaps
+		if(sessionSettings.lightningMode) {
+			if(url.includes('InteractionProcesses'))
+				url = '/lightning/setup/Flows/home'
+			else if(url.includes('LoginFlow'))
+				url = '/lightning/setup/LoginFlow/home'
+		}
+		return url
+	}
+	var goToUrl = function(url, newTab, settings) {
+		url = hotfixUrl(url)
+		chrome.runtime.sendMessage({ action: 'goToUrl', url: url, newTab: newTab, settings: Object.assign(settings, {serverInstance: serverInstance, lightningMode: sessionSettings.lightningMode}) } , function(response) {})
+	}
 	var searchTerms = function (terms) {
 		var targetUrl = serverInstance
 		if(serverInstance.includes('.force.com'))
@@ -511,7 +529,7 @@ var sfnav = (()=>{
 			document.onkeyup = (ev)=>{ window.ctrlKey = ev.ctrlKey }
 			document.onkeydown = (ev)=>{ window.ctrlKey = ev.ctrlKey }
 			orgId = document.cookie.match(/sid=([\w\d]+)/)[1]
-			serverInstance = getServerInstance()
+			serverInstance = getServerInstance(sessionSettings)
 			sessionHash = getSessionHash()
 			chrome.storage.sync.get(sessionSettings, settings=> {
 				sessionSettings = settings
