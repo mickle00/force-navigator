@@ -35,7 +35,7 @@ var getOtherExtensionCommands = (otherExtension, requestDetails, settings = {}, 
 				})
 			} else {
 				if(chrome.runtime.lastError) {
-					console.log("Extension not found", chrome.runtime.lastError)
+					console.debug("Extension not found", chrome.runtime.lastError)
 				}
 			}
 			sendResponse(commands)
@@ -141,12 +141,21 @@ var parseCustomObjects = (response, url, settings = {})=>{
 	})
 	return commands
 }
-var goToUrl = (targetUrl, newTab)=>{
+var goToUrl = (targetUrl, newTab, settings)=>{
 	chrome.tabs.query({currentWindow: true, active: true}, (tabs)=>{
+		const re = new RegExp("\\w+-extension:\/\/"+chrome.runtime.id,"g");
+		targetUrl = targetUrl.replace(re,'')
 		let newUrl = targetUrl.match(/.*?\.com(.*)/)
 		newUrl = newUrl ? newUrl[1] : targetUrl
+console.log(targetUrl,settings,setupLabelsToLightningMap[settings.cmd])
 		if(!targetUrl.includes('-extension:'))
 			newUrl = tabs[0].url.match(/.*?\.com/)[0] + newUrl
+		else if(settings.lightningMode && !targetUrl.includes('lightning')) {
+			cmd = settings.cmd.replace("Setup > Create > Workflow & Approvals > ","")
+			cmd = cmd.replace("Setup ","")
+			console.log(targetUrl,settings,setupLabelsToLightningMap[cmd])
+			newUrl = setupLabelsToLightningMap[cmd]
+		}
 		else
 			newUrl = targetUrl
 		if(newTab)
@@ -192,7 +201,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse)=>{
 		} else sendResponse({error: "Must include orgId"})
 	}
 	switch(request.action) {
-		case 'goToUrl': goToUrl(request.url, request.newTab); break
+		case 'goToUrl': goToUrl(request.url, request.newTab, request.settings); break
 		case 'getOtherExtensionCommands': getOtherExtensionCommands(request.otherExtension, request, request.settings, sendResponse); break
 		case 'getSetupTree':
 			if(setupTree[request.sessionHash] == null || request.force)

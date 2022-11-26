@@ -93,7 +93,13 @@ var sfnav = (()=>{
 					mode = "lex-campaign"
 					sessionSettings.lightningMode = true
 				}
-				targetUrl = serverInstance + "/ltng/switcher?destination=" + mode
+				if(true) {
+					targetUrl = serverInstance + "/ltng/switcher?destination=" + mode
+				} else {
+					// trying to preserve current page
+					matchUrl = window.location.href.replace(serverInstance,"")
+					targetUrl = serverInstance + matchUrl
+				}
 				chrome.storage.sync.set({lightningMode: sessionSettings.lightningMode}, response=>{
 					refreshAndClear()
 				})
@@ -164,14 +170,14 @@ var sfnav = (()=>{
 		}
 		if(targetUrl != "") {
 			hideSearchBox()
-			if(newTab)
-				goToUrl(targetUrl, newTab)
-			else
-				goToUrl(targetUrl)
+			goToUrl(targetUrl, newTab, {cmd: cmd})
 			return true
-		} else { return false }
+		} else {
+			console.debug('No command match', cmd)
+			return false
+		}
 	}
-	var goToUrl = function(url, newTab) { chrome.runtime.sendMessage({ action: 'goToUrl', url: url, newTab: newTab } , function(response) {}) }
+	var goToUrl = function(url, newTab, settings) { chrome.runtime.sendMessage({ action: 'goToUrl', url: url, newTab: newTab, settings: Object.assign(settings, {serverInstance: serverInstance, lightningMode: sessionSettings.lightningMode}) } , function(response) {}) }
 	var searchTerms = function (terms) {
 		var targetUrl = serverInstance
 		if(serverInstance.includes('.force.com'))
