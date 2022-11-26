@@ -1,16 +1,19 @@
 var getServerInstance = (settings = {})=>{
 	let targetUrl
 	let url = location.origin + ""
-	if(settings.lightningMode) // if(url.indexOf("lightning.force") != -1)
-		targetUrl = url.substring(0, url.indexOf("lightning.force")) + "lightning.force.com"
-	else if(url.indexOf("salesforce") != -1)
-		targetUrl = url.substring(0, url.indexOf("salesforce") - 5) + "salesforce.com"
-	else if(url.indexOf("cloudforce") != -1)
-		targetUrl = url.substring(0, url.indexOf("cloudforce") - 5) + "cloudforce.com"
-	else if(url.indexOf("visual.force") != -1) {
-		let urlParseArray = url.split(".")
-		console.debug('parsing Visualforce page', urlParseArray)
-		targetUrl = 'https://' + urlParseArray[1] + ''
+	if(settings.lightningMode) {// if(url.indexOf("lightning.force") != -1)
+		targetUrl = url.replace('lightning.force.com','').replace('my.salesforce.com','') + "lightning.force.com"
+	} else {
+		if(url.includes("salesforce"))
+			targetUrl = url.substring(0, url.indexOf("salesforce")) + "salesforce.com"
+		else if(url.includes("cloudforce"))
+			targetUrl = url.substring(0, url.indexOf("cloudforce")) + "cloudforce.com"
+		else if(url.includes("visual.force")) {
+			let urlParseArray = url.split(".")
+			targetUrl = urlParseArray[1] + '.salesforce.com'
+		} else {
+			targetUrl = url.replace('lightning.force.com','') + "my.salesforce.com"
+		}
 	}
 	return targetUrl
 }
@@ -81,10 +84,10 @@ const classicToLightningMap = {
 	'Validation Rules': '/ValidationRules/view'
 }
 
-const setupLabelMap = {
+const setupLabelsMap = {
     "Home": {
         "lightning": "/lightning/page/home",
-        "classic": "/"
+        "classic": "//"
     },
     "Setup": {
 		"lightning": "",

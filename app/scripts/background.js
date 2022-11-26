@@ -45,7 +45,7 @@ var getOtherExtensionCommands = (otherExtension, requestDetails, settings = {}, 
 var parseSetupTree = (response, url, settings = {})=>{
 	let commands = {}
 	let strNameMain, strName
-	const lightningMode = settings.lightningMode || url.includes("lightning.force")
+	// const lightningMode = settings.lightningMode // || url.includes("lightning.force")
 	;[].map.call(response.querySelectorAll('.setupLeaf > a[id*="_font"]'), function(item) {
 		let hasTopParent = false, hasParent = false
 		let parent, topParent, parentEl, topParentEl
@@ -64,11 +64,11 @@ var parseSetupTree = (response, url, settings = {})=>{
 		strName = strNameMain + item.innerText
 		let targetUrl = item.href
 		if(Object.keys(setupLabelsMap).includes(item.innerText)) {
-			targetUrl = url + setupLabelsMap[item.innerText][lightningMode ? 'lightning' : 'classic']
+			targetUrl = url + setupLabelsMap[item.innerText][settings.lightningMode ? 'lightning' : 'classic']
 			delete setupLabelsToLightningMap[item.innerText] // may delete
 		}
 		// Manual fixes -- should look for way to generalize this
-		if(lightningMode) {
+		if(settings.lightningMode) {
 			if(strName.match(/(Members|Fields)/g)?.length > 1)
 				targetUrl = url + '/lightning/setup/ObjectManager/CampaignMember/FieldsAndRelationships/view'
 			if(strName.match(/(Opportunity|Product|Fields)/g)?.length > 2)
@@ -95,7 +95,7 @@ var parseSetupTree = (response, url, settings = {})=>{
 		if(commands[strName] == null) commands[strName] = {url: targetUrl, key: strName}
 	})
 	// add Lightning direct links
-	if(lightningMode) {
+	if(settings.lightningMode) {
 		Object.keys(setupLabelsToLightningMap).forEach(k => {
 			if(commands[k] == null) { commands[k] = {
 				url: url + setupLabelsToLightningMap[k],
@@ -149,11 +149,6 @@ var goToUrl = (targetUrl, newTab, settings = {})=>{
 		newUrl = newUrl ? newUrl[1] : targetUrl
 		if(!targetUrl.includes('-extension:'))
 			newUrl = tabs[0].url.match(/.*?\.com/)[0] + newUrl
-		// else if(settings.lightningMode && !targetUrl.includes('lightning')) {
-		// 	cmd = settings.cmd.split('>')
-		// 	cmd = cmd[cmd.length-1].trim()
-		// 	newUrl = setupLabelsMap[cmd][settings.lightningMode ? 'lightning': 'classic']
-		// } // commenting out to try to push the checking up to the top level
 		else
 			newUrl = targetUrl
 		if(newTab)
@@ -200,7 +195,9 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse)=>{
 	}
 	switch(request.action) {
 		case 'goToUrl': goToUrl(request.url, request.newTab, request.settings); break
-		case 'getOtherExtensionCommands': getOtherExtensionCommands(request.otherExtension, request, request.settings, sendResponse); break
+		case 'getOtherExtensionCommands':
+			getOtherExtensionCommands(request.otherExtension, request, request.settings, sendResponse)
+			break
 		case 'getSetupTree':
 			if(setupTree[request.sessionHash] == null || request.force)
 				getHTTP("https://" + request.apiUrl + "/ui/setup/Setup", "document").then(response => {

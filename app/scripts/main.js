@@ -28,6 +28,8 @@ var loaded = false
 var sfnav = (()=>{
 	function loadCommands(settings, force = false) {
 		if(serverInstance == null || orgId == null || sessionId == null) { init(); return false }
+		if(force)
+			commands = {}
 		commands['Home'] = {}
 		commands['Setup'] = {}
 		commands['Merge Accounts'] = {}
@@ -51,6 +53,7 @@ var sfnav = (()=>{
 			force: force,
 			sessionId: sessionId
 		}
+console.log('o', options)
 		chrome.runtime.sendMessage( Object.assign(options, {action:'getSetupTree', settings: sessionSettings}), response=>{ Object.assign(commands, response) })
 		chrome.runtime.sendMessage( Object.assign(options, {action:'getMetadata', settings: sessionSettings}), response=>{ Object.assign(commands, response) })
 		chrome.runtime.sendMessage( Object.assign(options, {action:'getCustomObjects', settings: sessionSettings}), response=>{
@@ -73,17 +76,17 @@ var sfnav = (()=>{
 	}
 	function refreshAndClear() {
 		showLoadingIndicator()
+		serverInstance = getServerInstance(sessionSettings)
 		loadCommands(sessionSettings, true)
 		document.getElementById("sfnav_quickSearch").value = ""
 	}
 	function invokeCommand(cmd, newTab, event) {
 		if(cmd == "") { return false }
-		let checkCmd = cmd.toLowerCase()
+		let checkCmd = cmd.toLowerCase().replace('⚙️','').trim()
 		let targetUrl = ""
 		switch(checkCmd) {
 			case "refresh metadata":
-				return refreshAndClear()
-				return true
+				refreshAndClear()
 				break
 			case "object manager":
 				targetUrl = serverInstance + "/lightning/setup/ObjectManager/home"
@@ -92,7 +95,7 @@ var sfnav = (()=>{
 			case "switch to lightning":
 			case "toggle lightning":
 				let mode
-				if(window.location.href.includes("lightning.force")) {
+				if(sessionSettings.lightningMode) {
 					mode = "classic"
 					sessionSettings.lightningMode = false
 				} else {
@@ -133,7 +136,7 @@ var sfnav = (()=>{
 				return true
 				break
 			case "setup":
-				if(serverInstance.includes("lightning.force"))
+				if(sessionSettings.lightningMode)
 					targetUrl = serverInstance + "/lightning/setup/SetupOneHome/home"
 				else
 					targetUrl = serverInstance + "/ui/setup/Setup"
@@ -183,22 +186,12 @@ var sfnav = (()=>{
 			return false
 		}
 	}
-	var hotfixUrl = function(url) { // forcing fixes for mysterious Classic hotswaps
-		if(sessionSettings.lightningMode) {
-			if(url.includes('InteractionProcesses'))
-				url = '/lightning/setup/Flows/home'
-			else if(url.includes('LoginFlow'))
-				url = '/lightning/setup/LoginFlow/home'
-		}
-		return url
-	}
 	var goToUrl = function(url, newTab, settings) {
-		url = hotfixUrl(url)
 		chrome.runtime.sendMessage({ action: 'goToUrl', url: url, newTab: newTab, settings: Object.assign(settings, {serverInstance: serverInstance, lightningMode: sessionSettings.lightningMode}) } , function(response) {})
 	}
 	var searchTerms = function (terms) {
 		var targetUrl = serverInstance
-		if(serverInstance.includes('.force.com'))
+		if(sessionSettings.lightningMode)
 			targetUrl += "/one/one.app#" + btoa(JSON.stringify({"componentDef":"forceSearch:search","attributes":{"term": terms,"scopeMap":{"type":"TOP_RESULTS"},"context":{"disableSpellCorrection":false,"SEARCH_ACTIVITY":{"term": terms}}}}))
 		else
 			targetUrl += "/_ui/search/ui/UnifiedSearchResults?sen=ka&sen=500&str=" + encodeURI(terms) + "#!/str=" + encodeURI(terms) + "&searchAll=true&initialViewMode=summary"
@@ -529,10 +522,10 @@ var sfnav = (()=>{
 			document.onkeyup = (ev)=>{ window.ctrlKey = ev.ctrlKey }
 			document.onkeydown = (ev)=>{ window.ctrlKey = ev.ctrlKey }
 			orgId = document.cookie.match(/sid=([\w\d]+)/)[1]
-			serverInstance = getServerInstance(sessionSettings)
 			sessionHash = getSessionHash()
 			chrome.storage.sync.get(sessionSettings, settings=> {
 				sessionSettings = settings
+				serverInstance = getServerInstance(sessionSettings)
 				let theme = settings.theme
 				var div = document.createElement('div')
 				div.setAttribute('id', 'sfnav_styleBox')
