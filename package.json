@@ -19,7 +19,6 @@
     "webpack-merge": "^5.8.0"
   },
   "dependencies": {
-    "@arrow-js/core": "latest",
     "lisan": "latest",
     "mousetrap": "latest"
   }
