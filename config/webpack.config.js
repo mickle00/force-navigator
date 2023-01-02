@@ -12,10 +12,7 @@ const config = (env, argv) =>
       popup: PATHS.src + '/popup.js',
       contentScript: PATHS.src + '/contentScript.js',
       background: PATHS.src + '/background.js',
-      main: PATHS.src + '/main.js',
-      mousetrap: PATHS.src + '/mousetrap.min.js',
       shared: PATHS.src + '/shared.js',
-      pluralize: PATHS.src + '/pluralize.js',
     },
     devtool: argv.mode === 'production' ? false : 'source-map',
   });

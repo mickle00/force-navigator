@@ -39,7 +39,7 @@
 	--iconFilter: hue-rotate(240deg);	
 }
 
-#sfnav_searchBox {
+#sfnavSearchBox {
 	opacity: 0;
 	transition-property: opacity;
 	transition-duration: .2s;
@@ -57,13 +57,13 @@
 	background-color: var(--boxBackgroundColor);
 	font-family: Helvetica, Arial, sans-serif;
 }
-#sfnav_searchBox .sfnav_wrapper {
+#sfnavSearchBox .sfnav_wrapper {
 	background: var(--boxBackgroundColor);
 	position:relative;
 	height: 48px;
 	display: flex;
 }
-#sfnav_searchBox .sfnav_output {
+#sfnavSearchBox .sfnavOutput {
 	max-height:640px;
 	overflow:auto;
 }
@@ -80,7 +80,7 @@
 	font-size: 16px;
 	text-decoration: none;
 }
-#sfnav_searchBox input {
+#sfnavSearchBox input {
 	position: relative;
 	flex: 1;
 	display: inline-block;
@@ -101,7 +101,7 @@
 	height:48px;
 	display: inline-block;
 }
-#sfnav_loader {
+#sfnavLoader {
 	visibility: hidden;
 	display: inline-block;
 	width: 16px;
