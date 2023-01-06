@@ -26,19 +26,16 @@ export let forceNavigatorSettings = {
 		chrome.storage.sync.get(forceNavigatorSettings, settings=>{
 			forceNavigatorSettings = settings
 			forceNavigator.serverInstance = forceNavigator.getServerInstance(forceNavigatorSettings)
-			if(forceNavigator.sessionId === null) {
-				chrome.runtime.sendMessage({ "action": "getApiSessionId", "key": forceNavigator.organizationId }, response=>{
-					if(response && response.error) console.log("response", orgId, response, chrome.runtime.lastError)
-					else {
-						forceNavigator.sessionId = unescape(response.sessionId)
-						forceNavigator.userId = unescape(response.userId)
-						forceNavigator.apiUrl = unescape(response.apiUrl)
-						forceNavigator.loadCommands(settings)
-						ui.hideLoadingIndicator()
-						ui.bindShortcuts()
-					}
-				})
-			}
+			if(forceNavigator.sessionId !== null) { return }
+			chrome.runtime.sendMessage({ "action": "getApiSessionId", "key": forceNavigator.organizationId }, response=>{
+				if(response && response.error) { console.error("response", orgId, response, chrome.runtime.lastError); return }
+				forceNavigator.sessionId = unescape(response.sessionId)
+				forceNavigator.userId = unescape(response.userId)
+				forceNavigator.apiUrl = unescape(response.apiUrl)
+				forceNavigator.loadCommands(settings)
+				ui.hideLoadingIndicator()
+				ui.bindShortcuts()
+			})
 		})
 	}
 }

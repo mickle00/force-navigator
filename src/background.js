@@ -26,17 +26,14 @@ const getOtherExtensionCommands = (otherExtension, requestDetails, settings = {}
 	let commands = {}
 	if(chrome.management) {
 		chrome.management.get(otherExtension.id, response => {
-			if(response) {
-				otherExtension.commands.forEach(c=>{
-					commands[otherExtension.name + ' > ' + c.label] = {
-						"url": otherExtension.platform + "://" + otherExtension.urlId + c.url.replace("$URL",url).replace("$APIURL",apiUrl),
-						"label": otherExtension.name + ' > ' + c.label,
-						"key": otherExtension.key
-					}
-				})
-			} else if(chrome.runtime.lastError) {
-				console.debug("Extension not found", chrome.runtime.lastError)
-			}
+			if(chrome.runtime.lastError) { console.debug("Extension not found", chrome.runtime.lastError); return }
+			otherExtension.commands.forEach(c=>{
+				commands[otherExtension.name + ' > ' + c.label] = {
+					"url": otherExtension.platform + "://" + otherExtension.urlId + c.url.replace("$URL",url).replace("$APIURL",apiUrl),
+					"label": otherExtension.name + ' > ' + c.label,
+					"key": otherExtension.key
+				}
+			})
 			sendResponse(commands)
 		})
 	}
@@ -103,8 +100,13 @@ chrome.commands.onCommand.addListener((command)=>{
 })
 chrome.runtime.onMessage.addListener((request, sender, sendResponse)=>{
 	var orgKey = request.key !== null ? request.key.split('!')[0] : request.key
-	if (request.action === "getApiSessionId") {
-		if (request.key !== null) {
+	switch(request.action) {
+		case "goToUrl": goToUrl(request.url, request.newTab, request.settings); break
+		case "getOtherExtensionCommands":
+			getOtherExtensionCommands(request.otherExtension, request, request.settings, sendResponse)
+			break
+		case "getApiSessionId":
+			if (request.key === null) { sendResponse({error: "Must include orgId"}); return }
 			request.sid = request.uid = request.domain = ""
 			chrome.cookies.getAll({}, (all)=>{
 				all.forEach((c)=>{
@@ -113,25 +115,17 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse)=>{
 						request.domain = c.domain
 					}
 				})
-				if(request.sid !== "") {
-					forceNavigator.getHTTP("https://" + request.domain + '/services/data/' + forceNavigator.apiVersion, "json",
-						{"Authorization": "Bearer " + request.sid, "Accept": "application/json"}
-					).then(response => {
-						if(response?.identity) {
-							request.uid = response.identity.match(/005.*/)[0]
-							sendResponse({sessionId: request.sid, userId: request.uid, apiUrl: request.domain})
-						}
-						else sendResponse({error: "No user data found for " + request.key})
-					})
-				}
-				else sendResponse({error: "No session data found for " + request.key})
+				if(request.sid === "") { sendResponse({error: "No session data found for " + request.key}); return }
+				forceNavigator.getHTTP("https://" + request.domain + '/services/data/' + forceNavigator.apiVersion, "json",
+					{"Authorization": "Bearer " + request.sid, "Accept": "application/json"}
+				).then(response => {
+					if(response?.identity) {
+						request.uid = response.identity.match(/005.*/)[0]
+						sendResponse({sessionId: request.sid, userId: request.uid, apiUrl: request.domain})
+					}
+					else sendResponse({error: "No user data found for " + request.key})
+				})
 			})
-		} else sendResponse({error: "Must include orgId"})
-	}
-	switch(request.action) {
-		case 'goToUrl': goToUrl(request.url, request.newTab, request.settings); break
-		case 'getOtherExtensionCommands':
-			getOtherExtensionCommands(request.otherExtension, request, request.settings, sendResponse)
 			break
 		// case 'getSetupTree':
 		// 	if(setupTree[request.sessionHash] == null || request.force)

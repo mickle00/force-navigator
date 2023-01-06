@@ -14,20 +14,19 @@ const goToUrl = (url, newTab, settings)=>chrome.runtime.sendMessage({
 
 const searchTerms = (terms)=>{
 	let targetUrl = serverInstance
-	if(forceNavigatorSettings.lightningMode)
-		targetUrl += "/one/one.app#" + btoa(JSON.stringify({
-			"componentDef":"forceSearch:search",
-			"attributes":{
-				"term": terms,
-				"scopeMap": { "type":"TOP_RESULTS" },
-				"context":{
-					"disableSpellCorrection":false,
-					"SEARCH_ACTIVITY": {"term": terms}
-				}
+	targetUrl += (!forceNavigatorSettings.lightningMode)
+	? "/_ui/search/ui/UnifiedSearchResults?sen=ka&sen=500&str=" + encodeURI(terms) + "#!/str=" + encodeURI(terms) + "&searchAll=true&initialViewMode=summary"
+	: "/one/one.app#" + btoa(JSON.stringify({
+		"componentDef":"forceSearch:search",
+		"attributes":{
+			"term": terms,
+			"scopeMap": { "type":"TOP_RESULTS" },
+			"context":{
+				"disableSpellCorrection":false,
+				"SEARCH_ACTIVITY": {"term": terms}
 			}
-		}))
-	else
-		targetUrl += "/_ui/search/ui/UnifiedSearchResults?sen=ka&sen=500&str=" + encodeURI(terms) + "#!/str=" + encodeURI(terms) + "&searchAll=true&initialViewMode=summary"
+		}
+	}))
 	return targetUrl
 }
 const pasteFromClipboard = (newtab)=>{
@@ -59,42 +58,41 @@ const launchMerger = (otherId, object)=>{
 			return
 		}
 		const thisId = getIdFromUrl()
-		if(thisId)
-			switch(object) {
-				case "Account":
-					document.location.href = `${forceNavigator.serverInstance}/merge/accmergewizard.jsp?goNext=+Next+&cid=${otherId}&cid=${thisId}`
-					break
-				default:
-					break
-			}
+		if(!thisId)
+			return
+		switch(object) {
+			case "Account":
+				document.location.href = `${forceNavigator.serverInstance}/merge/accmergewizard.jsp?goNext=+Next+&cid=${otherId}&cid=${thisId}`
+				break
+			default:
+				break
+		}
 	}
 const launchMergerAccounts = (otherId)=>launchMerger(otherId, "Account")
 const launchMergerCases = (otherId)=>launchMerger(otherId, "Case")
 const createTask = (subject)=>{
 	showLoadingIndicator()
-	if(subject != "" && forceNavigator.userId) {
-		chrome.runtime.sendMessage({
-				"action":'createTask', "apiUrl": forceNavigator.apiUrl,
-				"key": forceNavigator.sessionHash, "sessionId": forceNavigator.sessionId,
-				"domain": forceNavigator.serverInstance, "sessionHash": forceNavigator.sessionHash,
-				"subject": subject, "userId": forceNavigator.userId
-			}, response=>{
-				if(response.errors.length == 0) {
-					clearOutput()
-					commands[t("commands.goToTask")] = {
-						"key": "commands.goToTask",
-						"url": forceNavigator.serverInstance + "/"+ response.id
-					}
-					document.getElementById("sfnavQuickSearch").value = ""
-					addWord(t("commands.goToTask"))
-					addWord(t("commands.escapeCommand"))
-					let firstEl = document.querySelector('#sfnavOutputs :first-child')
-					if(listPosition == -1 && firstEl != null)
-						firstEl.className = "sfnav_child sfnav_selected"
-					hideLoadingIndicator()
-				}
-		})
-	}
+	if(["",null,undefined].includes(subject) && !forceNavigator.userId) { console.error("Empty Task subject"); hideLoadingIndicator(); return }
+	chrome.runtime.sendMessage({
+			"action":'createTask', "apiUrl": forceNavigator.apiUrl,
+			"key": forceNavigator.sessionHash, "sessionId": forceNavigator.sessionId,
+			"domain": forceNavigator.serverInstance, "sessionHash": forceNavigator.sessionHash,
+			"subject": subject, "userId": forceNavigator.userId
+		}, response=>{
+			if(response.errors.length != 0) { console.error("Error creating task", response.errors); return }
+			clearOutput()
+			commands[t("commands.goToTask")] = {
+				"key": "commands.goToTask",
+				"url": forceNavigator.serverInstance + "/"+ response.id
+			}
+			document.getElementById("sfnavQuickSearch").value = ""
+			addWord(t("commands.goToTask"))
+			addWord(t("commands.escapeCommand"))
+			let firstEl = document.querySelector('#sfnavOutputs :first-child')
+			if(listPosition == -1 && firstEl != null)
+				firstEl.className = "sfnav_child sfnav_selected"
+			hideLoadingIndicator()
+	})
 }
 
 const invokeCommand = (command, newTab, event)=>{
