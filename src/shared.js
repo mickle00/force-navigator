@@ -1,8 +1,226 @@
 import { lisan, t } from "lisan"
-import ui from "./ui"
-const currentDictionary = require("./languages/en-US.js")
-lisan.add(currentDictionary)
+import Mousetrap from "mousetrap"
+lisan.add(require(`./languages/en-US.js`))
 
+const inputHandler = (function(m) {
+	var _global_callbacks = {},
+		_original_stop_callback = m.stopCallback
+	m.stopCallback = function(e, element, combo) {
+		if (_global_callbacks[combo]) { return false }
+		return _original_stop_callback(e, element, combo)
+	}
+	m.bindGlobal = function(keys, callback, action) {
+		m.bind(keys, callback, action)
+		if (keys instanceof Array) {
+			for (var i = 0; i < keys.length; i++) { _global_callbacks[keys[i]] = true }
+			return
+		}
+		_global_callbacks[keys] = true
+	}
+	return m
+})(Mousetrap)
+
+export const ui = {
+	"searchBox": null,
+	"navOutput": null,
+	"quickSearch": null,
+	"navLoader": null,
+	"createBox": ()=>{
+		let theme = forceNavigatorSettings.theme
+		let div = document.createElement("div")
+		div.setAttribute("id", "sfnavStyleBox")
+		div.setAttribute("class", theme)
+		const loaderURL = chrome.extension.getURL("images/ajax-loader.gif")
+		const logoURL = chrome.extension.getURL("images/sf-navigator128.png")
+		div.innerHTML = `
+<div id="sfnavSearchBox">
+	<div class="sfnav_wrapper">
+		<input type="text" id="sfnavQuickSearch" autocomplete="off"/>
+		<img id="sfnavLoader" src= "${loaderURL}"/>
+		<img id="sfnav_logo" src= "${logoURL}"/>
+	</div>
+	<div class="sfnav_shadow" id="sfnav_shadow"/>
+	<div class="sfnavOutput" id="sfnavOutput"/>
+</div>`
+		document.body.appendChild(div)
+		ui.searchBox = document.getElementById("sfnavSearchBox")
+		ui.navOutput = document.getElementById("sfnavOutput")
+		ui.quickSearch = document.getElementById("sfnavQuickSearch")
+		ui.navLoader = document.getElementById("sfnavLoader")
+	},
+	"mouseHandler": (e)=>{
+		e.target.classList.add('sfnav_selected')
+		return true
+	},
+	"mouseClick": (e)=>{
+		document.getElementById("sfnavQuickSearch").value = e.target.firstChild.nodeValue
+		forceNavigator.listPosition = -1
+		ui.setVisibleSearch("hidden")
+		if(!window.ctrlKey)
+			forceNavigator.invokeCommand(e.target.firstChild.nodeValue, false,'click')
+		else
+			ui.hideSearchBox()
+		return true
+	},
+	"mouseHandlerOut": (e)=>{ e.target.classList.remove('sfnav_selected'); return true },
+	"mouseClickLoginAs": (e)=>{ loginAsPerform(e.target.getAttribute("id")); return true },
+	"bindShortcuts": ()=>{
+		inputHandler.bindGlobal('esc', function(e) { ui.hideSearchBox() })
+		inputHandler(ui.quickSearch).bind('enter', ui.kbdCommand)
+		for (var i = 0; i < forceNavigator.newTabKeys.length; i++) {
+			inputHandler(ui.quickSearch).bind(forceNavigator.newTabKeys[i], ui.kbdCommand)
+		}
+		inputHandler(ui.quickSearch).bind('down', ui.selectMove.bind(this, 'down'))
+		inputHandler(ui.quickSearch).bind('up', ui.selectMove.bind(this, 'up'))
+		inputHandler(ui.quickSearch).bind('backspace', function(e) { forceNavigator.listPosition = -1 })
+		ui.quickSearch.oninput = function(e) {
+			ui.lookupCommands()
+			return true
+		}
+	},
+	"showLoadingIndicator": ()=>{ if(ui.navLoader) ui.navLoader.style.visibility = 'visible' },
+	"hideLoadingIndicator": ()=>{ if(ui.navLoader) ui.navLoader.style.visibility = 'hidden' },
+	"hideSearchBox": ()=>{
+		ui.quickSearch.blur()
+		ui.clearOutput()
+		ui.quickSearch.value = ''
+		ui.setVisibleSearch("hidden")
+	},
+	"setVisibleSearch": (visibility)=>{
+		if(visibility == "hidden") {
+			ui.searchBox.style.opacity = 0
+			ui.searchBox.style.zIndex = -1
+		}
+		else {
+			ui.searchBox.style.opacity = 0.98
+			ui.searchBox.style.zIndex = 9999
+			ui.quickSearch.focus()
+		}
+	},
+	"lookupCommands": ()=>{
+		let newSearchVal = ui.quickSearch.value
+		if(newSearchVal !== "") ui.addElements(newSearchVal)
+		else { ui.clearOutput() }
+	},
+	"addElements": (input)=>{
+		ui.clearOutput()
+		if(input.substring(0,1) == "?") ui.addWord('Global Search Usage: ? <Search term(s)>') // needs transation
+		else if(input.substring(0,1) == "!") ui.addWord('Create a Task: ! <Subject line>')
+		else {
+			let words = ui.getWord(input, forceNavigator.commands)
+			if(words.length > 0)
+				for (var i=0;i < words.length; ++i)
+					ui.addWord(words[i])
+			else
+				forceNavigator.listPosition = -1
+		}
+		let firstEl = ui.navOutput.querySelector(":first-child")
+		if(forceNavigator.listPosition == -1 && firstEl != null) firstEl.className = "sfnav_child sfnav_selected"
+	},
+	"getWord": (input, dict)=>{
+		if(forceNavigatorSettings.enhancedprofiles) {
+			dict['Setup > Manage Users > Profiles'] = dict['Enhanced Profiles'] // todo language fixes
+			delete dict['Profiles']
+		} else {
+			dict['Setup > Manage Users > Profiles'] = dict['Profiles']
+			delete dict['Enhanced Profiles']
+		}
+		if(typeof input === 'undefined' || input == '') return []
+		let foundCommands = [],
+			dictItems = [],
+			terms = input.toLowerCase().split(" ")
+		for (var key in dict) {
+			if(key.toLowerCase().indexOf(input) != -1) {
+				dictItems.push({num: forceNavigatorSettings.searchLimit, key: key})
+			} else {
+				let match = 0
+				let sortValue = 0
+				for(let i=0;i<terms.length;i++) {
+					if(key.toLowerCase().indexOf(terms[i]) != -1) {
+						match++
+						sortValue = 1
+					}
+				}
+				for(let i=1;i<=terms.length;i++) {
+					if(key.toLowerCase().indexOf(terms.slice(0,i).join(' ')) != -1)
+						sortValue++
+					else
+						break
+				}
+				if (match == terms.length)
+					dictItems.push({num : sortValue, key : key})
+			}
+		}
+		dictItems.sort(function(a,b) { return b.num - a.num })
+		for(let i = 0;i < forceNavigatorSettings.searchLimit && dictItems[i];i++)
+			foundCommands.push(dictItems[i].key)
+		return foundCommands
+	},
+	"addWord": (word)=>{
+		let sp
+		if(forceNavigator.commands[word] != null && forceNavigator.commands[word].url != null && forceNavigator.commands[word].url != "") {
+			sp = document.createElement("a")
+			if(forceNavigator.commands[word].url.startsWith('//'))
+				forceNavigator.commands[word].url = forceNavigator.commands[word].url.replace('//','/')
+			sp.setAttribute("href", forceNavigator.commands[word].url)
+		} else { sp = document.createElement("div") }
+		sp.setAttribute('data-test',true)
+		if(forceNavigator.commands[word] != null && forceNavigator.commands[word].id != null && forceNavigator.commands[word].id != "") { sp.id = forceNavigator.commands[word].id }
+		sp.classList.add("sfnav_child")
+		sp.appendChild(document.createTextNode(word))
+		sp.onmouseover = ui.mouseHandler
+		sp.onmouseout = ui.mouseHandlerOut
+		sp.onclick = ui.mouseClick
+		if(sp.id && sp.length > 0) { sp.onclick = ui.mouseClickLoginAs }
+		ui.navOutput.appendChild(sp)
+	},
+	"addError": (text)=>{
+		ui.clearOutput()
+		let err = document.createElement("div")
+		err.className = "sfnav_child sfnav-error-wrapper"
+		err.appendChild(document.createTextNode(t("prefix.error")))
+		err.appendChild(document.createElement('br'))
+		for(let i = 0;i<text.length;i++) {
+			err.appendChild(document.createTextNode(text[i].message))
+			err.appendChild(document.createElement('br'))
+		}
+		ui.searchBox.appendChild(err)
+	},
+	"clearOutput": ()=>{
+		ui.navOutput.innerHTML = ""
+		forceNavigator.listPosition = -1
+	},
+	"kbdCommand": (e, key)=>{
+		let position = forceNavigator.listPosition < 0 ? 0 : forceNavigator.listPosition
+		let origText = "", newText = ""
+		origText = ui.quickSearch.value
+		if(typeof ui.navOutput.childNodes[position] != 'undefined') {
+			newText = ui.navOutput.childNodes[position].firstChild.nodeValue
+		}
+		let newTab = forceNavigator.newTabKeys.indexOf(key) >= 0 ? true : false
+		if(!newTab)
+			ui.clearOutput()
+		if(!forceNavigator.invokeCommand(newText, newTab))
+			forceNavigator.invokeCommand(origText, newTab)
+	},
+	"selectMove": (direction)=>{
+		let words = Array.from(ui.navOutput.childNodes).reduce((a,w)=>a.concat([w.textContent]), [])
+		let isLastPos = direction == 'down' 
+			? forceNavigator.listPosition < words.length-1 // is at the bottom
+			: forceNavigator.listPosition >= 0 // so direction = up, is at the top
+		if (words.length > 0 && isLastPos) {
+			if(forceNavigator.listPosition < 0)
+				forceNavigator.listPosition = 0
+			forceNavigator.listPosition = forceNavigator.listPosition + (direction == 'down' ? 1 : -1)
+			if (forceNavigator.listPosition >=0) {
+				ui.navOutput.childNodes[forceNavigator.listPosition + (direction == 'down' ? -1 : 1) ]?.classList.remove('sfnav_selected')
+				ui.navOutput.childNodes[forceNavigator.listPosition]?.classList.add('sfnav_selected')
+				ui.navOutput.childNodes[forceNavigator.listPosition]?.scrollIntoViewIfNeeded()
+				return false
+			}
+		}
+	}
+}
 
 export let forceNavigatorSettings = {
 	"MAX_SEARCH_RESULTS": 32,
@@ -12,12 +230,13 @@ export let forceNavigatorSettings = {
 	"debug": false,
 	"developername": false,
 	"lightningMode": true,
+	"language": "en-US",
 	"availableThemes": ["Default", "Dark", "Unicorn", "Solarized"],
 	"ignoreList": null, // ignoreList will be for filtering custom objects, will need an add, remove, and list call
 	"changeDictionary": (newLanguage) => lisan.add(require("./languages/" + newLanguage + ".js")),
-	"setTheme": (cmd)=>{
-		let cmdSplit = cmd.split(' ')
-		const newTheme = "theme-" + cmdSplit[2].toLowerCase()
+	"setTheme": (command)=>{
+		let commandSplit = command.split(' ')
+		const newTheme = "theme-" + commandSplit[2].toLowerCase()
 		document.getElementById('sfnavStyleBox').classList = [newTheme]
 		forceNavigatorSettings.set("theme", newTheme)
 	},
@@ -34,7 +253,6 @@ export let forceNavigatorSettings = {
 				forceNavigator.apiUrl = unescape(response.apiUrl)
 				forceNavigator.loadCommands(settings)
 				ui.hideLoadingIndicator()
-				ui.bindShortcuts()
 			})
 		})
 	}
@@ -49,7 +267,6 @@ export const forceNavigator = {
 	"apiUrl": null,
 	"apiVersion": "v56.0",
 	"loaded": false,
-	"searchBox": null,
 	"listPosition": -1,
 	"ctrlKey": false,
 	"debug": false,
@@ -82,9 +299,107 @@ export const forceNavigator = {
 			forceNavigator.organizationId = document.cookie.match(/sid=([\w\d]+)/)[1]
 			forceNavigator.sessionHash = forceNavigator.getSessionHash()
 			forceNavigatorSettings.loadSettings()
+			lisan.setLocaleName(forceNavigatorSettings.language)
+			forceNavigator.resetCommands()
 			ui.createBox()
-console.log(5)
-		} catch(e) { if(forceNavigatorSettings.debug) console.log(e) }
+			ui.bindShortcuts()
+		} catch(e) {
+			console.info('err',e)
+			if(forceNavigatorSettings.debug) console.error(e)
+		}
+	},
+	"invokeCommand": (command, newTab, event)=>{
+		if(!command) { return false }
+		let targetUrl = ""
+	console.log(command)
+		switch(command.key) {
+			case "commands.refreshMetadata":
+				refreshAndClear()
+				break
+			case "commands.objectManager":
+				targetUrl = forceNavigator.serverInstance + "/lightning/setup/ObjectManager/home"
+				break
+			case "switch to classic":
+			case "switch to lightning":
+			case "commands.toggleLightning":
+				let mode = forceNavigatorSettings.lightningMode ? "classic" : "lex-campaign"
+				forceNavigatorSettings.lightningMode = mode === "lex-campaign"
+	// need to test updating this right
+				matchUrl = window.location.href.replace(forceNavigator.serverInstance,"")
+				targetUrl = forceNavigator.serverInstance + matchUrl
+				forceNavigatorSettings.set("lightningMode", forceNavigatorSettings.lightningMode)
+				break
+			case "commands.toggleEnhancedProfiles":
+				forceNavigatorSettings.enhancedprofiles = !forceNavigatorSettings.enhancedprofiles
+				forceNavigatorSettings.set("enhancedprofiles", forceNavigatorSettings.enhancedprofiles)
+				return true
+				break
+			case "dump":
+			case "commands.dumpDebug":
+				console.info("session settings:", forceNavigatorSettings)
+				console.info("server instance: ", forceNavigator.serverInstance)
+				console.info("API Url: ", forceNavigator.apiUrl)
+				console.info("Commands: ", forceNavigator.commands)
+				hideSearchBox()
+				break
+			case "commands.toggleDeveloperName":
+			    forceNavigatorSettings.developername = !forceNavigatorSettings.developername
+				forceNavigatorSettings.set("developername", forceNavigatorSettings.developername)
+				return true
+				break
+			case "commands.setup":
+				targetUrl = forceNavigator.serverInstance + (forceNavigatorSettings.lightningMode ? "/lightning/setup/SetupOneHome/home" : "/ui/setup/Setup")
+				break
+			case "commands.home":
+				targetUrl = forceNavigator.serverInstance + "/"
+				break
+			case "commands.toggleAllCheckboxes":
+				Array.from(document.querySelectorAll('input[type="checkbox"]')).forEach(c => c.checked=(c.checked ? false : true))
+				hideSearchBox()
+				break
+			case "commands.loginAs": 
+				loginAs(command, newTab)
+				return true
+			case "commands.setTheme":
+				forceNavigatorSettings.setTheme(command.value)
+				return true // probably not needed
+			case "commands.mergeAccounts":
+				launchMergerAccounts(command.value)
+				break
+			case "commands.createTask":
+				createTask(command.substring(1).trim())
+				break
+			case "commands.search":
+				targetUrl = searchTerms(command.substring(1).trim())
+		}
+		if(command.replace(/\d+/,'').trim().split(' ').reduce((i,c) => {
+			if('set search limit'.includes(c))
+				return ++i
+			else
+				return i
+		}, 0) > 1) {
+			const newLimit = parseInt(command.replace(/\D+/,''))
+			if(newLimit != NaN && newLimit <= MAX_SEARCH_RESULTS) {
+				forceNavigatorSettings.searchLimit = newLimit
+				forceNavigatorSettings.set("searchLimit", forceNavigatorSettings.searchLimit)
+					.then(result=>addWord(t("notification.searchSettingsUpdated")))
+				return true
+			} else
+				addError(t("error.searchLimitMax"))
+		}
+		else if(typeof forceNavigator.commands[command] != 'undefined' && forceNavigator.commands[command].url) { targetUrl = forceNavigator.commands[command].url }
+		else if(forceNavigatorSettings.debug) {
+			console.log(t(command.key) + t("error.notFound"))
+			return false
+		}
+		if(targetUrl != "") {
+			ui.hideSearchBox()
+			forceNavigator.goToUrl(targetUrl, newTab, {command: command})
+			return true
+		} else {
+			console.debug('No command match', command)
+			return false
+		}
 	},
 	"resetCommands": ()=>{
 		forceNavigator.commands = {}
@@ -101,10 +416,7 @@ console.log(5)
 			"commands.refreshMetadata",
 			"commands.dumpDebug",
 			"commands.setSearchLimit"
-		).forEach(c=>{
-			const k = t(c)
-			forceNavigator.commands[k] = {"key": c}
-		})
+		).forEach(c=>{forceNavigator.commands[t(c)] = {"key": c}})
 		forceNavigatorSettings.availableThemes.forEach(th=>forceNavigator.commands[t("commands.themes" + th)] = { "key": "commands.themes" + th })
 	},
 	"getServerInstance": (settings = {})=>{
@@ -169,16 +481,26 @@ console.log(5)
 			force: force,
 			sessionId: forceNavigator.sessionId
 		}
-		// chrome.runtime.sendMessage( Object.assign(options, {action:'getSetupTree', settings: forceNavigatorSettings}), response=>{ Object.assign(commands, response) })
-		chrome.runtime.sendMessage( Object.assign(options, {action:'getMetadata', settings: forceNavigatorSettings}), response=>Object.assign(commands, response))
+		// chrome.runtime.sendMessage( Object.assign(options, {action:'getSetupTree', settings: forceNavigatorSettings}), response=>{ Object.assign(forceNavigator.commands, response) })
+		chrome.runtime.sendMessage( Object.assign(options, {action:'getMetadata', settings: forceNavigatorSettings}), response=>Object.assign(forceNavigator.commands, response))
 		// chrome.runtime.sendMessage( Object.assign(options, {action:'getCustomObjects', settings: forceNavigatorSettings}), response=>{
-		// 	Object.assign(commands, response)
+		// 	Object.assign(forceNavigator.commands, response)
 		// })
 		forceNavigator.otherExtensions.forEach(e=>chrome.runtime.sendMessage(
 			Object.assign(options, {action:'getOtherExtensionCommands', otherExtension: e}), response=>Object.assign(forceNavigator.commands, response)
 		))
 		ui.hideLoadingIndicator()
 	},
+	"goToUrl": (url, newTab, settings)=>chrome.runtime.sendMessage({
+		action: "goToUrl",
+		url: url,
+		newTab: newTab,
+		settings: Object.assign(forceNavigatorSettings, {
+				serverInstance: forceNavigator.serverInstance,
+				lightningMode: forceNavigatorSettings.lightningMode
+			})
+		},
+		response=>{}),
 	"setupLabelsMap": {
 		"objects.fieldsAndRelationships": "/FieldsAndRelationships/view",
 		"objects.pageLayouts": "/PageLayouts/view",

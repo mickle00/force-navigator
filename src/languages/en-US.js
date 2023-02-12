@@ -1,10 +1,12 @@
 module.exports = {
-	locale: 'en-US',
-	keys: {
+	"locale": "en-US",
+	"entries": {
 		"prompt.countOptions": options => `Count ${options.length}`,
 		"prompt.getSettings": "Get Settings",
 		"prompt.saveSettings": "Save Settings",
 		"prompt.getCommands": "Get Commands",
+		"prompt.details": "Details",
+		"prompt.fields": "Fields",
 		"menu.explanation": `Settings stuff`,
 		"settings.theme": "Theme",
 		"settings.useApiName": "Show API Name",

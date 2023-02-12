@@ -28,7 +28,7 @@ const getOtherExtensionCommands = (otherExtension, requestDetails, settings = {}
 		chrome.management.get(otherExtension.id, response => {
 			if(chrome.runtime.lastError) { console.debug("Extension not found", chrome.runtime.lastError); return }
 			otherExtension.commands.forEach(c=>{
-				commands[otherExtension.name + ' > ' + c.label] = {
+				forceNavigator.commands[otherExtension.name + ' > ' + c.label] = {
 					"url": otherExtension.platform + "://" + otherExtension.urlId + c.url.replace("$URL",url).replace("$APIURL",apiUrl),
 					"label": otherExtension.name + ' > ' + c.label,
 					"key": otherExtension.key
@@ -46,8 +46,7 @@ const parseMetadata = (data, url, settings = {})=>{
 	return data.sobjects.reduce((commands, { labelPlural, label, name, keyPrefix }) => {
 		if (!keyPrefix || skipObjects.includes(keyPrefix)) { return commands }
 		let baseUrl = "/";
-		if (lightningMode && name.endsWith("__mdt"))
-			baseUrl += "lightning/setup/CustomMetadata/page?address="
+		if (forceNavigatorSettings.lightningMode && name.endsWith("__mdt")) { baseUrl += "lightning/setup/CustomMetadata/page?address=" }
 		commands[t("prefix.list") + labelPlural] = {
 			"key": "list."+name,
 			"url": `${baseUrl}/${keyPrefix}`
@@ -58,8 +57,8 @@ const parseMetadata = (data, url, settings = {})=>{
 		}
 		if(forceNavigatorSettings.lightningMode) {
 			let targetUrl = url + "/lightning/setup/ObjectManager/" + name
-			commands[t("prefix.setup") + label + ' > Details'] = {url: targetUrl + "/Details/view", key: el.text + " > Fields"};
-			mapKeys.forEach(k=>{
+			commands[t("prefix.setup") + label + ' > ' + t("prompt.details")] = {url: targetUrl + "/Details/view", key: t("prefix.setup") + label + " > " + t("prompt.fields")};
+			mapKeys.forEach(key=>{
 				commands[t("prefix.setup") + label + ' > ' + t(key)] = {
 					"url": targetUrl + forceNavigator.setupLabelsMap[key],
 					"key":  t("prefix.setup") + label + "." + t(key)
@@ -99,7 +98,7 @@ chrome.commands.onCommand.addListener((command)=>{
 	}
 })
 chrome.runtime.onMessage.addListener((request, sender, sendResponse)=>{
-	var orgKey = request.key !== null ? request.key.split('!')[0] : request.key
+	var orgKey = request.key !== null ? request.key?.split('!')[0] : request.key
 	switch(request.action) {
 		case "goToUrl": goToUrl(request.url, request.newTab, request.settings); break
 		case "getOtherExtensionCommands":
