@@ -175,8 +175,12 @@ export const ui = {
 		forceNavigator.listPosition = -1
 	},
 	"kbdCommand": (e, keyPress)=>{
-//TODO this breaks search and other things
-		const cmdKey = ui.navOutput.childNodes[(forceNavigator.listPosition < 0 ? 0 : forceNavigator.listPosition)].dataset.key
+		let cmdKey = ui.navOutput.childNodes[(forceNavigator.listPosition < 0 ? 0 : forceNavigator.listPosition)].dataset.key
+// Now need to fix loginAs
+		if(["?", "!"].includes(e.target.value[0]))
+			cmdKey = e.target.value[0] == "?" ? "commands.search" : "commands.createTask"
+		else
+			cmdKey = ui.navOutput.childNodes[(forceNavigator.listPosition < 0 ? 0 : forceNavigator.listPosition)].dataset.key
 		let newTab = forceNavigator.newTabKeys.indexOf(keyPress) >= 0 ? true : false
 		if(!newTab)
 			ui.clearOutput()
@@ -298,6 +302,7 @@ export const forceNavigator = {
 	"invokeCommand": (command, newTab, event)=>{
 		if(!command) { return false }
 		let targetUrl = ""
+		if(typeof command != "object") command = {"key": command}
 		switch(command.key) {
 			case "commands.refreshMetadata":
 				refreshAndClear()
@@ -356,9 +361,9 @@ export const forceNavigator = {
 				createTask(command.substring(1).trim())
 				break
 			case "commands.search":
-				targetUrl = searchTerms(command.substring(1).trim())
+				targetUrl = forceNavigator.searchTerms(ui.quickSearch.value.substring(1).trim())
 		}
-		if(command.replace(/\d+/,'').trim().split(' ').reduce((i,c) => {
+		if(command.key.replace(/\d+/,'').trim().split(' ').reduce((i,c) => {
 			if('set search limit'.includes(c))
 				return ++i
 			else
@@ -391,6 +396,7 @@ export const forceNavigator = {
 		const modeUrl = forceNavigatorSettings.lightningMode ? "lightning" : "classic"
 		forceNavigator.commands = {}
 		Array(
+			"commands.home",
 			"commands.setup",
 			"commands.mergeAccounts",
 			"commands.toggleAllCheckboxes",
@@ -406,27 +412,45 @@ export const forceNavigator = {
 		forceNavigatorSettings.availableThemes.forEach(th=>forceNavigator.commands["commands.themes" + th] = { "key": "commands.themes" + th })
 		Object.keys(forceNavigator.urlMap).forEach(c=>{forceNavigator.commands[c] = {
 			"key": c,
-			"url": forceNavigator.urlMap[c][modeUrl]
+			"url": forceNavigator.urlMap[c][modeUrl],
+			"label": [t("prefix.setup"), t(c)].join(" > ")
 		}})
 	},
+	"searchTerms": (terms)=>{
+		let searchUrl = forceNavigator.serverInstance
+		searchUrl += (!forceNavigatorSettings.lightningMode)
+		? "/_ui/search/ui/UnifiedSearchResults?sen=ka&sen=500&str=" + encodeURI(terms) + "#!/str=" + encodeURI(terms) + "&searchAll=true&initialViewMode=summary"
+		: "/one/one.app#" + btoa(JSON.stringify({
+			"componentDef":"forceSearch:search",
+			"attributes":{
+				"term": terms,
+				"scopeMap": { "type":"TOP_RESULTS" },
+				"context":{
+					"disableSpellCorrection":false,
+					"SEARCH_ACTIVITY": {"term": terms}
+				}
+			}
+		}))
+		return searchUrl
+	},
 	"getServerInstance": (settings = {})=>{
-		let targetUrl
+		let serverUrl
 		let url = location.origin + ""
 		if(settings.lightningMode) {// if(url.indexOf("lightning.force") != -1)
-			targetUrl = url.replace('lightning.force.com','').replace('my.salesforce.com','') + "lightning.force.com"
+			serverUrl = url.replace('lightning.force.com','').replace('my.salesforce.com','') + "lightning.force.com"
 		} else {
 			if(url.includes("salesforce"))
-				targetUrl = url.substring(0, url.indexOf("salesforce")) + "salesforce.com"
+				serverUrl = url.substring(0, url.indexOf("salesforce")) + "salesforce.com"
 			else if(url.includes("cloudforce"))
-				targetUrl = url.substring(0, url.indexOf("cloudforce")) + "cloudforce.com"
+				serverUrl = url.substring(0, url.indexOf("cloudforce")) + "cloudforce.com"
 			else if(url.includes("visual.force")) {
 				let urlParseArray = url.split(".")
-				targetUrl = urlParseArray[1] + '.salesforce.com'
+				serverUrl = urlParseArray[1] + '.salesforce.com'
 			} else {
-				targetUrl = url.replace('lightning.force.com','') + "my.salesforce.com"
+				serverUrl = url.replace('lightning.force.com','') + "my.salesforce.com"
 			}
 		}
-		return targetUrl
+		return serverUrl
 	},
 	"getSessionHash": ()=>{
 		try {
@@ -434,11 +458,11 @@ export const forceNavigator = {
 			return sId.split('!')[0] + '!' + sId.substring(sId.length - 10, sId.length)
 		} catch(e) { if(debug) console.log(e) }
 	},
-	"getHTTP": (targetUrl, type = "json", headers = {}, data = {}, method = "GET") => {
+	"getHTTP": (getUrl, type = "json", headers = {}, data = {}, method = "GET") => {
 		let request = { method: method, headers: headers }
 		if(Object.keys(data).length > 0)
 			request.body = JSON.stringify(data)
-		return fetch(targetUrl, request).then(response => {
+		return fetch(getUrl, request).then(response => {
 			forceNavigator.apiUrl = response.url.match(/:\/\/(.*)salesforce.com/)[1] + "salesforce.com"
 			switch(type) {
 				case "json": return response.clone().json()
@@ -453,7 +477,7 @@ export const forceNavigator = {
 	},
 	"refreshAndClear": ()=>{
 		showLoadingIndicator()
-		serverInstance = forceNavigator.getServerInstance(forceNavigator)
+		forceNavigator.serverInstance = forceNavigator.getServerInstance(forceNavigator)
 		forceNavigator.loadCommands(forceNavigatorSettings, true)
 		document.getElementById("sfnavQuickSearch").value = ""
 	},

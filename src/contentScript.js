@@ -1,23 +1,6 @@
 import { forceNavigator, forceNavigatorSettings } from "./shared"
 import { t } from "lisan"
 
-const searchTerms = (terms)=>{
-	let targetUrl = serverInstance
-	targetUrl += (!forceNavigatorSettings.lightningMode)
-	? "/_ui/search/ui/UnifiedSearchResults?sen=ka&sen=500&str=" + encodeURI(terms) + "#!/str=" + encodeURI(terms) + "&searchAll=true&initialViewMode=summary"
-	: "/one/one.app#" + btoa(JSON.stringify({
-		"componentDef":"forceSearch:search",
-		"attributes":{
-			"term": terms,
-			"scopeMap": { "type":"TOP_RESULTS" },
-			"context":{
-				"disableSpellCorrection":false,
-				"SEARCH_ACTIVITY": {"term": terms}
-			}
-		}
-	}))
-	return targetUrl
-}
 const pasteFromClipboard = (newtab)=>{
 	let cb = document.createElement("textarea")
 	let body = document.getElementsByTagName('body')[0]
