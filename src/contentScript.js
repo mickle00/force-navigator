@@ -43,7 +43,7 @@ const launchMerger = (otherId, object)=>{
 		otherId = pasteFromClipboard()
 	if(![15,18].includes(otherId.length)) {
 		forceNavigator.clearOutput()
-		forceNavigator.addWord(t("commands.errorAccountMerge"))
+		forceNavigator.addSearchResult("commands.errorAccountMerge")
 		return
 	}
 	const thisId = getIdFromUrl()
@@ -70,13 +70,13 @@ const createTask = (subject)=>{
 		}, response=>{
 			if(response.errors.length != 0) { console.error("Error creating task", response.errors); return }
 			clearOutput()
-			forceNavigator.commands[t("commands.goToTask")] = {
+			forceNavigator.commands["commands.goToTask"] = {
 				"key": "commands.goToTask",
 				"url": forceNavigator.serverInstance + "/"+ response.id
 			}
-			document.getElementById("sfnavQuickSearch").value = ""
-			addWord(t("commands.goToTask"))
-			addWord(t("commands.escapeCommand"))
+			forceNavigator.quickSearch.value = ""
+			ui.addSearchResult("commands.goToTask")
+			ui.addSearchResult("commands.escapeCommand")
 			let firstEl = document.querySelector('#sfnavOutputs :first-child')
 			if(listPosition == -1 && firstEl != null)
 				firstEl.className = "sfnav_child sfnav_selected"
@@ -108,9 +108,12 @@ const createTask = (subject)=>{
 }
 const loginAsShowOptions = (records)=>{
 	for(let i = 0; i < records.length; ++i) {
-		let cmd = t("prefix.loginAs") + records[i].Name
-		forceNavigator.commands[cmd] = { "key": cmd, "id": records[i].Id}
-		forcenavigator.addWord(cmd)
+		forceNavigator.commands["prefix.loginAs"] = {
+			"key": "prefix.loginAs",
+			"userId": records[i].Id,
+			"label": t("prefix.loginAs") +" "+ records[i].Name
+		}
+		forcenavigator.addSearchResult("prefix.loginAs")
 	}
 	let firstEl = document.querySelector('#sfnavOutput :first-child')
 	if(listPosition == -1 && firstEl != null) firstEl.className = "sfnav_child sfnav_selected"

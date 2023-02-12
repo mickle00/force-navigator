@@ -42,26 +42,28 @@ const getOtherExtensionCommands = (otherExtension, requestDetails, settings = {}
 const parseMetadata = (data, url, settings = {})=>{
 	const skipObjects = ["0DM"]
 	if (data.length == 0 || typeof data.sobjects == "undefined") return false
-	let mapKeys = Object.keys(forceNavigator.setupLabelsMap)
+	let mapKeys = Object.keys(forceNavigator.objectSetupLabelsMap)
 	return data.sobjects.reduce((commands, { labelPlural, label, name, keyPrefix }) => {
 		if (!keyPrefix || skipObjects.includes(keyPrefix)) { return commands }
 		let baseUrl = "/";
 		if (forceNavigatorSettings.lightningMode && name.endsWith("__mdt")) { baseUrl += "lightning/setup/CustomMetadata/page?address=" }
-		commands[t("prefix.list") + labelPlural] = {
-			"key": "list."+name,
-			"url": `${baseUrl}/${keyPrefix}`
+		commands[keyPrefix + ".list"] = {
+			"key": keyPrefix + ".list",
+			"url": `${baseUrl}/${keyPrefix}`,
+			"label": t("prefix.list") + " " + labelPlural
 		}
-		commands[t("prefix.new") + label] = {
-			"key": "new."+name,
-			"url": `${baseUrl}/${keyPrefix}/e`
+		commands[keyPrefix + ".new"] = {
+			"key": keyPrefix + ".new",
+			"url": `${baseUrl}/${keyPrefix}/e`,
+			"label": t("prefix.new") + " " + label
 		}
 		if(forceNavigatorSettings.lightningMode) {
 			let targetUrl = url + "/lightning/setup/ObjectManager/" + name
-			commands[t("prefix.setup") + label + ' > ' + t("prompt.details")] = {url: targetUrl + "/Details/view", key: t("prefix.setup") + label + " > " + t("prompt.fields")};
 			mapKeys.forEach(key=>{
-				commands[t("prefix.setup") + label + ' > ' + t(key)] = {
-					"url": targetUrl + forceNavigator.setupLabelsMap[key],
-					"key":  t("prefix.setup") + label + "." + t(key)
+				commands[keyPrefix + "." + key] = {
+					"key": keyPrefix + "." + key,
+					"url": targetUrl + forceNavigator.objectSetupLabelsMap[key],
+					"label": [t("prefix.setup"), label, t(key)].join(" > ")
 				}
 			})
 		} else {
