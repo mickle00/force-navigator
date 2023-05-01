@@ -43,7 +43,7 @@ const launchMerger = (otherId, object)=>{
 const launchMergerAccounts = (otherId)=>launchMerger(otherId, "Account")
 const launchMergerCases = (otherId)=>launchMerger(otherId, "Case")
 const createTask = (subject)=>{
-	showLoadingIndicator()
+	ui.showLoadingIndicator()
 	if(["",null,undefined].includes(subject) && !forceNavigator.userId) { console.error("Empty Task subject"); hideLoadingIndicator(); return }
 	chrome.runtime.sendMessage({
 			"action":'createTask', "apiUrl": forceNavigator.apiUrl,
@@ -65,48 +65,6 @@ const createTask = (subject)=>{
 				firstEl.className = "sfnav_child sfnav_selected"
 			hideLoadingIndicator()
 	})
-}
-
- const loginAs = (cmd, newTab)=>{
-	let cmdSplit = cmd.split(' ')
-	let searchValue = cmdSplit[2]
-	if(cmdSplit[3] !== undefined)
-		searchValue += '+' + cmdSplit[3]
-	showLoadingIndicator()
-	chrome.runtime.sendMessage({
-		action:'searchLogins', apiUrl: apiUrl,
-		key: sessionHash, sessionId: sessionId,
-		domain: serverInstance, sessionHash: sessionHash,
-		searchValue: searchValue, userId: userId
-	}, success=>{
-		let numberOfUserRecords = success.records.length
-		hideLoadingIndicator()
-		if(numberOfUserRecords < 1) { addError([{"message":"No user for your search exists."}]) }
-		else if(numberOfUserRecords > 1) { loginAsShowOptions(success.records) }
-		else {
-			var userId = success.records[0].Id
-			loginAsPerform(userId, newTab)
-		}
-	})
-}
-const loginAsShowOptions = (records)=>{
-	for(let i = 0; i < records.length; ++i) {
-		forceNavigator.commands["prefix.loginAs"] = {
-			"key": "prefix.loginAs",
-			"userId": records[i].Id,
-			"label": t("prefix.loginAs") +" "+ records[i].Name
-		}
-		forcenavigator.addSearchResult("prefix.loginAs")
-	}
-	let firstEl = document.querySelector('#sfnavOutput :first-child')
-	if(listPosition == -1 && firstEl != null) firstEl.className = "sfnav_child sfnav_selected"
-}
-const loginAsPerform = (userId, newTab)=>{
-	let targetUrl = "https://" + forceNavigator.apiUrl + "/servlet/servlet.su?oid=" + forceNavigator.organizationId + "&suorgadminid=" + userId + "&retURL=" + encodeURIComponent(window.location.pathname) + "&targetURL=" + encodeURIComponent(window.location.pathname) + "&"
-	ui.hideSearchBox()
-	if(newTab) forceNavigator.goToUrl(targetUrl, true)
-	else forceNavigator.goToUrl(targetUrl)
-	return true
 }
 
 forceNavigator.init()

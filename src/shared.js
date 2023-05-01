@@ -63,7 +63,8 @@ export const ui = {
 		return true
 	},
 	"mouseHandlerOut": (e)=>{ e.target.classList.remove('sfnav_selected'); return true },
-	"mouseClickLoginAs": (e)=>{ loginAsPerform(e.target.getAttribute("id")); return true },
+	"mouseClickLoginAs": (e)=>{ forceNavigator.loginAsPerform(e.target.dataset.key.replace("commands.loginAs.","")); return true },
+	// "mouseClickLoginAs": (e)=>{ forceNavigator.loginAsPerform(e.target.getAttribute("id")); return true },
 	"bindShortcuts": ()=>{
 		inputHandler.bindGlobal('esc', function(e) { ui.hideSearchBox() }) // global doesn't seem to be working
 		inputHandler(ui.quickSearch).bind('esc', function(e) { ui.hideSearchBox() })
@@ -176,14 +177,15 @@ export const ui = {
 		forceNavigator.listPosition = -1
 	},
 	"kbdCommand": (e, keyPress)=>{
-		let cmdKey = ui.navOutput.childNodes[(forceNavigator.listPosition < 0 ? 0 : forceNavigator.listPosition)].dataset
-// Now need to fix loginAs
+		let cmdKey = ui.navOutput.childNodes[(forceNavigator.listPosition < 0 ? 0 : forceNavigator.listPosition)]?.dataset
 		if(["?", "!"].includes(e.target.value[0]))
 			cmdKey = e.target.value[0] == "?" ? "commands.search" : "commands.createTask"
+		if(!cmdKey?.key.startsWith("commands.loginAs.") && e.target.value.toLowerCase().includes(t("prefix.loginAs").toLowerCase()))
+			cmdKey = "commands.loginAs"
 		let newTab = forceNavigator.newTabKeys.indexOf(keyPress) >= 0 ? true : false
 		if(!newTab)
 			ui.clearOutput()
-		forceNavigator.invokeCommand(cmdKey, newTab)
+		forceNavigator.invokeCommand(cmdKey, newTab, e.target)
 	},
 	"selectMove": (direction)=>{
 		let words = Array.from(ui.navOutput.childNodes).reduce((a,w)=>a.concat([w.textContent]), [])
@@ -300,6 +302,10 @@ export const forceNavigator = {
 		if(!command) { return false }
 		let targetUrl = ""
 		if(typeof command != "object") command = {"key": command}
+		if(command.key.startsWith("commands.loginAs.")) {
+			forceNavigator.loginAsPerform(command.key.replace("commands.loginAs.",""), newTab)
+			return true
+		}
 		switch(command.key) {
 			case "commands.refreshMetadata":
 				forceNavigator.refreshAndClear()
@@ -345,7 +351,7 @@ export const forceNavigator = {
 				ui.hideSearchBox()
 				break
 			case "commands.loginAs": 
-				loginAs(command, newTab)
+				forceNavigator.loginAs(command, newTab)
 				return true
 			case "commands.setTheme":
 				forceNavigatorSettings.setTheme(command.value)
@@ -372,7 +378,7 @@ export const forceNavigator = {
 					.then(result=>ui.addSearchResult("notification.searchSettingsUpdated"))
 				return true
 			} else
-				addError(t("error.searchLimitMax"))
+				ui.addError(t("error.searchLimitMax"))
 		}
 		else if(typeof forceNavigator.commands[command.key] != 'undefined' && forceNavigator.commands[command.key].url) { targetUrl = forceNavigator.commands[command.key].url }
 		else if(forceNavigatorSettings.debug) {
@@ -512,6 +518,46 @@ export const forceNavigator = {
 			})
 		},
 		response=>{}),
+	"loginAs": (cmd, newTab)=>{
+		let searchValue = ui.searchBox.querySelector('input').value.toLowerCase().replace(t("prefix.loginAs").toLowerCase(), "")
+		if(![null,undefined,""].includes(searchValue) && searchValue.length > 1) {
+			ui.showLoadingIndicator()
+			chrome.runtime.sendMessage({
+				action:'searchLogins', apiUrl: forceNavigator.apiUrl,
+				key: forceNavigator.sessionHash, sessionId: forceNavigator.sessionId,
+				domain: forceNavigator.serverInstance, sessionHash: forceNavigator.sessionHash,
+				searchValue: searchValue, userId: forceNavigator.userId
+			}, success=>{
+				let numberOfUserRecords = success.records.length
+				ui.hideLoadingIndicator()
+				if(numberOfUserRecords < 1) { ui.addError([{"message":"No user for your search exists."}]) }
+				else if(numberOfUserRecords > 1) { forceNavigator.loginAsShowOptions(success.records) }
+				else {
+					var userId = success.records[0].Id
+					forceNavigator.loginAsPerform(userId, newTab)
+				}
+			})
+		}
+	},
+	"loginAsShowOptions": (records)=>{
+		for(let i = 0; i < records.length; ++i) {
+			forceNavigator.commands["commands.loginAs." + records[i].Id] = {
+				"key": "commands.loginAs." + records[i].Id,
+				"userId": records[i].Id,
+				"label": t("prefix.loginAs") +" "+ records[i].Name
+			}
+			ui.addSearchResult("commands.loginAs." + records[i].Id)
+		}
+		let firstEl = document.querySelector('#sfnavOutput :first-child')
+		if(firstEl != null) firstEl.className = "sfnav_child sfnav_selected"
+	},
+	"loginAsPerform": (userId, newTab)=>{
+		let targetUrl = "https://" + forceNavigator.apiUrl + "/servlet/servlet.su?oid=" + forceNavigator.organizationId + "&suorgadminid=" + userId + "&retURL=" + encodeURIComponent(window.location.pathname) + "&targetURL=" + encodeURIComponent(window.location.pathname) + "&"
+		ui.hideSearchBox()
+		if(newTab) forceNavigator.goToUrl(targetUrl, true)
+		else forceNavigator.goToUrl(targetUrl)
+		return true
+	},
 	"objectSetupLabelsMap": {
 		"objects.details": "/Details/view",
 		"objects.fieldsAndRelationships": "/FieldsAndRelationships/view",
