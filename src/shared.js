@@ -218,12 +218,11 @@ export const forceNavigatorSettings = {
 	"ignoreList": null, // ignoreList will be for filtering custom objects, will need an add, remove, and list call
 	"changeDictionary": (newLanguage) => lisan.add(require("./languages/" + newLanguage + ".js")),
 	"setTheme": (command)=>{
-		let commandSplit = command.split(' ')
-		const newTheme = "theme-" + commandSplit[2].toLowerCase()
+		const newTheme = "theme-" + command.replace('commands.themes','').toLowerCase()
 		document.getElementById('sfnavStyleBox').classList = [newTheme]
 		forceNavigatorSettings.set("theme", newTheme)
 	},
-	"set": (key, value)=>{ chrome.storage.sync.set( (({})[key]=value), response=>refreshAndClear()) },
+	"set": (key, value)=>{ let s={}; s[key]=value; chrome.storage.sync.set(s, response=>forceNavigator.refreshAndClear()) },
 	"loadSettings": ()=>{
 		chrome.storage.sync.get(forceNavigatorSettings, settings=>{
 			for(const k in settings) { forceNavigatorSettings[k] = settings[k] }
@@ -303,7 +302,7 @@ export const forceNavigator = {
 		if(typeof command != "object") command = {"key": command}
 		switch(command.key) {
 			case "commands.refreshMetadata":
-				refreshAndClear()
+				forceNavigator.refreshAndClear()
 				break
 			case "commands.objectManager":
 				targetUrl = forceNavigator.serverInstance + "/lightning/setup/ObjectManager/home"
@@ -312,11 +311,9 @@ export const forceNavigator = {
 			case "switch to lightning":
 			case "commands.toggleLightning":
 				let mode = forceNavigatorSettings.lightningMode ? "classic" : "lex-campaign"
+				const matchUrl = window.location.href.replace(window.location.origin,"")
+				targetUrl = forceNavigator.serverInstance + "/ltng/switcher?destination=" + mode + "&referrer=" + encodeURIComponent(matchUrl)
 				forceNavigatorSettings.lightningMode = mode === "lex-campaign"
-	// need to test updating this right
-				const matchUrl = window.location.href.replace(forceNavigator.serverInstance,"")
-				targetUrl = forceNavigator.serverInstance + matchUrl
-			console.log(forceNavigatorSettings, forceNavigatorSettings.set)
 				forceNavigatorSettings.set("lightningMode", forceNavigatorSettings.lightningMode)
 				break
 			case "commands.toggleEnhancedProfiles":
@@ -330,7 +327,7 @@ export const forceNavigator = {
 				console.info("server instance: ", forceNavigator.serverInstance)
 				console.info("API Url: ", forceNavigator.apiUrl)
 				console.info("Commands: ", forceNavigator.commands)
-				hideSearchBox()
+				ui.hideSearchBox()
 				break
 			case "commands.toggleDeveloperName":
 			    forceNavigatorSettings.developername = !forceNavigatorSettings.developername
@@ -345,7 +342,7 @@ export const forceNavigator = {
 				break
 			case "commands.toggleAllCheckboxes":
 				Array.from(document.querySelectorAll('input[type="checkbox"]')).forEach(c => c.checked=(c.checked ? false : true))
-				hideSearchBox()
+				ui.hideSearchBox()
 				break
 			case "commands.loginAs": 
 				loginAs(command, newTab)
@@ -408,7 +405,8 @@ export const forceNavigator = {
 			"commands.dumpDebug",
 			"commands.setSearchLimit"
 		).forEach(c=>{forceNavigator.commands[c] = {"key": c}})
-		forceNavigatorSettings.availableThemes.forEach(th=>forceNavigator.commands["commands.themes" + th] = { "key": "commands.themes" + th })
+		// TODO disabled themes for the moment
+		// forceNavigatorSettings.availableThemes.forEach(th=>forceNavigator.commands["commands.themes" + th] = { "key": "commands.themes" + th })
 		Object.keys(forceNavigator.urlMap).forEach(c=>{forceNavigator.commands[c] = {
 			"key": c,
 			"url": forceNavigator.urlMap[c][modeUrl],
