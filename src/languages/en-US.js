@@ -7,7 +7,7 @@ module.exports = {
 		"prompt.getCommands": "Get Commands",
 		"prompt.details": "Details",
 		"prompt.fields": "Fields",
-		"menu.explanation": `Settings stuff`,
+		"menu.explanation": `Settings items (TBD)`,
 		"menu.globalSearch": "Global Search Usage: ? <Search term(s)>",
 		"menu.createTask": "Create a Task: ! <Subject line>",
 		"settings.theme": "Theme",

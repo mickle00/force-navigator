@@ -56,8 +56,8 @@ export const ui = {
 		document.getElementById("sfnavQuickSearch").value = e.target.firstChild.nodeValue
 		forceNavigator.listPosition = -1
 		ui.setVisibleSearch("hidden")
-		if(!window.ctrlKey)
-			forceNavigator.invokeCommand(e.target.firstChild.nodeValue, false,'click')
+		if(e.target.dataset.key)
+			forceNavigator.invokeCommand(e.target.dataset, window.ctrlKey,'click')
 		else
 			ui.hideSearchBox()
 		return true
@@ -65,7 +65,8 @@ export const ui = {
 	"mouseHandlerOut": (e)=>{ e.target.classList.remove('sfnav_selected'); return true },
 	"mouseClickLoginAs": (e)=>{ loginAsPerform(e.target.getAttribute("id")); return true },
 	"bindShortcuts": ()=>{
-		inputHandler.bindGlobal('esc', function(e) { ui.hideSearchBox() })
+		inputHandler.bindGlobal('esc', function(e) { ui.hideSearchBox() }) // global doesn't seem to be working
+		inputHandler(ui.quickSearch).bind('esc', function(e) { ui.hideSearchBox() })
 		inputHandler(ui.quickSearch).bind('enter', ui.kbdCommand)
 		for (var i = 0; i < forceNavigator.newTabKeys.length; i++) {
 			inputHandler(ui.quickSearch).bind(forceNavigator.newTabKeys[i], ui.kbdCommand)
@@ -116,7 +117,7 @@ export const ui = {
 		let preSort = {}, terms = input.toLowerCase().split(" ")
 		for(const key in forceNavigator.commands) {
 			const label = forceNavigator.commands[key]?.label ?? ""
-			const comboSearch = (key + "|" + label).toLowerCase()
+			const comboSearch = (key + '|' + label).toLowerCase()
 			if(comboSearch.indexOf(input) != -1) {
 				preSort[key] = forceNavigatorSettings.searchLimit
 			} else {
@@ -175,12 +176,10 @@ export const ui = {
 		forceNavigator.listPosition = -1
 	},
 	"kbdCommand": (e, keyPress)=>{
-		let cmdKey = ui.navOutput.childNodes[(forceNavigator.listPosition < 0 ? 0 : forceNavigator.listPosition)].dataset.key
+		let cmdKey = ui.navOutput.childNodes[(forceNavigator.listPosition < 0 ? 0 : forceNavigator.listPosition)].dataset
 // Now need to fix loginAs
 		if(["?", "!"].includes(e.target.value[0]))
 			cmdKey = e.target.value[0] == "?" ? "commands.search" : "commands.createTask"
-		else
-			cmdKey = ui.navOutput.childNodes[(forceNavigator.listPosition < 0 ? 0 : forceNavigator.listPosition)].dataset.key
 		let newTab = forceNavigator.newTabKeys.indexOf(keyPress) >= 0 ? true : false
 		if(!newTab)
 			ui.clearOutput()
@@ -205,10 +204,11 @@ export const ui = {
 	}
 }
 
-export let forceNavigatorSettings = {
+export const forceNavigatorSettings = {
 	"MAX_SEARCH_RESULTS": 32,
 	"theme":'theme-default',
 	"searchLimit": 16,
+	"commands": {},
 	"enhancedprofiles": true,
 	"debug": false,
 	"developername": false,
@@ -223,10 +223,10 @@ export let forceNavigatorSettings = {
 		document.getElementById('sfnavStyleBox').classList = [newTheme]
 		forceNavigatorSettings.set("theme", newTheme)
 	},
-	"set": (key, value)=>chrome.storage.sync.set( (({})[key]=value), response=>refreshAndClear()),
+	"set": (key, value)=>{ chrome.storage.sync.set( (({})[key]=value), response=>refreshAndClear()) },
 	"loadSettings": ()=>{
 		chrome.storage.sync.get(forceNavigatorSettings, settings=>{
-			forceNavigatorSettings = settings
+			for(const k in settings) { forceNavigatorSettings[k] = settings[k] }
 			forceNavigator.serverInstance = forceNavigator.getServerInstance(forceNavigatorSettings)
 			if(forceNavigator.sessionId !== null) { return }
 			chrome.runtime.sendMessage({ "action": "getApiSessionId", "key": forceNavigator.organizationId }, response=>{
@@ -287,10 +287,8 @@ export const forceNavigator = {
 			ui.createBox()
 			ui.bindShortcuts()
 			if(forceNavigatorSettings.enhancedprofiles) {
-				forceNavigator.commands["setup.manageUsers.profiles"] = forceNavigator.commands["setup.enhancedProfiles"]
 				delete forceNavigator.commands["setup.profiles"]
 			} else {
-				forceNavigator.commands["setup.manageUsers.profiles"] = forceNavigator.commands['setup.profiles']
 				delete forceNavigator.commands["setup.enhancedProfiles"]
 			}
 
@@ -316,8 +314,9 @@ export const forceNavigator = {
 				let mode = forceNavigatorSettings.lightningMode ? "classic" : "lex-campaign"
 				forceNavigatorSettings.lightningMode = mode === "lex-campaign"
 	// need to test updating this right
-				matchUrl = window.location.href.replace(forceNavigator.serverInstance,"")
+				const matchUrl = window.location.href.replace(forceNavigator.serverInstance,"")
 				targetUrl = forceNavigator.serverInstance + matchUrl
+			console.log(forceNavigatorSettings, forceNavigatorSettings.set)
 				forceNavigatorSettings.set("lightningMode", forceNavigatorSettings.lightningMode)
 				break
 			case "commands.toggleEnhancedProfiles":
@@ -378,7 +377,7 @@ export const forceNavigator = {
 			} else
 				addError(t("error.searchLimitMax"))
 		}
-		else if(typeof forceNavigator.commands[command] != 'undefined' && forceNavigator.commands[command].url) { targetUrl = forceNavigator.commands[command].url }
+		else if(typeof forceNavigator.commands[command.key] != 'undefined' && forceNavigator.commands[command.key].url) { targetUrl = forceNavigator.commands[command.key].url }
 		else if(forceNavigatorSettings.debug) {
 			console.log(t(command.key) + t("error.notFound"))
 			return false
